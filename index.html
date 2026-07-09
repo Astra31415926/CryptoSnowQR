@@ -3,34 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CryptoSnowflake QR</title>
+    <title>CryptoSnowflake QR v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
-        :root { --bg-color: #0a0a0a; --ui-font: system-ui, sans-serif; }
+        :root { --bg-color: #050505; --ui-font: system-ui, sans-serif; }
         body { background: var(--bg-color); color: #fff; font-family: var(--ui-font); overflow-x: hidden; min-height: 100vh; touch-action: manipulation; }
         .screen { display: none; flex-direction: column; min-height: 100vh; }
         .screen.active { display: flex; }
         .c { color: #00FFFF; } .m { color: #FF00FF; } .y { color: #FFFF00; } .k { color: #FF004D; } .a { color: #00FF41; } .n { color: #0088FF; }
-        textarea { background: rgba(20, 20, 20, 0.9); border: 2px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--ui-font); resize: none; transition: all 0.3s; }
-        textarea:focus { outline: none; border-color: #00FF41; box-shadow: 0 0 10px rgba(0, 255, 65, 0.2); }
+        
+        textarea, input[type="password"] { background: rgba(20, 20, 20, 0.9); border: 2px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--ui-font); resize: none; transition: all 0.3s; }
+        textarea:focus, input[type="password"]:focus { outline: none; border-color: #a855f7; box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); }
+        
         .btn-primary { position: relative; overflow: hidden; font-weight: 800; letter-spacing: 0.05em; transition: all 0.2s; }
-        .btn-create { background: linear-gradient(135deg, #F97316, #EA580C); box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3); }
-        .btn-scan-ui { background: linear-gradient(135deg, #14B8A6, #0D9488); color: #000; box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3); }
+        .btn-create { background: linear-gradient(135deg, #ec4899, #a855f7); box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); }
+        .btn-scan-ui { background: linear-gradient(135deg, #14b8a6, #06b6d4); color: #000; box-shadow: 0 4px 15px rgba(20, 184, 166, 0.4); }
         .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
         .btn-secondary:active { background: rgba(255,255,255,0.1); }
+        
         .viewfinder-corners { position: absolute; inset: 20px; pointer-events: none; z-index: 15; }
-        .corner { position: absolute; width: 30px; height: 30px; border-color: rgba(255,255,255,0.5); }
+        .corner { position: absolute; width: 30px; height: 30px; border-color: rgba(168, 85, 247, 0.8); }
         .tl { top: 0; left: 0; border-top: 4px solid; border-left: 4px solid; border-radius: 5px 0 0 0; }
         .tr { top: 0; right: 0; border-top: 4px solid; border-right: 4px solid; border-radius: 0 5px 0 0; }
         .bl { bottom: 0; left: 0; border-bottom: 4px solid; border-left: 4px solid; border-radius: 0 0 0 5px; }
         .br { bottom: 0; right: 0; border-bottom: 4px solid; border-right: 4px solid; border-radius: 0 0 5px 0; }
-        .viewfinder-hunting .corner { border-color: #00ff41; box-shadow: 0 0 15px #00ff41; }
+        .viewfinder-hunting .corner { border-color: #00ff41; box-shadow: 0 0 20px #00ff41; }
+        
         @keyframes flash { 0% { opacity: 0; } 20% { opacity: 0.8; } 100% { opacity: 0; } }
         .flash-anim { animation: flash 0.3s ease-out; }
-        .status-crypto { color: #F97316; border-left: 4px solid #F97316; }
-        .status-normal { border-left: 4px solid #14B8A6; }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        
+        .spy-overlay { backdrop-filter: blur(8px); transition: opacity 0.3s; }
+        .spy-container { box-shadow: 0 0 40px rgba(168, 85, 247, 0.3); }
     </style>
 </head>
 <body class="p-4 pb-6">
@@ -38,15 +46,15 @@
     
     <!-- HOME -->
     <div id="screen-home" class="screen active">
-        <header class="flex items-center justify-center h-20 mb-8">
+        <header class="flex items-center justify-center h-24 mb-8">
             <h1 class="text-3xl font-black tracking-tighter uppercase">
                 <span class="text-white">Crypto</span><span class="c">S</span><span class="m">n</span><span class="y">o</span><span class="k">w</span><span class="a">Q</span><span class="n">R</span>
             </h1>
         </header>
         <main class="flex-1 flex flex-col items-center justify-center px-2 text-center">
-            <div class="text-base text-zinc-300 mb-10 leading-relaxed max-w-md bg-zinc-900/50 p-6 rounded-2xl border border-white/5">
-                <p class="font-bold text-white mb-3 text-lg">Генератор криптографічних орнаментів</p>
-                <p>Додай <span class="text-orange-400 font-bold">|||</span> та пароль для шифрування (AES-256-GCM). Без пароля — просто арт-код. Читається лише цим додатком.</p>
+            <div class="text-base text-zinc-300 mb-12 leading-relaxed max-w-md bg-zinc-900/50 p-6 rounded-3xl border border-purple-500/20">
+                <p class="font-bold text-white mb-3 text-lg">Генератор крипто-мандал</p>
+                <p>Ідеальна 8-кратна симетрія. Два незалежних орнаменти в каналах R та G. Дані заховані в синьому каналі (B).</p>
             </div>
             <div class="w-full max-w-xs space-y-4 mt-auto">
                 <button onclick="switchScreen('create')" class="w-full py-4 btn-primary btn-create text-white rounded-2xl text-sm uppercase">[+] Створити</button>
@@ -62,12 +70,12 @@
             <div class="flex-1 text-center"><h1 class="text-xl font-black tracking-tighter">Створення</h1></div>
             <div class="w-10 h-10"></div>
         </header>
-        <div class="p-4 space-y-2 flex-shrink-0">
-            <textarea id="b-text" class="w-full p-3 pl-4 rounded-xl h-24 text-sm font-medium" placeholder="Текст або Текст|||Пароль"></textarea>
-            <div id="create-status" class="text-xs px-2 h-5"></div>
+        <div class="p-4 space-y-3 flex-shrink-0">
+            <textarea id="b-text" class="w-full p-3 pl-4 rounded-xl h-20 text-sm font-medium" placeholder="Текст або посилання..."></textarea>
+            <input type="password" id="b-pass" class="w-full p-3 pl-4 rounded-xl h-12 text-sm font-medium" placeholder="🔑 Секретний ключ (залиште порожнім для звичайного коду)">
         </div>
         <div class="flex-1 flex flex-col items-center justify-center p-4">
-             <div class="relative w-full max-w-xs aspect-square bg-zinc-950 rounded-3xl p-3 border border-white/5 shadow-2xl overflow-hidden flex items-center justify-center">
+             <div class="relative w-full max-w-xs aspect-square bg-zinc-950 rounded-3xl p-2 border border-white/5 shadow-2xl overflow-hidden flex items-center justify-center">
                  <canvas id="canvas-create" width="512" height="512" class="w-full h-full relative z-10"></canvas>
              </div>
         </div>
@@ -84,7 +92,7 @@
             <div class="w-10 h-10"></div>
         </header>
         <div class="p-4 space-y-2 flex-shrink-0">
-            <textarea id="b-text-scan" class="w-full p-3 pl-4 rounded-xl h-16 text-sm font-medium" placeholder="Результат..."></textarea>
+            <textarea id="b-text-scan" class="w-full p-3 pl-4 rounded-xl h-16 text-sm font-medium" placeholder="Результат..." readonly></textarea>
         </div>
         <div class="flex-1 flex flex-col items-center justify-center p-4">
              <div id="container-scan" class="relative w-full max-w-xs aspect-square bg-zinc-950 rounded-3xl border border-white/5 shadow-2xl overflow-hidden flex items-center justify-center">
@@ -102,27 +110,40 @@
         </div>
     </div>
 
-    <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[200]"></div>
+    <!-- SPY OVERLAY -->
+    <div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 z-[200] flex flex-col items-center justify-center p-6">
+        <div class="spy-container bg-zinc-900 border-2 border-purple-500 p-8 rounded-3xl text-center max-w-sm w-full">
+            <!-- Поп-сюрреалистичный Шпион (замените на картинку при желании) -->
+            <div class="text-7xl mb-2 animate-bounce">🕵️‍♂️</div>
+            <div class="flex justify-center text-4xl mb-4 -mt-6">👀</div>
+            
+            <h2 class="text-2xl font-black text-purple-300 mb-2">АГЕНТ, СТОП!</h2>
+            <p class="text-zinc-400 mb-6 text-sm">Ці дані зашифровані (AES-256). Назовіть секретне слово, щоб я міг їх дешифрувати.</p>
+            
+            <input type="password" id="spy-pass" class="w-full p-4 rounded-xl bg-black text-white text-center text-2xl tracking-widest mb-2 border-purple-500 focus:border-pink-500" placeholder="••••••••">
+            <p id="spy-error" class="text-red-500 text-sm h-6 font-bold transition-opacity opacity-0">ДЕРЖАВА НЕ ДОВІРЯЄ ВАМ</p>
+            
+            <button onclick="closeSpy()" class="mt-4 text-zinc-600 text-xs underline">Відміна</button>
+        </div>
+    </div>
+
+    <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
     // ==========================================
-    // 1. КРИПТОГРАФИЯ (Web Crypto API)
+    // 1. КРИПТОГРАФІЯ
     // ==========================================
     const CRYPTO_CONFIG = { SALT_SIZE: 16, KEY_SIZE: 32, NONCE_SIZE: 12, ITERATIONS: 390000 };
 
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder();
         const salt = crypto.getRandomValues(new Uint8Array(CRYPTO_CONFIG.SALT_SIZE));
-        const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits", "deriveKey"]);
+        const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
         const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: CRYPTO_CONFIG.ITERATIONS, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: CRYPTO_CONFIG.KEY_SIZE * 8 }, false, ["encrypt"]);
         const nonce = crypto.getRandomValues(new Uint8Array(CRYPTO_CONFIG.NONCE_SIZE));
         const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, enc.encode(plaintext));
-        
-        // Склеиваем Salt + Nonce + Ciphertext и кодируем в Base64
         const combined = new Uint8Array(salt.buffer.byteLength + nonce.buffer.byteLength + ciphertext.byteLength);
-        combined.set(salt, 0);
-        combined.set(nonce, salt.byteLength);
-        combined.set(new Uint8Array(ciphertext), salt.byteLength + nonce.byteLength);
+        combined.set(salt, 0); combined.set(nonce, salt.byteLength); combined.set(new Uint8Array(ciphertext), salt.byteLength + nonce.byteLength);
         return btoa(String.fromCharCode.apply(null, combined));
     }
 
@@ -133,26 +154,26 @@
             const salt = combined.slice(0, CRYPTO_CONFIG.SALT_SIZE);
             const nonce = combined.slice(CRYPTO_CONFIG.SALT_SIZE, CRYPTO_CONFIG.SALT_SIZE + CRYPTO_CONFIG.NONCE_SIZE);
             const ciphertext = combined.slice(CRYPTO_CONFIG.SALT_SIZE + CRYPTO_CONFIG.NONCE_SIZE);
-            
-            const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits", "deriveKey"]);
+            const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
             const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: CRYPTO_CONFIG.ITERATIONS, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: CRYPTO_CONFIG.KEY_SIZE * 8 }, false, ["decrypt"]);
             const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, key, ciphertext);
             return new TextDecoder().decode(decrypted);
-        } catch (e) { return null; } // Wrong password or corrupted
+        } catch (e) { return null; }
     }
 
     // ==========================================
-    // 2. ГЕНЕРАТОР СНЕЖИНОК (Твоя логика на JS)
+    // 2. ІДЕАЛЬНА ПІКСЕЛЬНА СИМЕТРІЯ (НОВА ЛОГІКА)
     // ==========================================
     const CELL_SIZE = 7;
-    const BLOCK_PALETTE = [80, 120, 180];
-    const PATTERN_PALETTE = [180, 200, 160];
-    const SYMMETRIC_FILLER_IDX = [0, 8, 13, 16, 17]; // Индексы p1, p9, p14, p17, p18 в массиве PATTERNS
+    const SYMMETRIC_FILLER_IDX = [0, 8, 13, 16, 17]; 
     const BRIGHTNESS_THRESHOLD = 128;
     const FILLER_COLOR_DARK = 20;
     const FILLER_COLOR_LIGHT = 230;
+    const PALETTES = [
+        [80, 120, 180],   // Для R
+        [180, 200, 160]   // Для G
+    ];
 
-    // Твои 22 узора
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -175,172 +196,116 @@
         [[1,1,1,1,1,1,1],[0,1,1,1,1,1,1],[0,0,1,1,1,1,1],[0,0,0,1,1,1,1],[0,0,0,0,1,1,1],[0,0,0,0,0,1,1],[0,0,0,0,0,0,1]],
         [[0,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,0,0,0,0,0],[1,1,1,0,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,1,0,0],[1,1,1,1,1,1,0]]
     ];
-
     const solidBlockPattern = Array.from({length: CELL_SIZE}, () => Array(CELL_SIZE).fill(1));
-
     function isSolidBlock(p) { return JSON.stringify(p) === JSON.stringify(solidBlockPattern); }
-    function flipMatrixX(m) { return m.map(r => [...r].reverse()); }
-    function flipMatrixY(m) { return [...m].reverse(); }
-    function transposeMatrix(m) { return m[0].map((col, i) => m.map(row => row[i])); }
 
-    function generateSnowflakeGrid(size, palette, useSmartFill) {
-        let grid = Array.from({length: size}, () => Array(size).fill(0));
-        let gridDim = Math.floor(size / CELL_SIZE) + 4;
-        if (gridDim % 2 === 0) gridDim++;
-        
-        let centerIdx = Math.floor(gridDim / 2);
-        let quadrantDim = centerIdx + 1;
-        let octant = Array.from({length: quadrantDim}, () => Array(quadrantDim).fill(null));
+    function generatePixelPerfectMask(size, paletteId) {
+        let grid = Array(size).fill(null).map(() => Array(size).fill(0));
+        let center = Math.floor(size / 2);
+        let blockMap = {};
+        let palette = PALETTES[paletteId];
 
-        // Заполняем 1/8 (октант)
-        for (let r = 0; r < quadrantDim; r++) {
-            for (let c = 0; c <= r; c++) {
+        // 1. Генерируем "чертеж" блоков только для одного октанта
+        for(let by = 0; by < Math.ceil(size/CELL_SIZE); by++) {
+            for(let bx = by; bx < Math.ceil(size/CELL_SIZE); bx++) {
                 let pat = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
                 let col = palette[Math.floor(Math.random() * palette.length)];
-                octant[r][c] = { pat, col };
-            }
-        }
-
-        // Умное заполнение
-        if (useSmartFill) {
-            for (let r = 0; r < quadrantDim; r++) {
-                for (let c = 0; c <= r; c++) {
-                    let cell = octant[r][c];
-                    if (isSolidBlock(cell.pat)) {
-                        let newPat = PATTERNS[SYMMETRIC_FILLER_IDX[Math.floor(Math.random() * SYMMETRIC_FILLER_IDX.length)]];
-                        let newCol = cell.col > BRIGHTNESS_THRESHOLD ? FILLER_COLOR_DARK : FILLER_COLOR_LIGHT;
-                        octant[r][c] = { pat: newPat, col: newCol };
-                    }
-                }
-            }
-        }
-
-        // Рендеринг на сетку
-        let offset = Math.floor((size - (gridDim * CELL_SIZE)) / 2);
-        for (let rCell = 0; rCell < gridDim; rCell++) {
-            for (let cCell = 0; cCell < gridDim; cCell++) {
-                let relC = cCell - centerIdx, relR = rCell - centerIdx;
-                let absC = Math.abs(relC), absR = Math.abs(relR);
-                let srcR = Math.max(absR, absC), srcC = Math.min(absR, absC);
                 
-                let m = octant[srcR][srcC].pat.map(r=>[...r]);
-                if (absR < absC) m = transposeMatrix(m);
-                if (relR < 0) m = flipMatrixY(m);
-                if (relC < 0) m = flipMatrixX(m);
+                if (isSolidBlock(pat)) {
+                    pat = PATTERNS[SYMMETRIC_FILLER_IDX[Math.floor(Math.random() * SYMMETRIC_FILLER_IDX.length)]];
+                    col = col > BRIGHTNESS_THRESHOLD ? FILLER_COLOR_DARK : FILLER_COLOR_LIGHT;
+                }
+                blockMap[`${bx},${by}`] = pat;
+            }
+        }
 
-                for (let rP = 0; rP < CELL_SIZE; rP++) {
-                    for (let cP = 0; cP < CELL_SIZE; cP++) {
-                        if (m[rP][cP] === 1) {
-                            let y = offset + rCell * CELL_SIZE + rP;
-                            let x = offset + cCell * CELL_SIZE + cP;
-                            if (x >= 0 && x < size && y >= 0 && y < size) grid[y][x] = 1;
-                        }
-                    }
+        // 2. Забываем про блоки! Рисуем только пиксели с идеальным зеркалением
+        for(let y = 0; y < center; y++) {
+            for(let x = y; x < center; x++) {
+                let bx = Math.floor(x / CELL_SIZE);
+                let by = Math.floor(y / CELL_SIZE);
+                let cellKey = `${bx},${by}`;
+                if(!blockMap[cellKey]) cellKey = `${by},${bx}`; // Фоллбэк для оси
+                
+                let pat = blockMap[cellKey];
+                if(!pat) continue;
+
+                let px = x % CELL_SIZE;
+                let py = y % CELL_SIZE;
+
+                if (pat[py][px] === 1) {
+                    // Строго 8 точек симметрии
+                    let points = [
+                        [center + x, center + y], [center + y, center + x],
+                        [center - x - 1, center + y], [center - y - 1, center + x],
+                        [center + x, center - y - 1], [center + y, center - x - 1],
+                        [center - x - 1, center - y - 1], [center - y - 1, center - x - 1]
+                    ];
+                    points.forEach(([px, py]) => {
+                        if(px >= 0 && px < size && py >= 0 && py < size) grid[py][px] = 1;
+                    });
                 }
             }
         }
         return grid;
     }
 
-    function generateLayeredMask(size) {
-        let blocks = generateSnowflakeGrid(size, BLOCK_PALETTE, true);
-        let pats = generateSnowflakeGrid(size, PATTERN_PALETTE, true);
-        
-        // Вращаем узоры (эмуляция ImageChops)
-        let rotated180 = pats.map(r => [...r].reverse()).map(r => r.reverse());
-        let composite1 = blocks.map((row, y) => row.map((val, x) => (val === 1 && rotated180[y][x] === 1) ? 1 : 0));
-        
-        let rotated90 = transposeMatrix(composite1).map(r => [...r].reverse());
-        let superPattern = composite1.map((row, y) => row.map((val, x) => (val === 1 && rotated90[y][x] === 1) ? 1 : 0));
-        
-        // Difference (XOR)
-        let finalMask = blocks.map((row, y) => row.map((val, x) => (val !== superPattern[y][x]) ? 1 : 0));
-        return finalMask;
-    }
-
     // ==========================================
-    // 3. ЛОГИКА ПРИЛОЖЕНИЯ
+    // 3. ЛОГІКА ПРИЛОЖЕННЯ
     // ==========================================
-    const state = {
-        scanning: false, locked: false, pendingDecrypt: null, isCryptoMode: false,
-        standardFailCount: 0, activeSearch: false, time: 0,
-        config: { B: { k1: 0.05, k2: 0.13 } }
-    };
-
+    const state = { scanning: false, locked: false, pendingDecrypt: null, standardFailCount: 0, activeSearch: false, time: 0, config: { B: { k1: 0.05, k2: 0.13 } } };
     const els = {
-        bText: document.getElementById('b-text'),
+        bText: document.getElementById('b-text'), bPass: document.getElementById('b-pass'),
         bTextScan: document.getElementById('b-text-scan'),
         mainCreate: document.getElementById('canvas-create').getContext('2d', { willReadFrequently: true }),
         mainScan: document.getElementById('canvas-scan-main').getContext('2d', { willReadFrequently: true }),
         freezeCtx: document.getElementById('canvas-scan-freeze').getContext('2d', { willReadFrequently: true }),
-        video: document.getElementById('video-scan'),
-        flash: document.getElementById('flash-layer'),
-        viewfinder: document.getElementById('viewfinder')
+        video: document.getElementById('video-scan'), flash: document.getElementById('flash-layer'), viewfinder: document.getElementById('viewfinder'),
+        spyOverlay: document.getElementById('spy-overlay'), spyPass: document.getElementById('spy-pass'), spyError: document.getElementById('spy-error')
     };
 
-    function switchScreen(name) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('screen-' + name).classList.add('active');
-    }
-
+    function switchScreen(name) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-' + name).classList.add('active'); }
+    
     function hardReset() {
-        stopScanning();
-        state.locked = false; state.pendingDecrypt = null; state.isCryptoMode = false;
-        state.standardFailCount = 0; state.activeSearch = false; state.time = 0;
-        els.bText.value = ""; els.bTextScan.value = "";
-        els.bTextScan.placeholder = "Результат...";
-        els.bTextScan.className = "w-full p-3 pl-4 rounded-xl h-16 text-sm font-medium status-normal";
-        document.getElementById('create-status').textContent = "";
+        stopScanning(); closeSpy();
+        state.locked=false; state.pendingDecrypt=null; state.standardFailCount=0; state.activeSearch=false; state.time=0;
+        els.bText.value=""; els.bPass.value=""; els.bTextScan.value="";
         document.getElementById('btn-save').classList.add('hidden');
-        els.mainCreate.fillStyle = "#000"; els.mainCreate.fillRect(0,0,512,512);
+        els.mainCreate.fillStyle="#000"; els.mainCreate.fillRect(0,0,512,512);
         switchScreen('home');
     }
 
     // --- GENERATOR ---
     let typingTimer;
-    els.bText.addEventListener('input', () => {
-        clearTimeout(typingTimer);
-        let statusEl = document.getElementById('create-status');
-        if (els.bText.value.includes('|||')) {
-            statusEl.textContent = "🔒 Включено шифрование AES-256-GCM";
-            statusEl.className = "text-xs px-2 h-5 text-orange-400";
-        } else {
-            statusEl.textContent = "🎨 Звичайний орнаментальний код";
-            statusEl.className = "text-xs px-2 h-5 text-teal-400";
-        }
-        typingTimer = setTimeout(generateQR, 300);
-    });
+    function bindGeneratorEvents() {
+        const triggerGen = () => { clearTimeout(typingTimer); typingTimer = setTimeout(generateQR, 300); };
+        els.bText.addEventListener('input', triggerGen);
+        els.bPass.addEventListener('input', triggerGen);
+    }
 
     async function generateQR() {
-        const rawText = els.bText.value;
-        els.mainCreate.fillStyle = "#000"; els.mainCreate.fillRect(0,0,512,512);
-        
+        const rawText = els.bText.value; const pass = els.bPass.value;
+        els.mainCreate.fillStyle="#000"; els.mainCreate.fillRect(0,0,512,512);
         if (!rawText.trim()) { document.getElementById('btn-save').classList.add('hidden'); return; }
 
         let textToEncode = rawText;
-        if (rawText.includes('|||')) {
-            let parts = rawText.split('|||');
-            if (parts.length === 2 && parts[1].trim() !== "") {
-                try {
-                    textToEncode = await encryptData(parts[0].trim(), parts[1].trim());
-                } catch(e) { alert("Помилка шифрування"); return; }
-            }
+        if (pass.trim() !== "") {
+            try { textToEncode = await encryptData(rawText, pass); } catch(e) { alert("Помилка шифрування"); return; }
         }
 
         try {
             const utf8 = unescape(encodeURIComponent(textToEncode));
             const qr = qrcode(0, 'M'); qr.addData(utf8); qr.make();
-            const mc = qr.getModuleCount();
-            const qz = 2, fi = 1, fo = 2;
-            const total = mc + (qz*2) + (fi*2) + (fo*2);
-            const mod = 512 / total;
+            const mc = qr.getModuleCount(); const qz=2, fi=1, fo=2;
+            const total = mc + (qz*2) + (fi*2) + (fo*2); const mod = 512 / total;
 
-            // Фоны рамок
-            els.mainCreate.fillStyle = "rgb(200, 200, 200)"; els.mainCreate.fillRect(0,0,512,512);
-            els.mainCreate.fillStyle = "rgb(50, 50, 50)"; els.mainCreate.fillRect(fo*mod, fo*mod, 512 - (fo*mod*2), 512 - (fo*mod*2));
+            els.mainCreate.fillStyle="rgb(200,200,200)"; els.mainCreate.fillRect(0,0,512,512);
+            els.mainCreate.fillStyle="rgb(50,50,50)"; els.mainCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
 
+            // ДВА РАЗНЫХ УЗОРА ДЛЯ R И G
             const ornSize = mc + (qz*2);
-            const mask = generateLayeredMask(ornSize);
+            const maskR = generatePixelPerfectMask(ornSize, 0); // Палитра 0
+            const maskG = generatePixelPerfectMask(ornSize, 1); // Палитра 1
 
             const coreStart = fo + fi + qz;
             for (let r = 0; r < total; r++) {
@@ -353,8 +318,8 @@
                     let qrR = r - coreStart, qrC = c - coreStart;
                     let isCore = (qrR >= 0 && qrR < mc && qrC >= 0 && qrC < mc);
 
-                    let valR = mask[oR][oC] ? 200 : 50;
-                    let valG = mask[oR][oC] ? 200 : 50;
+                    let valR = maskR[oR][oC] ? 200 : 50;
+                    let valG = maskG[oR][oC] ? 200 : 50; // Используем независимую маску G
                     let valB = 50;
                     if (isCore) valB = qr.isDark(qrR, qrC) ? 200 : 50;
 
@@ -363,150 +328,109 @@
                 }
             }
             document.getElementById('btn-save').classList.remove('hidden');
-        } catch(e) { console.error("QR gen error", e); }
+        } catch(e) { console.error(e); }
     }
 
-    function saveQR() { const a=document.createElement('a'); a.download='crypto-snowflake.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
+    function saveQR() { const a=document.createElement('a'); a.download='crypto-mandala.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
 
-    // --- SCANNER & DECRYPT UI ---
+    // --- SCANNER & SPY UI ---
     async function handleScanResult(data) {
         state.locked = true; stopScanning();
         playBeep(); flashScreen();
         els.viewfinder.classList.add('viewfinder-hunting');
         setTimeout(()=>els.viewfinder.classList.remove('viewfinder-hunting'), 300);
 
-        // Проверка на криптографию
         if (data.trim().endsWith('=')) {
-            state.isCryptoMode = true;
             state.pendingDecrypt = data.trim();
-            els.bTextScan.value = "";
-            els.bTextScan.placeholder = "🔑 ВВЕДІТЬ ПАРОЛЬ ДЛЯ РОЗШИФРУВАННЯ...";
-            els.bTextScan.className = "w-full p-3 pl-4 rounded-xl h-16 text-sm font-medium status-crypto";
-            els.bTextScan.readOnly = false;
-            els.bTextScan.focus();
+            showSpy();
         } else {
-            state.isCryptoMode = false;
-            state.pendingDecrypt = null;
-            els.bTextScan.readOnly = true;
             els.bTextScan.value = data;
-            els.bTextScan.className = "w-full p-3 pl-4 rounded-xl h-16 text-sm font-medium status-normal";
-            els.bTextScan.placeholder = "Результат...";
-            
-            els.bText.value = data;
-            switchScreen('create');
-            generateQR();
+            els.bText.value = data; els.bPass.value = "";
+            switchScreen('create'); generateQR();
         }
     }
 
-    els.bTextScan.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter' && state.isCryptoMode && state.pendingDecrypt) {
-            let pwd = els.bTextScan.value;
+    function showSpy() {
+        els.spyOverlay.classList.remove('hidden');
+        els.spyPass.value = "";
+        els.spyError.style.opacity = '0';
+        setTimeout(() => els.spyPass.focus(), 100);
+    }
+
+    function closeSpy() {
+        els.spyOverlay.classList.add('hidden');
+        state.pendingDecrypt = null;
+    }
+
+    els.spyPass.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter' && state.pendingDecrypt) {
+            let pwd = els.spyPass.value;
             if (!pwd) return;
-            els.bTextScan.placeholder = "⏳ Дешифрування (390k ітерацій)...";
-            els.bTextScan.value = "";
             
-            // Задержка, чтобы браузер успел отрисовать UI до тяжелой крипто-операции
-            await new Promise(r => setTimeout(r, 50));
+            els.spyPass.disabled = true;
+            els.spyPass.placeholder = "⏳ Дешифрування...";
+            await new Promise(r => setTimeout(r, 50)); // Задержка для UI
             
             let result = await decryptData(state.pendingDecrypt, pwd);
-            state.pendingDecrypt = null;
-            state.isCryptoMode = false;
-            els.bTextScan.readOnly = true;
             
+            els.spyPass.disabled = false;
+            els.spyPass.placeholder = "••••••••";
+
             if (result !== null) {
+                closeSpy();
                 els.bTextScan.value = result;
-                els.bTextScan.className = "w-full p-3 pl-4 rounded-xl h-16 text-sm font-medium status-normal";
-                els.bTextScan.placeholder = "Результат...";
-                els.bText.value = result;
-                switchScreen('create');
+                els.bText.value = result; els.bPass.value = pwd; // Сохраняем пароль
+                switchScreen('create'); generateQR();
             } else {
-                els.bTextScan.value = "";
-                els.bTextScan.placeholder = "❌ НЕВІРНИЙ ПАРОЛЬ. Спробуйте ще раз...";
-                els.bTextScan.className = "w-full p-3 pl-4 rounded-xl h-16 text-sm font-medium status-crypto";
-                state.isCryptoMode = true;
-                state.pendingDecrypt = els.bTextScan.dataset.pending || ""; 
+                // Тряска и ошибка
+                els.spyError.style.opacity = '1';
+                els.spyPass.classList.add('shake-anim');
+                setTimeout(() => els.spyPass.classList.remove('shake-anim'), 500);
+                els.spyPass.value = "";
+                els.spyPass.focus();
             }
         }
     });
 
-    // --- SCANNER CORE (SCI Math от QRnament) ---
+    // --- SCANNER CORE (SCI Math) ---
     function applyBradleyStandard(imgData, chIdx) {
-        const w = imgData.width, h = imgData.height, d = imgData.data, out = new Uint8ClampedArray(w*h*4), intImg = new Int32Array(w*h), s = Math.floor(w/8), t = 15;
+        const w=imgData.width,h=imgData.height,d=imgData.data,out=new Uint8ClampedArray(w*h*4),intImg=new Int32Array(w*h),s=Math.floor(w/8),t=15;
         for(let y=0;y<h;y++){let sum=0;for(let x=0;x<w;x++){sum+=d[(y*w+x)*4+chIdx];intImg[y*w+x]=(y>0?intImg[(y-1)*w+x]:0)+sum;}}
         for(let y=0;y<h;y++){for(let x=0;x<w;x++){let x1=Math.max(x-s,0),x2=Math.min(x+s,w-1),y1=Math.max(y-s,0),y2=Math.min(y+s,h-1),cnt=(x2-x1)*(y2-y1);let sum=intImg[y2*w+x2]-intImg[y1*w+x2]-intImg[y2*w+x1]+intImg[y1*w+x1];let val=d[(y*w+x)*4+chIdx];let res=(val*cnt<sum*(100-t)/100)?0:255;let idx=(y*w+x)*4;out[idx]=out[idx+1]=out[idx+2]=res;out[idx+3]=255;}}
-        return new ImageData(out, w, h);
+        return new ImageData(out,w,h);
     }
-    function applySCIMath(imgData, cfg) {
-        const d = imgData.data;
-        for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let res=(b-(r*cfg.k1+g*cfg.k2))*1.5;res=Math.max(0,Math.min(255,res));d[i]=res;d[i+1]=res;d[i+2]=res;d[i+3]=255;}
-    }
+    function applySCIMath(imgData,cfg){const d=imgData.data;for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let res=(b-(r*cfg.k1+g*cfg.k2))*1.5;res=Math.max(0,Math.min(255,res));d[i]=res;d[i+1]=res;d[i+2]=res;d[i+3]=255;}}
     function getOscParam(t,period,min,max){const c=t%period,h=period/2,p=(c<h)?c/h:(period-c)/h;return min+p*(max-min);}
 
     function processLoop() {
-        if (!state.scanning) return;
-        let sourceCopy = null;
-        if (!els.video.classList.contains('hidden') && els.video.readyState === els.video.HAVE_ENOUGH_DATA) {
-            els.mainScan.drawImage(els.video, 0, 0, 512, 512); sourceCopy = els.mainScan.getImageData(0, 0, 512, 512);
-        } else if (!document.getElementById('canvas-scan-freeze').classList.contains('hidden')) {
-            sourceCopy = els.freezeCtx.getImageData(0, 0, 512, 512);
-        }
-        if (sourceCopy && !state.locked) {
-            if (state.standardFailCount > 45 && !state.activeSearch) state.activeSearch = true;
-            let found = false;
-            if (state.activeSearch) {
-                state.time++;
-                let cfg = {...state.config.B, gain: getOscParam(state.time, 100, 0.5, 3.5), offset: getOscParam(state.time, 250, -80, 0)};
-                let work = new ImageData(new Uint8ClampedArray(sourceCopy.data), 512, 512);
-                applySCIMath(work, cfg);
-                let mono = applyBradleyStandard(work, 0);
-                let code = jsQR(mono.data, 512, 512, {inversionAttempts:"attemptBoth"});
-                if(code){handleScanResult(code.data);found=true;}
-                if(!found)els.mainScan.putImageData(work,0,0);
-            } else {
-                state.standardFailCount++;
-                let mono = applyBradleyStandard(sourceCopy, 2);
-                let code = jsQR(mono.data, 512, 512, {inversionAttempts:"attemptBoth"});
-                if(code){handleScanResult(code.data);found=true;state.standardFailCount=0;}
-                if(!found)els.mainScan.putImageData(sourceCopy,0,0);
-            }
-        }
-        requestAnimationFrame(processLoop);
+        if(!state.scanning)return;let sourceCopy=null;
+        if(!els.video.classList.contains('hidden')&&els.video.readyState===els.video.HAVE_ENOUGH_DATA){els.mainScan.drawImage(els.video,0,0,512,512);sourceCopy=els.mainScan.getImageData(0,0,512,512);}
+        else if(!document.getElementById('canvas-scan-freeze').classList.contains('hidden')){sourceCopy=els.freezeCtx.getImageData(0,0,512,512);}
+        if(sourceCopy&&!state.locked){
+            if(state.standardFailCount>45&&!state.activeSearch)state.activeSearch=true;let found=false;
+            if(state.activeSearch){state.time++;let cfg={...state.config.B,gain:getOscParam(state.time,100,0.5,3.5),offset:getOscParam(state.time,250,-80,0)};let work=new ImageData(new Uint8ClampedArray(sourceCopy.data),512,512);applySCIMath(work,cfg);let mono=applyBradleyStandard(work,0);let code=jsQR(mono.data,512,512,{inversionAttempts:"attemptBoth"});if(code){handleScanResult(code.data);found=true;}if(!found)els.mainScan.putImageData(work,0,0);}
+            else{state.standardFailCount++;let mono=applyBradleyStandard(sourceCopy,2);let code=jsQR(mono.data,512,512,{inversionAttempts:"attemptBoth"});if(code){handleScanResult(code.data);found=true;state.standardFailCount=0;}if(!found)els.mainScan.putImageData(sourceCopy,0,0);}
+        }requestAnimationFrame(processLoop);
     }
 
     async function startCamera() {
-        state.locked=false; state.pendingDecrypt=null; state.isCryptoMode=false; state.standardFailCount=0; state.activeSearch=false;
-        els.bTextScan.value=""; els.bTextScan.readOnly=true; els.bTextScan.placeholder="Результат...";
-        els.viewfinder.classList.remove('hidden'); els.video.classList.remove('hidden'); document.getElementById('canvas-scan-freeze').classList.add('hidden');
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280}}});
-            els.video.srcObject=stream;els.video.play();state.scanning=true;requestAnimationFrame(processLoop);
-        } catch(e){alert("Помилка камери: "+e);}
+        state.locked=false;state.pendingDecrypt=null;state.standardFailCount=0;state.activeSearch=false;
+        els.viewfinder.classList.remove('hidden');els.video.classList.remove('hidden');document.getElementById('canvas-scan-freeze').classList.add('hidden');
+        try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280}}});els.video.srcObject=stream;els.video.play();state.scanning=true;requestAnimationFrame(processLoop);}catch(e){alert("Помилка камери");}
     }
 
     function handleFile(e) {
-        const file = e.target.files[0]; if(!file)return;
-        state.locked=false;state.pendingDecrypt=null;state.isCryptoMode=false;state.standardFailCount=100;state.activeSearch=true;
-        els.viewfinder.classList.remove('hidden');
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                els.freezeCtx.drawImage(img, 0,0,512,512);
-                document.getElementById('canvas-scan-freeze').classList.remove('hidden'); els.video.classList.add('hidden');
-                state.scanning=true;requestAnimationFrame(processLoop);
-            }; img.src = ev.target.result;
-        }; reader.readAsDataURL(file);
+        const file=e.target.files[0];if(!file)return;state.locked=false;state.pendingDecrypt=null;state.standardFailCount=100;state.activeSearch=true;
+        els.viewfinder.classList.remove('hidden');const reader=new FileReader();
+        reader.onload=(ev)=>{const img=new Image();img.onload=()=>{els.freezeCtx.drawImage(img,0,0,512,512);document.getElementById('canvas-scan-freeze').classList.remove('hidden');els.video.classList.add('hidden');state.scanning=true;requestAnimationFrame(processLoop);};img.src=ev.target.result;};reader.readAsDataURL(file);
     }
 
-    function stopScanning() {
-        state.scanning=false; if(els.video.srcObject)els.video.srcObject.getTracks().forEach(t=>t.stop());
-        els.viewfinder.classList.add('hidden'); els.video.classList.add('hidden'); document.getElementById('canvas-scan-freeze').classList.add('hidden');
-    }
-
+    function stopScanning() { state.scanning=false;if(els.video.srcObject)els.video.srcObject.getTracks().forEach(t=>t.stop());els.viewfinder.classList.add('hidden');els.video.classList.add('hidden');document.getElementById('canvas-scan-freeze').classList.add('hidden'); }
     function playBeep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;o.type="sine";g.gain.setValueAtTime(0.1,c.currentTime);g.gain.exponentialRampToValueAtTime(0.00001,c.currentTime+0.15);o.start();o.stop(c.currentTime+0.15);}catch(e){}}
     function flashScreen(){els.flash.classList.add('flash-anim');setTimeout(()=>els.flash.classList.remove('flash-anim'),400);}
 
     document.getElementById('file-input').addEventListener('change', handleFile);
+    bindGeneratorEvents();
     </script>
 </body>
 </html>
