@@ -5,100 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CryptoSnowQR Artifact</title>
     
-    <!-- Древний шрифт -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <!-- Библиотеки -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <style>
-        :root { --rune-gold: #d4af37; --rune-glow: #ffbf00; --stone-dark: #1a1a1a; }
+        :root { --rune-gold: #d4af37; --rune-glow: #ffbf00; }
         body { 
-            background: #000; 
-            margin: 0; padding: 0; 
-            font-family: 'Cinzel', serif; 
-            overflow-x: hidden; 
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: #000; margin: 0; padding: 0; 
+            font-family: 'Cinzel', serif; overflow: hidden; 
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* КОНТЕЙНЕР-АРТЕФАКТ */
-        .artifact-container {
+        /* 1. АДАПТИВНЫЙ КОНТЕЙНЕР БАЗА */
+        .crypto-container {
             position: relative;
             width: 100vw;
-            height: 56.25vw; /* Сохраняем пропорции 16:9 */
+            height: 56.25vw; /* 16/9 */
             max-height: 100vh;
-            max-width: 177.78vh; /* Обратный расчет для вертикальных экранов */
-            background: url('https://z-cdn-media.chatglm.cn/files/bd51f3c9-3b69-4c3f-a172-3d76659e9111.png?auth_key=1883631919-1c3b9eaec91241dab4fe859895e182ba-0-ee05bfa42ec980bbb63b86342e3d5cc4') center/cover no-repeat;
+            max-width: 177.78vh; /* 16/9 reverse */
+            background: url('Brutal Runic CryptoSnowQR (1).jpg') center/cover no-repeat;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
-        /* АНИМАЦИЯ СВЕЧЕНИЯ РУН */
+        /* АНИМАЦИЯ ЯНТАРНОГО ПУЛЬСА */
         @keyframes amberPulse {
             0%, 100% { filter: drop-shadow(0 0 10px #5c3d00) drop-shadow(0 0 20px #2a1a00); }
-            50% { filter: drop-shadow(0 0 25px var(--rune-glow)) drop-shadow(0 0 50px #8b6914) brightness(1.1); }
+            50% { filter: drop-shadow(0 0 30px var(--rune-glow)) drop-shadow(0 0 60px #8b6914) brightness(1.15); }
         }
-        .artifact-container.glow-active {
-            animation: amberPulse 2s infinite ease-in-out;
-        }
+        .crypto-container.glow-active { animation: amberPulse 2s infinite ease-in-out; }
 
-        /* СЛОИ ВВОДА (ПОВЕРХ КАМНЯ) */
+        /* 2. ТОЧНЫЕ КООРДИНАТЫ ЭЛЕМЕНТОВ */
         .ui-layer {
             position: absolute;
             background: transparent;
-            border: none;
-            outline: none;
-            resize: none;
+            border: none; outline: none; resize: none;
             color: var(--rune-gold);
             text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
             caret-color: var(--rune-glow);
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
+            font-family: 'Cinzel', serif; font-weight: 700;
             letter-spacing: 0.05em;
-            box-sizing: border-box;
-            padding: 0 1vw;
+            box-sizing: border-box; padding: 0 1vw;
         }
         .ui-layer::placeholder { color: rgba(212, 175, 55, 0.4); text-shadow: none; }
         .ui-layer:focus { outline: none; }
 
-        /* Позиционирование (рассчитано в % от 1600x900) */
-        #ui-text { top: 11.5%; left: 17.5%; width: 65%; height: 7%; font-size: 1.8vw; text-align: center; line-height: 1.2; }
-        #ui-qr-wrapper { top: 24%; left: 31.5%; width: 37%; height: 51.5%; display: flex; justify-content: center; align-items: center; pointer-events: none; }
-        #canvas-create { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; border-radius: 4px; }
-        #ui-pass { top: 82%; left: 33.5%; width: 33%; height: 5.5%; font-size: 1.6vw; text-align: center; letter-spacing: 0.3em; }
+        /* Точное позиционирование из ТЗ */
+        #ui-text { 
+            left: 26.5%; top: 21.6%; width: 47.2%; height: 8.4%; 
+            font-size: 2vw; text-align: center; line-height: 1.2; 
+        }
+        
+        #ui-qr-wrapper { 
+            left: 39.1%; top: 35.3%; width: 22.1%; height: 40.6%; 
+            display: flex; justify-content: center; align-items: center; 
+            pointer-events: none; 
+        }
+        
+        #canvas-create { 
+            max-width: 100%; max-height: 100%; 
+            image-rendering: pixelated; /* Для четких пикселей мандалы */
+            image-rendering: crisp-edges; 
+        }
 
-        /* КНОПКИ УПРАВЛЕНИЯ */
+        /* Поле ключа (позиционировано визуально по центру под QR) */
+        #ui-pass { 
+            left: 35%; top: 82%; width: 30%; height: 5.5%; 
+            font-size: 1.6vw; text-align: center; letter-spacing: 0.3em; 
+        }
+
+        /* КНОПКИ УПРАВЛЕНИЯ (скрыты по умолчанию, появляются по необходимости) */
         .action-btn {
-            position: absolute;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            color: var(--rune-gold);
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
-            padding: 1vw 2vw;
-            cursor: pointer;
-            transition: all 0.3s;
-            border-radius: 4px;
-            font-size: 1.2vw;
+            position: absolute; background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(212, 175, 55, 0.3); color: var(--rune-gold);
+            font-family: 'Cinzel', serif; font-weight: 700;
+            padding: 1vw 2vw; cursor: pointer; transition: all 0.3s;
+            border-radius: 4px; font-size: 1.2vw; z-index: 10;
         }
         .action-btn:hover { background: rgba(212, 175, 55, 0.2); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
         #btn-save { bottom: 3%; left: 3%; display: none; }
         #btn-scan { bottom: 3%; right: 3%; }
 
-        /* СКРЫТЫЕ ЭЛЕМЕНТЫ СКАНЕРА */
+        /* СКРЫТЫЕ ЭЛЕМЕНТЫ И МОДАЛКИ */
         .hidden { display: none !important; }
-        
-        /* МОДАЛЬНОЕ ОКНО СКАНЕРА */
-        .scan-modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
+        .scan-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .scanner-box { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: #111; border-radius: 20px; overflow: hidden; border: 2px solid #333; }
         .viewfinder-corners { position: absolute; inset: 20px; pointer-events: none; z-index: 15; }
         .corner { position: absolute; width: 30px; height: 30px; border-color: var(--rune-gold); }
@@ -107,24 +102,20 @@
         .bl { bottom: 0; left: 0; border-bottom: 4px solid; border-left: 4px solid; border-radius: 0 0 0 5px; }
         .br { bottom: 0; right: 0; border-bottom: 4px solid; border-right: 4px solid; border-radius: 0 0 5px 0; }
         .viewfinder-hunting .corner { border-color: #00ff41; box-shadow: 0 0 20px #00ff41; }
-        
         .scanner-controls { margin-top: 20px; display: flex; gap: 15px; width: 100%; max-width: 400px; }
         .scan-btn { flex: 1; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: 'Cinzel', serif; border-radius: 12px; cursor: pointer; font-size: 16px; }
 
-        /* ШПИОН ОВЕРЛЕЙ */
-        .spy-overlay { backdrop-filter: blur(8px); transition: opacity 0.3s; }
+        .spy-overlay { backdrop-filter: blur(8px); }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         .spy-container { box-shadow: 0 0 40px rgba(168, 85, 247, 0.3); background: #111; border: 2px solid #a855f7; }
-        
         @keyframes flash { 0% { opacity: 0; } 20% { opacity: 0.8; } 100% { opacity: 0; } }
         .flash-anim { animation: flash 0.3s ease-out; }
     </style>
 </head>
 <body>
 
-    <!-- ГЛАВНЫЙ АРТЕФАКТ -->
-    <div id="artifact" class="artifact-container">
+    <div id="artifact" class="crypto-container">
         <textarea id="ui-text" class="ui-layer" placeholder="Введіть текст таємниці..."></textarea>
         
         <div id="ui-qr-wrapper">
@@ -137,7 +128,6 @@
         <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО СКАНЕРА -->
     <div id="scan-modal" class="scan-modal hidden">
         <div class="scanner-box">
             <video id="video-scan" class="absolute inset-0 w-full h-full object-cover hidden z-10" playsinline></video>
@@ -155,13 +145,12 @@
         <input type="file" id="file-input" accept="image/*" class="hidden">
     </div>
 
-    <!-- ШПИОН ОВЕРЛЕЙ -->
     <div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 z-[200] flex flex-col items-center justify-center p-6">
         <div class="spy-container p-8 rounded-3xl text-center max-w-sm w-full">
             <div class="text-7xl mb-2 animate-bounce">🕵️‍♂️</div>
             <div class="flex justify-center text-4xl mb-4 -mt-6">👀</div>
             <h2 class="text-2xl font-black text-purple-300 mb-2" style="font-family: sans-serif;">АГЕНТ, СТОП!</h2>
-            <p class="text-zinc-400 mb-6 text-sm" style="font-family: sans-serif;">Ці дані зашифровані. Назовіть секретне слово.</p>
+            <p class="text-zinc-400 mb-6 text-sm" style="font-family: sans-serif;">Ці дані зашифровані. Назовьте секретне слово.</p>
             <input type="password" id="spy-pass" class="w-full p-4 rounded-xl bg-black text-white text-center text-2xl tracking-widest mb-2 border-purple-500 focus:border-pink-500 outline-none" style="font-family: monospace;" placeholder="••••••••">
             <p id="spy-error" class="text-red-500 text-sm h-6 font-bold transition-opacity opacity-0" style="font-family: sans-serif;">ДЕРЖАВА НЕ ДОВІРЯЄ ВАМ</p>
             <button onclick="closeSpy()" class="mt-4 text-zinc-600 text-xs underline" style="font-family: sans-serif;">Відміна</button>
@@ -171,9 +160,7 @@
     <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
-    // ==========================================
     // 1. КРИПТОГРАФІЯ
-    // ==========================================
     const CRYPTO_CONFIG = { SALT_SIZE: 16, KEY_SIZE: 32, NONCE_SIZE: 12, ITERATIONS: 390000 };
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
@@ -195,9 +182,13 @@
         } catch(e) { return null; }
     }
 
-    // ==========================================
-    // 2. ГЕНЕРАТОР ІДЕАЛЬНОЇ СИМЕТРІЇ (Піксельна точність)
-    // ==========================================
+    // 2. ЯДРО ГЕНЕРАТОРА (КРИТИЧЕСКОЕ ТРЕБОВАНИЕ: НЕЧЕТНАЯ РАЗМЕРНОСТЬ)
+    
+    // Функция жесткого принуждения к нечетному числу
+    function forceOdd(n) {
+        return n % 2 === 0 ? n + 1 : n;
+    }
+
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -225,8 +216,11 @@
     const PAL = [[80, 120, 180], [180, 200, 160]];
 
     function generateMask(size, palId) {
+        // Гарантируем, что size НЕЧЕТНОЕ
+        size = forceOdd(size);
+        
         let grid = Array(size).fill(null).map(()=>Array(size).fill(0));
-        let center = Math.floor(size / 2);
+        let center = Math.floor(size / 2); // Идеальное ядро (например, 22 для размера 45)
         let bMap = {}, pal = PAL[palId];
         
         for(let by=0; by<Math.ceil(size/7); by++) {
@@ -240,11 +234,16 @@
                 bMap[`${bx},${by}`] = p;
             }
         }
+        
+        // Построение идеальной симметрии от центрального пикселя
         for(let y=0; y<center; y++) {
             for(let x=y; x<center; x++) {
-                let k = `${Math.floor(x/7)},${Math.floor(y/7)}`; if(!bMap[k]) k=`${Math.floor(y/7)},${Math.floor(x/7)}`;
+                let k = `${Math.floor(x/7)},${Math.floor(y/7)}`; 
+                if(!bMap[k]) k=`${Math.floor(y/7)},${Math.floor(x/7)}`;
                 let p = bMap[k]; if(!p) continue;
+                
                 if(p[y%7][x%7] === 1) {
+                    // 8 точек зеркального отражения от ядра
                     [[center+x,center+y],[center+y,center+x],[center-x-1,center+y],[center-y-1,center+x],[center+x,center-y-1],[center+y,center-x-1],[center-x-1,center-y-1],[center-y-1,center-x-1]].forEach(([px,py])=>{
                         if(px>=0&&px<size&&py>=0&&py<size) grid[py][px]=1;
                     });
@@ -254,9 +253,7 @@
         return grid;
     }
 
-    // ==========================================
     // 3. ЛОГІКА ПРИЛОЖЕННЯ
-    // ==========================================
     const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
@@ -269,11 +266,11 @@
         btnSave: document.getElementById('btn-save')
     };
 
-    // АНИМАЦИЯ СВЕЧЕНИЯ
+    // АНИМАЦИЯ СВЕЧЕНИЯ КАМНЯ
     els.pass.addEventListener('focus', () => els.artifact.classList.add('glow-active'));
     els.pass.addEventListener('blur', () => els.artifact.classList.remove('glow-active'));
 
-    // ГЕНЕРАЦИЯ QR
+    // ГЕНЕРАЦИЯ
     let genTimer;
     function bindGen() {
         const trig = () => { clearTimeout(genTimer); genTimer = setTimeout(generateQR, 300); };
@@ -294,18 +291,20 @@
             const qr = qrcode(0, 'M'); qr.addData(utf8); qr.make();
             let mc = qr.getModuleCount();
             let qz=2, fi=1, fo=2;
-            let total = mc + (qz*2) + (fi*2) + (fo*2);
             
-            // ФИКСАЦИЯ НЕЧЕТНОГО ЦЕНТРА
-            if (total % 2 === 0) { qz++; total += 2; } 
+            // ПРИНУДИТЕЛЬНОЕ НЕЧЕТНОЕ ЗНАЧЕНИЕ ДЛЯ ИДЕАЛЬНОГО ЦЕНТРА
+            let ornSize = forceOdd(mc + (qz*2));
+            let total = forceOdd(ornSize + (fi*2) + (fo*2));
             
             const mod = 512 / total;
+            
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
             els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
 
-            const ornSize = mc + (qz*2);
+            // Генерация двух независимых нечетных масок
             const maskR = generateMask(ornSize, 0);
             const maskG = generateMask(ornSize, 1);
+            
             const coreStart = fo + fi + qz;
 
             for (let r = 0; r < total; r++) {
@@ -337,10 +336,8 @@
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
     async function handleScanResult(data) {
-        state.locked=true; stopScanning();
-        playBeep(); flashScreen();
+        state.locked=true; stopScanning(); playBeep(); flashScreen();
         els.viewfinder.classList.add('viewfinder-hunting'); setTimeout(()=>els.viewfinder.classList.remove('viewfinder-hunting'),300);
-        
         if (data.trim().endsWith('=')) { state.pendingDecrypt=data.trim(); showSpy(); }
         else { closeScanner(); els.text.value=data; els.pass.value=""; generateQR(); }
     }
@@ -360,7 +357,7 @@
         }
     });
 
-    // ЯДРО СКАНЕРА (SCI MATH)
+    // ЯДРО СКАНЕРА
     function applyBradley(img,ch){const w=img.width,h=img.height,d=img.data,o=new Uint8ClampedArray(w*h*4),ii=new Int32Array(w*h),s=Math.floor(w/8),t=15;for(let y=0;y<h;y++){let sum=0;for(let x=0;x<w;x++){sum+=d[(y*w+x)*4+ch];ii[y*w+x]=(y>0?ii[(y-1)*w+x]:0)+sum;}}for(let y=0;y<h;y++){for(let x=0;x<w;x++){let x1=Math.max(x-s,0),x2=Math.min(x+s,w-1),y1=Math.max(y-s,0),y2=Math.min(y+s,h-1),c=(x2-x1)*(y2-y1);let sum=ii[y2*w+x2]-ii[y1*w+x2]-ii[y2*w+x1]+ii[y1*w+x1];let v=d[(y*w+x)*4+ch];let r=(v*c<sum*(100-t)/100)?0:255;let i=(y*w+x)*4;o[i]=o[i+1]=o[i+2]=r;o[i+3]=255;}}return new ImageData(o,w,h);}
     function applySCI(img,cfg){const d=img.data;for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let res=(b-(r*cfg.k1+g*cfg.k2))*1.5;res=Math.max(0,Math.min(255,res));d[i]=res;d[i+1]=res;d[i+2]=res;d[i+3]=255;}}
     function getOsc(t,p,mn,mx){const c=t%p,h=p/2,ps=(c<h)?c/h:(p-c)/h;return mn+ps*(mx-mn);}
@@ -383,7 +380,6 @@
     }
     function handleFile(e){const file=e.target.files[0];if(!file)return;state.locked=false;state.pendingDecrypt=null;state.failCount=100;state.activeSearch=true;els.viewfinder.classList.remove('hidden');const r=new FileReader();r.onload=(ev)=>{const img=new Image();img.onload=()=>{els.cFreeze.drawImage(img,0,0,512,512);document.getElementById('canvas-scan-freeze').classList.remove('hidden');els.video.classList.add('hidden');state.scanning=true;requestAnimationFrame(processLoop);};img.src=ev.target.result;};r.readAsDataURL(file);}
     function stopScanning(){state.scanning=false;if(els.video.srcObject)els.video.srcObject.getTracks().forEach(t=>t.stop());els.viewfinder.classList.add('hidden');els.video.classList.add('hidden');document.getElementById('canvas-scan-freeze').classList.add('hidden');}
-    
     function playBeep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;o.type="sine";g.gain.setValueAtTime(0.1,c.currentTime);g.gain.exponentialRampToValueAtTime(0.00001,c.currentTime+0.15);o.start();o.stop(c.currentTime+0.15);}catch(e){}}
     function flashScreen(){const f=document.getElementById('flash-layer');f.classList.add('flash-anim');setTimeout(()=>f.classList.remove('flash-anim'),400);}
 
