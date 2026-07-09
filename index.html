@@ -29,7 +29,10 @@
             height: 56.25vw; /* 16/9 */
             max-height: 100vh;
             max-width: 177.78vh; /* 16/9 reverse */
-            background: url('Brutal Runic CryptoSnowQR (1).jpg') center/cover no-repeat;
+            /* ИСПРАВЛЕНО: Универсальный относительный путь без пробелов */
+            background-image: url('bg.jpg');
+            background-size: cover;
+            background-position: center;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
@@ -55,31 +58,11 @@
         .ui-layer::placeholder { color: rgba(212, 175, 55, 0.4); text-shadow: none; }
         .ui-layer:focus { outline: none; }
 
-        /* Точное позиционирование из ТЗ */
-        #ui-text { 
-            left: 26.5%; top: 21.6%; width: 47.2%; height: 8.4%; 
-            font-size: 2vw; text-align: center; line-height: 1.2; 
-        }
-        
-        #ui-qr-wrapper { 
-            left: 39.1%; top: 35.3%; width: 22.1%; height: 40.6%; 
-            display: flex; justify-content: center; align-items: center; 
-            pointer-events: none; 
-        }
-        
-        #canvas-create { 
-            max-width: 100%; max-height: 100%; 
-            image-rendering: pixelated; /* Для четких пикселей мандалы */
-            image-rendering: crisp-edges; 
-        }
+        #ui-text { left: 26.5%; top: 21.6%; width: 47.2%; height: 8.4%; font-size: 2vw; text-align: center; line-height: 1.2; }
+        #ui-qr-wrapper { left: 39.1%; top: 35.3%; width: 22.1%; height: 40.6%; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        #canvas-create { max-width: 100%; max-height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+        #ui-pass { left: 35%; top: 82%; width: 30%; height: 5.5%; font-size: 1.6vw; text-align: center; letter-spacing: 0.3em; }
 
-        /* Поле ключа (позиционировано визуально по центру под QR) */
-        #ui-pass { 
-            left: 35%; top: 82%; width: 30%; height: 5.5%; 
-            font-size: 1.6vw; text-align: center; letter-spacing: 0.3em; 
-        }
-
-        /* КНОПКИ УПРАВЛЕНИЯ (скрыты по умолчанию, появляются по необходимости) */
         .action-btn {
             position: absolute; background: rgba(0,0,0,0.6);
             border: 1px solid rgba(212, 175, 55, 0.3); color: var(--rune-gold);
@@ -91,7 +74,6 @@
         #btn-save { bottom: 3%; left: 3%; display: none; }
         #btn-scan { bottom: 3%; right: 3%; }
 
-        /* СКРЫТЫЕ ЭЛЕМЕНТЫ И МОДАЛКИ */
         .hidden { display: none !important; }
         .scan-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .scanner-box { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: #111; border-radius: 20px; overflow: hidden; border: 2px solid #333; }
@@ -117,13 +99,10 @@
 
     <div id="artifact" class="crypto-container">
         <textarea id="ui-text" class="ui-layer" placeholder="Введіть текст таємниці..."></textarea>
-        
         <div id="ui-qr-wrapper">
             <canvas id="canvas-create" width="512" height="512"></canvas>
         </div>
-        
         <input type="password" id="ui-pass" class="ui-layer" placeholder="• • • К Л Ю Ч • • •">
-        
         <button id="btn-save" class="action-btn" onclick="saveQR()">[+] ЗБЕРЕГТИ</button>
         <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
     </div>
@@ -161,7 +140,6 @@
 
     <script>
     // 1. КРИПТОГРАФІЯ
-    const CRYPTO_CONFIG = { SALT_SIZE: 16, KEY_SIZE: 32, NONCE_SIZE: 12, ITERATIONS: 390000 };
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
         const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -182,13 +160,7 @@
         } catch(e) { return null; }
     }
 
-    // 2. ЯДРО ГЕНЕРАТОРА (КРИТИЧЕСКОЕ ТРЕБОВАНИЕ: НЕЧЕТНАЯ РАЗМЕРНОСТЬ)
-    
-    // Функция жесткого принуждения к нечетному числу
-    function forceOdd(n) {
-        return n % 2 === 0 ? n + 1 : n;
-    }
-
+    // 2. ЯДРО ГЕНЕРАТОРА (ПОЛНОСТЬЮ ПЕРЕПИСАНО ПО ТВОЕМУ АЛГОРИТМУ)
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -216,41 +188,59 @@
     const PAL = [[80, 120, 180], [180, 200, 160]];
 
     function generateMask(size, palId) {
-        // Гарантируем, что size НЕЧЕТНОЕ
-        size = forceOdd(size);
+        // ПРИНУДИТЕЛЬНАЯ НЕЧЕТНОСТЬ
+        if (size % 2 === 0) size += 1;
+
+        // ИДЕАЛЬНЫЙ ЦЕНТР
+        let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
+        let centerY = Math.floor(size / 2);
+        let centerX = Math.floor(size / 2);
         
-        let grid = Array(size).fill(null).map(()=>Array(size).fill(0));
-        let center = Math.floor(size / 2); // Идеальное ядро (например, 22 для размера 45)
-        let bMap = {}, pal = PAL[palId];
-        
-        for(let by=0; by<Math.ceil(size/7); by++) {
-            for(let bx=by; bx<Math.ceil(size/7); bx++) {
-                let p = PATTERNS[Math.floor(Math.random()*PATTERNS.length)];
-                let c = pal[Math.floor(Math.random()*pal.length)];
-                if(JSON.stringify(p)===JSON.stringify(solidBlock)) {
-                    p = PATTERNS[FILLER_IDX[Math.floor(Math.random()*FILLER_IDX.length)]];
-                    c = c > 128 ? 20 : 230;
+        let pal = PAL[palId];
+        let maxBlock = Math.ceil(centerY / 7) + 1;
+        let blockMap = {};
+
+        // Предзаполнение блоков только для октанта
+        for(let by = 0; by < maxBlock; by++) {
+            for(let bx = by; bx < maxBlock; bx++) {
+                let pat = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+                let col = pal[Math.floor(Math.random() * pal.length)];
+                if(JSON.stringify(pat) === JSON.stringify(solidBlock)) {
+                    pat = PATTERNS[FILLER_IDX[Math.floor(Math.random() * FILLER_IDX.length)]];
                 }
-                bMap[`${bx},${by}`] = p;
+                blockMap[`${bx},${by}`] = pat;
             }
         }
-        
-        // Построение идеальной симметрии от центрального пикселя
-        for(let y=0; y<center; y++) {
-            for(let x=y; x<center; x++) {
-                let k = `${Math.floor(x/7)},${Math.floor(y/7)}`; 
-                if(!bMap[k]) k=`${Math.floor(y/7)},${Math.floor(x/7)}`;
-                let p = bMap[k]; if(!p) continue;
+
+        // Отрисовка строго 1/8 (Октант) и зеркалирование в 8 сторон
+        for(let y = 0; y <= centerY; y++) {
+            for(let x = y; x <= centerX; x++) {
+                let bx = Math.floor(x / 7);
+                let by = Math.floor(y / 7);
+                let key = `${bx},${by}`;
+                if(!blockMap[key]) key = `${by},${bx}`;
                 
-                if(p[y%7][x%7] === 1) {
-                    // 8 точек зеркального отражения от ядра
-                    [[center+x,center+y],[center+y,center+x],[center-x-1,center+y],[center-y-1,center+x],[center+x,center-y-1],[center+y,center-x-1],[center-x-1,center-y-1],[center-y-1,center-x-1]].forEach(([px,py])=>{
-                        if(px>=0&&px<size&&py>=0&&py<size) grid[py][px]=1;
-                    });
+                let pat = blockMap[key];
+                if(!pat) continue;
+
+                let px = x % 7;
+                let py = y % 7;
+                
+                if(pat[py][px] === 1) {
+                    let value = 1;
+                    // СТРОГОЕ 8-КРАТНОЕ ЗЕРКАЛИРОВАНИЕ ПО ТВОЕЙ ФОРМУЛЕ
+                    matrix[centerY + y][centerX + x] = value;
+                    matrix[centerY + x][centerX + y] = value;
+                    matrix[centerY - y][centerX + x] = value;
+                    matrix[centerY - x][centerX + y] = value;
+                    matrix[centerY + y][centerX - x] = value;
+                    matrix[centerY + x][centerX - y] = value;
+                    matrix[centerY - y][centerX - x] = value;
+                    matrix[centerY - x][centerX - y] = value;
                 }
             }
         }
-        return grid;
+        return matrix;
     }
 
     // 3. ЛОГІКА ПРИЛОЖЕННЯ
@@ -266,11 +256,9 @@
         btnSave: document.getElementById('btn-save')
     };
 
-    // АНИМАЦИЯ СВЕЧЕНИЯ КАМНЯ
     els.pass.addEventListener('focus', () => els.artifact.classList.add('glow-active'));
     els.pass.addEventListener('blur', () => els.artifact.classList.remove('glow-active'));
 
-    // ГЕНЕРАЦИЯ
     let genTimer;
     function bindGen() {
         const trig = () => { clearTimeout(genTimer); genTimer = setTimeout(generateQR, 300); };
@@ -292,19 +280,21 @@
             let mc = qr.getModuleCount();
             let qz=2, fi=1, fo=2;
             
-            // ПРИНУДИТЕЛЬНОЕ НЕЧЕТНОЕ ЗНАЧЕНИЕ ДЛЯ ИДЕАЛЬНОГО ЦЕНТРА
-            let ornSize = forceOdd(mc + (qz*2));
-            let total = forceOdd(ornSize + (fi*2) + (fo*2));
+            // Гарантируем нечетность для орнамента
+            let ornSize = mc + (qz*2);
+            if (ornSize % 2 === 0) ornSize += 1;
+            
+            // Гарантируем нечетность для общего размера
+            let total = ornSize + (fi*2) + (fo*2);
+            if (total % 2 === 0) total += 1;
             
             const mod = 512 / total;
             
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
             els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
 
-            // Генерация двух независимых нечетных масок
             const maskR = generateMask(ornSize, 0);
             const maskG = generateMask(ornSize, 1);
-            
             const coreStart = fo + fi + qz;
 
             for (let r = 0; r < total; r++) {
@@ -316,8 +306,8 @@
                     let oR=r-(fo+fi), oC=c-(fo+fi), qrR=r-coreStart, qrC=c-coreStart;
                     let isC = (qrR>=0&&qrR<mc&&qrC>=0&&qrC<mc);
 
-                    let vR = maskR[oR][oC] ? 200 : 50;
-                    let vG = maskG[oR][oC] ? 200 : 50;
+                    let vR = maskR[oR] && maskR[oR][oC] ? 200 : 50;
+                    let vG = maskG[oR] && maskG[oR][oC] ? 200 : 50;
                     let vB = 50;
                     if (isC) vB = qr.isDark(qrR, qrC) ? 200 : 50;
 
@@ -331,7 +321,6 @@
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
 
-    // СКАНЕР
     function openScanner() { els.modal.classList.remove('hidden'); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
