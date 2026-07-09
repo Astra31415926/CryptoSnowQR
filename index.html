@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -23,6 +22,7 @@
             display: flex; justify-content: center; align-items: center;
         }
 
+        /* БАЗОВЫЙ АДАПТИВНЫЙ КОНТЕЙНЕР (16:9) */
         .crypto-container {
             position: relative;
             width: 100vw;
@@ -35,12 +35,14 @@
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
+        /* АНИМАЦИЯ ЯНТАРНОГО ПУЛЬСА */
         @keyframes amberPulse {
             0%, 100% { filter: drop-shadow(0 0 10px #5c3d00) drop-shadow(0 0 20px #2a1a00); }
             50% { filter: drop-shadow(0 0 30px var(--rune-glow)) drop-shadow(0 0 60px #8b6914) brightness(1.15); }
         }
         .crypto-container.glow-active { animation: amberPulse 2s infinite ease-in-out; }
 
+        /* ИЗОЛИРОВАННЫЕ КООРДИНАТЫ ИНТЕРФЕЙСА */
         .ui-layer {
             position: absolute;
             background: transparent;
@@ -55,25 +57,37 @@
         .ui-layer::placeholder { color: rgba(212, 175, 55, 0.4); text-shadow: none; }
         .ui-layer:focus { outline: none; }
 
-        #ui-text { left: 26.5%; top: 21.6%; width: 47.2%; height: 8.4%; font-size: 2vw; text-align: center; line-height: 1.2; }
-        
-        /* ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ ИДЕАЛЬНОГО КВАДРАТА */
-        #ui-qr-wrapper { 
-            left: 39.1%; 
-            top: 35.3%; 
-            width: 22.1%; 
-            height: 40.6%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            pointer-events: none; 
+        #ui-text { 
+            left: 26.5%; 
+            top: 21.6%; 
+            width: 47.2%; 
+            height: 8.4%; 
+            font-size: 2vw; 
+            text-align: center; 
+            line-height: 1.2; 
         }
+
+        /* ИСПРАВЛЕНО: Жесткое позиционирование и Flex-центровка узора внутри выемки */
+        #ui-qr-wrapper { 
+            position: absolute !important;
+            left: 39.1% !important; 
+            top: 35.3% !important; 
+            width: 22.1% !important; 
+            height: 40.6% !important; 
+            display: flex !important; 
+            justify-content: center !important; 
+            align-items: center !important; 
+            pointer-events: none; 
+            background: transparent !important;
+        }
+
+        /* ИСПРАВЛЕНО: Квадратные пропорции холста 1:1 без деформаций */
         #canvas-create { 
-            width: 100%;
-            height: auto;
-            max-width: 100%; 
-            max-height: 100%; 
-            aspect-ratio: 1 / 1; 
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important; 
+            max-height: 100% !important; 
+            aspect-ratio: 1 / 1 !important; 
             image-rendering: pixelated; 
             image-rendering: crisp-edges; 
         }
@@ -116,9 +130,11 @@
 
     <div id="artifact" class="crypto-container">
         <textarea id="ui-text" class="ui-layer" placeholder="Введіть текст таємниці..."></textarea>
+        
         <div id="ui-qr-wrapper">
             <canvas id="canvas-create" width="512" height="512"></canvas>
         </div>
+        
         <input type="password" id="ui-pass" class="ui-layer" placeholder="• • • К Л Ю Ч • • •">
         <button id="btn-save" class="action-btn" onclick="saveQR()">[+] ЗБЕРЕГТИ</button>
         <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
@@ -156,7 +172,7 @@
     <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
-    // 1. КРИПТОГРАФІЯ
+    // КРИПТОГРАФИЯ
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
         const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -177,7 +193,7 @@
         } catch(e) { return null; }
     }
 
-    // 2. ЯДРО ГЕНЕРАТОРА (ІДЕАЛЬНА 8-КРАТНА СИМЕТРІЯ)
+    // МАТРИЧНЫЕ ШАБЛОНЫ ДЛЯ ОРНАМЕНТА
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -204,11 +220,14 @@
     const FILLER_IDX = [0, 8, 13, 16, 17]; 
     const PAL = [[80, 120, 180], [180, 200, 160]];
 
+    // МАТЕМАТИЧЕСКИЙ МАТРИЧНЫЙ ГЕНЕРАТОР
     function generateMask(size, palId) {
-        if (size % 2 === 0) size += 1;
+        if (size % 2 === 0) size += 1; // Нечетность
+
         let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
         let centerY = Math.floor(size / 2);
         let centerX = Math.floor(size / 2);
+        
         let pal = PAL[palId];
         let maxBlock = Math.ceil(centerY / 7) + 1;
         let blockMap = {};
@@ -223,16 +242,21 @@
             }
         }
 
+        // Отрисовка октанта с 8-кратным зеркалированием относительно ядра
         for(let y = 0; y <= centerY; y++) {
             for(let x = y; x <= centerX; x++) {
                 let bx = Math.floor(x / 7);
                 let by = Math.floor(y / 7);
                 let key = `${bx},${by}`;
                 if(!blockMap[key]) key = `${by},${bx}`;
+                
                 let pat = blockMap[key];
                 if(!pat) continue;
 
-                if(pat[y % 7][x % 7] === 1) {
+                let px = x % 7;
+                let py = y % 7;
+                
+                if(pat[py][px] === 1) {
                     let value = 1;
                     matrix[centerY + y][centerX + x] = value;
                     matrix[centerY + x][centerX + y] = value;
@@ -248,7 +272,7 @@
         return matrix;
     }
 
-    // 3. ЛОГІКА ПРИЛОЖЕННЯ
+    // УПРАВЛЕНИЕ ПРИЛОЖЕНИЕМ
     const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
@@ -284,10 +308,15 @@
             const qr = qrcode(0, 'M'); qr.addData(utf8); qr.make();
             let mc = qr.getModuleCount();
             let qz=2, fi=1, fo=2;
-            let ornSize = mc + (qz*2); if (ornSize % 2 === 0) ornSize += 1;
-            let total = ornSize + (fi*2) + (fo*2); if (total % 2 === 0) total += 1;
+            
+            let ornSize = mc + (qz*2);
+            if (ornSize % 2 === 0) ornSize += 1;
+            
+            let total = ornSize + (fi*2) + (fo*2);
+            if (total % 2 === 0) total += 1;
             
             const mod = 512 / total;
+            
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
             els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
 
@@ -318,7 +347,6 @@
     }
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
-
     function openScanner() { els.modal.classList.remove('hidden'); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
@@ -344,6 +372,7 @@
         }
     });
 
+    // ДВИЖОК СКАНИРОВАНИЯ БИНАРИЗАЦИИ
     function applyBradley(img,ch){const w=img.width,h=img.height,d=img.data,o=new Uint8ClampedArray(w*h*4),ii=new Int32Array(w*h),s=Math.floor(w/8),t=15;for(let y=0;y<h;y++){let sum=0;for(let x=0;x<w;x++){sum+=d[(y*w+x)*4+ch];ii[y*w+x]=(y>0?ii[(y-1)*w+x]:0)+sum;}}for(let y=0;y<h;y++){for(let x=0;x<w;x++){let x1=Math.max(x-s,0),x2=Math.min(x+s,w-1),y1=Math.max(y-s,0),y2=Math.min(y+s,h-1),c=(x2-x1)*(y2-y1);let sum=ii[y2*w+x2]-ii[y1*w+x2]-ii[y2*w+x1]+ii[y1*w+x1];let v=d[(y*w+x)*4+ch];let r=(v*c<sum*(100-t)/100)?0:255;let i=(y*w+x)*4;o[i]=o[i+1]=o[i+2]=r;o[i+3]=255;}}return new ImageData(o,w,h);}
     function applySCI(img,cfg){const d=img.data;for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let res=(b-(r*cfg.k1+g*cfg.k2))*1.5;res=Math.max(0,Math.min(255,res));d[i]=res;d[i+1]=res;d[i+2]=res;d[i+3]=255;}}
     function getOsc(t,p,mn,mx){const c=t%p,h=p/2,ps=(c<h)?c/h:(p-c)/h;return mn+ps*(mx-mn);}
