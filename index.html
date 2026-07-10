@@ -92,9 +92,8 @@
             width: 22.1% !important; height: 40.6% !important;
             display: flex !important; justify-content: center !important; align-items: center !important;
             pointer-events: none; 
-            /* ИСПРАВЛЕНО: Жесткая привязка к масштабу вьюпорта для бесшовной стыковки с главным фоном */
-            background: url('bg.jpg') no-repeat center !important;
-            background-size: 100vw 56.25vw !important; 
+            /* ИЗМЕНЕНО: Фон по умолчанию вместо прозрачного */
+            background: url('bg.jpg') center/cover no-repeat !important; 
             z-index: 4;
         }
 
@@ -189,7 +188,9 @@
     <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
+    // ==========================================
     // 1. КРИПТОГРАФІЯ
+    // ==========================================
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
         const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -210,7 +211,9 @@
         } catch(e) { return null; }
     }
 
+    // ==========================================
     // 2. ЯДРО ГЕНЕРАТОРА (ІДЕАЛЬНА 8-КРАТНА СИМЕТРІЯ)
+    // ==========================================
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -281,7 +284,9 @@
         return matrix;
     }
 
+    // ==========================================
     // 3. ЛОГІКА ПРИЛОЖЕННЯ І МАСКИ
+    // ==========================================
     const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
@@ -342,18 +347,16 @@
     async function generateQR() {
         const raw = els.text.value, pwd = els.pass.value;
         const canvasEl = document.getElementById('canvas-create');
+        canvasEl.classList.remove('show-canvas');
         
-        // ИСПРАВЛЕНО: Сначала скрываем холст и выходим, не рисуя черный квадрат, 
-        // чтобы mix-blend-mode не размывал подложку
+        els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
+        
+        // ИЗМЕНЕНО: Добавлена жесткая команда скрытия холста при пустом вводе
         if (!raw.trim()) { 
-            canvasEl.classList.remove('show-canvas');
             els.btnSave.style.display='none'; 
+            document.getElementById('canvas-create').classList.remove('show-canvas');
             return; 
         }
-
-        // Если есть текст - подготавливаем холст к отрисовке
-        canvasEl.classList.remove('show-canvas');
-        els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
 
         let data = raw;
         if (pwd.trim() !== "") { try { data = await encryptData(raw, pwd); } catch(e) { return; } }
@@ -400,7 +403,9 @@
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
 
+    // ==========================================
     // 4. СКАНЕР І ШПІОН
+    // ==========================================
     function openScanner() { els.modal.classList.remove('hidden'); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
