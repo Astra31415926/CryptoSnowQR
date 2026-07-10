@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CryptoSnowQR Artifact</title>
-   
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
-        /* --- БАЗОВЫЙ КАРКАС ИНТЕРФЕЙСА --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: #1a1510;
@@ -37,7 +35,8 @@
             font-size: 1.8vw; text-align: left; padding-left: 1.5vw; line-height: 1.2;
             background: transparent; border: none; color: #7fff00; resize: none; outline: none;
             font-family: inherit; z-index: 5;
-            transition: opacity 0.8s ease, color 0.6s ease;
+            transition: opacity 0.6s ease;
+            display: block;
         }
         #ui-pass {
             position: absolute;
@@ -45,33 +44,33 @@
             font-size: 1.6vw; text-align: center; letter-spacing: 0.3em;
             background: transparent; border: none; color: #7fff00; outline: none;
             font-family: inherit; z-index: 5;
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
         }
-        /* --- ГРАФИЧЕСКИЕ СЛОИ-МАСКИ --- */
         .overlay-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; background-size: cover; background-position: center; background-repeat: no-repeat;
-            opacity: 0; transition: opacity 0.6s ease;
+            opacity: 0;
         }
         #title-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(15% 0%, 85% 0%, 85% 20%, 15% 20%);
-            z-index: 2;
+            z-index: 2; transition: opacity 0.1s ease-out;
         }
         .flicker-active { opacity: 0.5 !important; }
         #lock-left-glow, #lock-right-glow {
             background-image: url('bg3.jpg');
-            z-index: 3;
+            clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
+            z-index: 3; transition: opacity 0.3s ease;
         }
-        #lock-left-glow { clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%); }
         #lock-right-glow { clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%); }
         #lock-left-closed, #lock-right-closed {
             background-image: url('bg1.jpg');
-            z-index: 3;
+            opacity: 0;
+            z-index: 3; transition: opacity 0.3s ease;
         }
         #lock-left-closed { clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%); }
         #lock-right-closed { clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%); }
-        /* --- КОНТЕЙНЕР И ХОЛСТ ОРНАМЕНТА --- */
+
         #ui-qr-wrapper {
             position: absolute !important; left: 39.1% !important; top: 35.3% !important;
             width: 22.1% !important; height: 40.6% !important;
@@ -82,15 +81,16 @@
             transition: box-shadow 0.6s ease;
         }
         #ui-qr-wrapper.active-shadow {
-            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.85) !important;
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8) !important;
         }
         #canvas-create {
             width: 100% !important; height: auto !important; max-width: 100% !important; max-height: 100% !important;
             aspect-ratio: 1 / 1 !important; image-rendering: pixelated; image-rendering: crisp-edges;
-            mix-blend-mode: soft-light; opacity: 0; transition: opacity 1s ease;
+            mix-blend-mode: soft-light; opacity: 0;
+            transition: opacity 0.6s ease;
         }
         .show-canvas { opacity: 1 !important; }
-        /* --- КНОПКИ --- */
+
         .action-btn {
             position: absolute; background: rgba(0,0,0,0.6); border: 1px solid rgba(127, 255, 0, 0.3);
             color: #7fff00; font-family: 'Cinzel', serif; font-weight: 700;
@@ -99,7 +99,7 @@
         .action-btn:hover { background: rgba(127, 255, 0, 0.2); box-shadow: 0 0 15px rgba(127, 255, 0, 0.4); }
         #btn-save { bottom: 3%; left: 3%; display: none; }
         #btn-scan { bottom: 3%; right: 3%; }
-        /* --- МОДАЛЬНІ --- */
+
         .hidden { display: none !important; }
         .scan-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .scanner-box { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: #111; border-radius: 20px; overflow: hidden; border: 2px solid #39ff14; }
@@ -109,68 +109,71 @@
         .tr { top: 0; right: 0; border-top: 4px solid; border-right: 4px solid; border-radius: 0 5px 0 0; }
         .bl { bottom: 0; left: 0; border-bottom: 4px solid; border-left: 4px solid; border-radius: 0 0 0 5px; }
         .br { bottom: 0; right: 0; border-bottom: 4px solid; border-right: 4px solid; border-radius: 0 0 5px 0; }
-        .spy-overlay { backdrop-filter: blur(8px); }
+        .viewfinder-hunting .corner { border-color: #fff; box-shadow: 0 0 20px #fff; }
+        .scanner-controls { margin-top: 20px; display: flex; gap: 15px; width: 100%; max-width: 400px; }
+        .scan-btn { flex: 1; padding: 15px; background: rgba(57, 255, 20, 0.1); border: 1px solid rgba(57, 255, 20, 0.3); color: #39ff14; font-family: 'Cinzel', serif; border-radius: 12px; cursor: pointer; font-size: 16px; }
+
+        .spy-overlay { backdrop-filter: blur(8px); z-index: 300; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-        .spy-container { box-shadow: 0 0 40px rgba(57, 255, 20, 0.3); background: #111; border: 2px solid #39ff14; }
+        .spy-container { box-shadow: 0 0 40px rgba(255, 0, 0, 0.3); background: rgba(0,0,0,0.9); border: 2px solid #ff0000; }
         @keyframes flash { 0% { opacity: 0; } 20% { opacity: 0.8; } 100% { opacity: 0; } }
         .flash-anim { animation: flash 0.3s ease-out; }
-
-        /* СТАНИ ДЛЯ СКАНУВАННЯ */
-        .scan-mode #ui-text { opacity: 0.15; pointer-events: none; }
-        .scan-mode #ui-pass { top: 48%; height: 6.5%; font-size: 2.1vw; box-shadow: 0 0 25px rgba(127,255,0,0.7); }
-        .decrypted #canvas-create { opacity: 0.35 !important; filter: brightness(0.8) contrast(1.1); }
-        .decrypted #ui-text { opacity: 1 !important; color: #bbffbb; pointer-events: auto; }
+        #ui-pass:disabled { opacity: 0.5; cursor: not-allowed; }
+        .decryption-mode #ui-text { display: none !important; }
+        .decryption-mode #ui-pass { top: 45%; height: 8%; font-size: 2.2vw; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid #39ff14; }
     </style>
 </head>
 <body>
-    <div id="artifact" class="crypto-container">
-        <div id="title-glow" class="overlay-layer"></div>
-        <div id="lock-left-glow" class="overlay-layer"></div>
-        <div id="lock-left-closed" class="overlay-layer"></div>
-        <div id="lock-right-glow" class="overlay-layer"></div>
-        <div id="lock-right-closed" class="overlay-layer"></div>
-       
-        <textarea id="ui-text" placeholder="Введіть текст таємниці..."></textarea>
-        <input type="password" id="ui-pass" placeholder="••••••" maxlength="12">
-        <div id="ui-qr-wrapper">
-            <canvas id="canvas-create" width="512" height="512"></canvas>
-        </div>
-        <button id="btn-save" class="action-btn" onclick="saveQR()">[+] ЗБЕРЕГТИ</button>
-        <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
+
+<div id="artifact" class="crypto-container">
+    <div id="title-glow" class="overlay-layer"></div>
+    <div id="lock-left-glow" class="overlay-layer"></div>
+    <div id="lock-left-closed" class="overlay-layer"></div>
+    <div id="lock-right-glow" class="overlay-layer"></div>
+    <div id="lock-right-closed" class="overlay-layer"></div>
+
+    <textarea id="ui-text" placeholder="Введіть текст таємниці..."></textarea>
+    <input type="password" id="ui-pass" placeholder="••••••" maxlength="12">
+
+    <div id="ui-qr-wrapper">
+        <canvas id="canvas-create" width="512" height="512"></canvas>
     </div>
 
-    <div id="scan-modal" class="scan-modal hidden">
-        <div class="scanner-box">
-            <video id="video-scan" class="absolute inset-0 w-full h-full object-cover hidden z-10" playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
-            <canvas id="canvas-scan-freeze" class="hidden" width="512" height="512" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></canvas>
-            <canvas id="canvas-scan-main" width="512" height="512" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:20;"></canvas>
-            <div id="viewfinder" class="viewfinder-corners hidden">
-                <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-            </div>
-        </div>
-        <div class="scanner-controls">
-            <button class="scan-btn" onclick="startCamera()">📸 Камера</button>
-            <button class="scan-btn" onclick="document.getElementById('file-input').click()">🖼️ Галерея</button>
-            <button class="scan-btn" style="background:rgba(255,0,0,0.2); border-color:rgba(255,0,0,0.5);" onclick="closeScanner()">✖ Закрити</button>
-        </div>
-        <input type="file" id="file-input" accept="image/*" class="hidden">
-    </div>
+    <button id="btn-save" class="action-btn" onclick="saveQR()">[+] ЗБЕРЕГТИ</button>
+    <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
+</div>
 
-    <div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 z-[200] flex flex-col items-center justify-center p-6">
-        <div class="spy-container p-8 rounded-3xl text-center max-w-sm w-full">
-            <div class="text-7xl mb-2 animate-bounce">🕵️‍♂️</div>
-            <div class="flex justify-center text-4xl mb-4 -mt-6">👀</div>
-            <h2 class="text-2xl font-black text-green-300 mb-2" style="font-family: sans-serif;">АГЕНТ, СТОП!</h2>
-            <p class="text-zinc-400 mb-6 text-sm" style="font-family: sans-serif;">Ці дані зашифровані. Назовьте секретне слово.</p>
-            <input type="password" id="spy-pass" class="w-full p-4 rounded-xl bg-black text-white text-center text-2xl tracking-widest mb-2 border-green-500 outline-none" style="font-family: monospace;" placeholder="••••••••">
-            <p id="spy-error" class="text-red-500 text-sm h-6 font-bold transition-opacity opacity-0" style="font-family: sans-serif;">ДЕРЖАВА НЕ ДОВІРЯЄ ВАМ</p>
-            <button onclick="closeSpy()" class="mt-4 text-zinc-600 text-xs underline" style="font-family: sans-serif;">Відміна</button>
+<!-- Модалка сканера -->
+<div id="scan-modal" class="scan-modal hidden">
+    <div class="scanner-box">
+        <video id="video-scan" class="hidden" playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:10;"></video>
+        <canvas id="canvas-scan-freeze" class="hidden" width="512" height="512" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></canvas>
+        <canvas id="canvas-scan-main" width="512" height="512" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:20;"></canvas>
+        <div id="viewfinder" class="viewfinder-corners hidden">
+            <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
         </div>
     </div>
-    <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
+    <div class="scanner-controls">
+        <button class="scan-btn" onclick="startCamera()">📸 Камера</button>
+        <button class="scan-btn" onclick="document.getElementById('file-input').click()">🖼️ Галерея</button>
+        <button class="scan-btn" style="background:rgba(255,0,0,0.2); border-color:rgba(255,0,0,0.5);" onclick="closeScanner()">✖ Закрити</button>
+    </div>
+    <input type="file" id="file-input" accept="image/*" class="hidden">
+</div>
 
-    <script>
+<!-- Оверлей ошибки -->
+<div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 flex flex-col items-center justify-center p-6 pointer-events-none">
+    <div id="spy-shake-container" class="spy-container p-8 rounded-3xl text-center max-w-sm w-full pointer-events-auto">
+        <div class="text-7xl mb-2">🕵️‍♂️</div>
+        <div class="flex justify-center text-4xl mb-4 -mt-6">👀</div>
+        <p id="spy-error" class="text-red-500 text-xl h-10 font-bold transition-opacity opacity-0" style="font-family: sans-serif;">ДЕРЖАВА НЕ ДОВІРЯЄ ВАМ</p>
+    </div>
+</div>
+
+<div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[400]"></div>
+
+<script>
     // 1. КРИПТОГРАФІЯ
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
@@ -192,28 +195,9 @@
         } catch(e) { return null; }
     }
 
-    // 2. PATTERNS (повний масив з оригіналу)
+    // 2. ЯДРО ГЕНЕРАТОРА ОРНАМЕНТУ
     const PATTERNS = [
-        [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
-        [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
-        [[1,1,1,1,1,1,1],[0,0,0,0,0,0,1],[1,1,1,1,1,0,1],[1,0,0,0,1,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]],
-        [[1,1,1,1,1,1,1],[1,0,0,0,0,0,0],[1,0,1,1,1,1,1],[1,0,1,0,0,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]],
-        [[1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,1,1,1,0,1],[1,0,1,0,1,0,1],[1,0,1,0,0,0,1],[1,0,1,1,1,1,1],[1,0,0,0,0,0,0]],
-        [[0,0,0,0,0,1,1],[0,0,0,0,1,1,0],[0,0,0,1,1,0,0],[1,1,1,1,1,1,1],[0,0,0,1,1,0,0],[0,0,0,0,1,1,0],[0,0,0,0,0,1,1]],
-        [[1,1,1,1,1,0,0],[1,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1],[0,0,0,0,0,0,1],[0,0,0,0,0,0,1],[0,0,1,1,1,1,1]],
-        [[0,0,0,0,1,1,1],[0,0,0,1,1,1,0],[0,0,1,1,1,0,0],[0,1,1,1,0,0,0],[1,1,1,0,0,0,0],[1,1,0,0,0,0,0],[1,0,0,0,0,0,0]],
-        [[1,1,0,0,0,1,1],[1,1,0,0,0,1,1],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[1,1,0,0,0,1,1],[1,1,0,0,0,1,1]],
-        [[0,0,0,1,0,0,0],[0,0,1,1,1,0,0],[0,1,1,1,1,1,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0]],
-        [[1,1,1,1,1,1,0],[1,0,0,0,0,1,0],[1,0,1,1,1,1,0],[1,0,1,0,0,0,0],[1,0,1,1,1,1,1],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1]],
-        [[0,0,0,0,0,0,1],[0,0,0,0,0,1,1],[0,0,0,0,1,1,0],[0,0,0,1,1,0,0],[0,0,1,1,0,0,0],[0,1,1,0,0,0,0],[1,1,0,0,0,0,0]],
-        [[0,0,0,1,0,0,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[1,0,0,0,0,0,1],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,0,0,1,0,0,0]],
-        [[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1]],
-        [[0,0,1,1,1,0,0],[0,0,1,1,1,0,0],[1,1,0,1,0,1,1],[1,1,1,0,1,1,1],[1,1,0,1,0,1,1],[0,0,1,1,1,0,0],[0,0,1,1,1,0,0]],
-        [[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1],[0,0,0,0,0,0,0],[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0]],
-        [[0,1,1,0,1,1,0],[1,0,1,0,1,0,1],[1,1,0,0,0,1,1],[0,0,0,1,0,0,0],[1,1,0,0,0,1,1],[1,0,1,0,1,0,1],[0,1,1,0,1,1,0]],
-        [[0,1,0,1,0,1,0],[1,1,0,1,0,1,1],[0,0,0,1,0,0,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[1,1,0,1,0,1,1],[0,1,0,1,0,1,0]],
-        [[1,1,1,1,1,1,1],[0,1,1,1,1,1,1],[0,0,1,1,1,1,1],[0,0,0,1,1,1,1],[0,0,0,0,1,1,1],[0,0,0,0,0,1,1],[0,0,0,0,0,0,1]],
-        [[0,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,0,0,0,0,0],[1,1,1,0,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,1,0,0],[1,1,1,1,1,1,0]]
+        [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,1,0,1,1,0],[0,0,0,0,1,1,0],[1,1,1,1,1,1,1],[0,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,1,1,1,0,0],[0,0,0,0,1,1,1],[0,0,0,1,1,1,0],[0,0,1,1,1,0,0],[1,0,0,0,1,0,1],[0,1,1,0,1,1,0],[0,0,0,1,0,0,0],[1,1,1,0,0,0,0],[1,1,0,0,0,1,1],[0,0,1,0,1,0,0],[1,0,1,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,1,1,0,0],[0,1,1,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,0,0,0],[0,1,1,0,1,1,0],[1,1,0,0,0,1,1],[0,1,0,1,0,1,0],[1,1,1,1,1,1,1],[0,1,1,1,1,1,1],[0,0,1,1,1,1,1],[0,0,0,1,1,1,1],[0,0,0,0,1,1,1],[0,0,0,0,0,0,1]
     ];
     const solidBlock = Array.from({length:7}, ()=>Array(7).fill(1));
     const FILLER_IDX = [0, 8, 13, 16, 17];
@@ -245,37 +229,45 @@
                 if(!pat) continue;
                 if(pat[y % 7][x % 7] === 1) {
                     let value = 1;
-                    matrix[centerY + y][centerX + x] = value;
-                    matrix[centerY + x][centerX + y] = value;
-                    matrix[centerY - y][centerX + x] = value;
-                    matrix[centerY - x][centerX + y] = value;
-                    matrix[centerY + y][centerX - x] = value;
-                    matrix[centerY + x][centerX - y] = value;
-                    matrix[centerY - y][centerX - x] = value;
-                    matrix[centerY - x][centerX - y] = value;
+                    matrix[centerY + y][centerX + x] = value; matrix[centerY + x][centerX + y] = value;
+                    matrix[centerY - y][centerX + x] = value; matrix[centerY - x][centerX + y] = value;
+                    matrix[centerY + y][centerX - x] = value; matrix[centerY + x][centerX - y] = value;
+                    matrix[centerY - y][centerX - x] = value; matrix[centerY - x][centerX - y] = value;
                 }
             }
         }
         return matrix;
     }
 
-    // 3. STATE & ELEMENTS
-    const state = { scanning: false, locked: false, pendingDecrypt: null, isScanMode: false };
+    // 3. СТАН ТА ЕЛЕМЕНТИ
+    const state = {
+        scanning: false,
+        locked: false,
+        pendingDecrypt: null,
+        failCount: 0,
+        activeSearch: false,
+        time: 0,
+        isDecryptionMode: false,
+        cfg: { B: { k1: 0.05, k2: 0.13 } }
+    };
     const lockTimers = { left: null, right: null };
 
     const els = {
         text: document.getElementById('ui-text'),
         pass: document.getElementById('ui-pass'),
         cCreate: document.getElementById('canvas-create').getContext('2d', {willReadFrequently:true}),
+        cScan: document.getElementById('canvas-scan-main').getContext('2d', {willReadFrequently:true}),
+        cFreeze: document.getElementById('canvas-scan-freeze').getContext('2d', {willReadFrequently:true}),
         video: document.getElementById('video-scan'),
         artifact: document.getElementById('artifact'),
         modal: document.getElementById('scan-modal'),
         viewfinder: document.getElementById('viewfinder'),
         spyOv: document.getElementById('spy-overlay'),
-        spyPass: document.getElementById('spy-pass'),
+        spyContainer: document.getElementById('spy-shake-container'),
         spyErr: document.getElementById('spy-error'),
         btnSave: document.getElementById('btn-save'),
         qrWrapper: document.getElementById('ui-qr-wrapper'),
+        titleGlow: document.getElementById('title-glow'),
         lockLeftGlow: document.getElementById('lock-left-glow'),
         lockLeftClosed: document.getElementById('lock-left-closed'),
         lockRightGlow: document.getElementById('lock-right-glow'),
@@ -283,9 +275,8 @@
     };
 
     function flashTitle() {
-        const title = document.getElementById('title-glow');
-        title.classList.add('flicker-active');
-        setTimeout(() => title.classList.remove('flicker-active'), 120);
+        els.titleGlow.classList.add('flicker-active');
+        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 100);
     }
 
     function updateLocks(len) {
@@ -293,204 +284,266 @@
         els.lockRightGlow.style.opacity = '0';
         if (len === 0) {
             clearTimeout(lockTimers.left); clearTimeout(lockTimers.right);
-            els.lockLeftClosed.style.opacity = '0';
-            els.lockRightClosed.style.opacity = '0';
+            els.lockLeftClosed.style.opacity = '0'; els.lockRightClosed.style.opacity = '0';
             return;
         }
-        if (len >= 1 && len <= 3) els.lockLeftGlow.style.opacity = '1';
+        if (len >= 1 && len <= 3) { els.lockLeftGlow.style.opacity = '1'; }
         if (len >= 3) {
             clearTimeout(lockTimers.left);
-            lockTimers.left = setTimeout(() => { els.lockLeftGlow.style.opacity = '0'; els.lockLeftClosed.style.opacity = '1'; }, 280);
-        } else { els.lockLeftClosed.style.opacity = '0'; }
-        if (len >= 4 && len <= 6) els.lockRightGlow.style.opacity = '1';
+            lockTimers.left = setTimeout(() => { els.lockLeftGlow.style.opacity = '0'; els.lockLeftClosed.style.opacity = '1'; }, 300);
+        } else { clearTimeout(lockTimers.left); els.lockLeftClosed.style.opacity = '0'; }
+        if (len >= 4 && len <= 6) { els.lockRightGlow.style.opacity = '1'; }
         if (len >= 6) {
             clearTimeout(lockTimers.right);
-            lockTimers.right = setTimeout(() => { els.lockRightGlow.style.opacity = '0'; els.lockRightClosed.style.opacity = '1'; }, 280);
-        } else { els.lockRightClosed.style.opacity = '0'; }
+            lockTimers.right = setTimeout(() => { els.lockRightGlow.style.opacity = '0'; els.lockRightClosed.style.opacity = '1'; }, 300);
+        } else { clearTimeout(lockTimers.right); els.lockRightClosed.style.opacity = '0'; }
     }
 
-    let genTimer;
-    function bindInputs() {
-        els.text.addEventListener('input', () => { flashTitle(); clearTimeout(genTimer); genTimer = setTimeout(() => generateQR(), 280); });
-        els.pass.addEventListener('input', () => {
-            updateLocks(els.pass.value.trim().length);
-            clearTimeout(genTimer); genTimer = setTimeout(() => generateQR(), 280);
-        });
-    }
+    // 4. ГЕНЕРАЦІЯ QR-КОДУ З ОРНАМЕНТОМ
+    async function generateQR(fromData = null) {
+        if (state.isDecryptionMode) return;
 
-    async function generateQR(isDecrypted = false) {
-        const raw = els.text.value.trim(), pwd = els.pass.value.trim();
+        const raw = fromData !== null ? fromData : els.text.value;
+        const pwd = els.pass.value;
         const canvasEl = document.getElementById('canvas-create');
-        if (!raw) {
+
+        if (!raw.trim()) {
             canvasEl.classList.remove('show-canvas');
+            canvasEl.style.opacity = '0';
             els.qrWrapper.classList.remove('active-shadow');
             els.btnSave.style.display = 'none';
             return;
         }
-        els.cCreate.fillStyle = "#000"; els.cCreate.fillRect(0,0,512,512);
+
+        canvasEl.classList.remove('show-canvas');
+        canvasEl.style.opacity = '1';
+        els.cCreate.fillStyle = "#000";
+        els.cCreate.fillRect(0, 0, 512, 512);
+
         let data = raw;
-        if (pwd && !isDecrypted) {
+        if (pwd.trim() !== "") {
             try { data = await encryptData(raw, pwd); } catch(e) { return; }
         }
+
         try {
-            const qr = qrcode(0, 'M'); qr.addData(unescape(encodeURIComponent(data))); qr.make();
-            const mc = qr.getModuleCount(), qz=2, fi=1, fo=2;
-            let ornSize = mc + qz*2; if(ornSize%2===0) ornSize++;
-            let total = ornSize + fi*2 + fo*2; if(total%2===0) total++;
+            const utf8 = unescape(encodeURIComponent(data));
+            const qr = qrcode(0, 'M');
+            qr.addData(utf8);
+            qr.make();
+            let mc = qr.getModuleCount();
+            let qz = 2, fi = 1, fo = 2;
+            let ornSize = mc + (qz * 2);
+            if (ornSize % 2 === 0) ornSize += 1;
+            let total = ornSize + (fi * 2) + (fo * 2);
+            if (total % 2 === 0) total += 1;
             const mod = 512 / total;
-            els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
-            els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-fo*mod*2, 512-fo*mod*2);
+
+            els.cCreate.fillStyle = "rgb(200,200,200)";
+            els.cCreate.fillRect(0, 0, 512, 512);
+            els.cCreate.fillStyle = "rgb(50,50,50)";
+            els.cCreate.fillRect(fo * mod, fo * mod, 512 - (fo * mod * 2), 512 - (fo * mod * 2));
+
             const maskR = generateMask(ornSize, 0);
             const maskG = generateMask(ornSize, 1);
             const coreStart = fo + fi + qz;
+
             for (let r = 0; r < total; r++) {
                 for (let c = 0; c < total; c++) {
-                    if (r<fo||r>=total-fo||c<fo||c>=total-fo) continue;
-                    if (r<fo+fi||r>=total-(fo+fi)||c<fo+fi||c>=total-(fo+fi)) continue;
-                    const oR = r-(fo+fi), oC = c-(fo+fi), qrR = r-coreStart, qrC = c-coreStart;
-                    const isC = (qrR>=0 && qrR<mc && qrC>=0 && qrC<mc);
-                    const vR = (maskR[oR] && maskR[oR][oC]) ? 200 : 50;
-                    const vG = (maskG[oR] && maskG[oR][oC]) ? 200 : 50;
-                    const vB = isC ? (qr.isDark(qrR, qrC) ? 200 : 50) : 50;
-                    els.cCreate.fillStyle = `rgb(${vR},${vG},${vB})`;
-                    els.cCreate.fillRect(c*mod, r*mod, mod+0.6, mod+0.6);
+                    let isO = (r < fo || r >= total - fo || c < fo || c >= total - fo);
+                    let isI = !isO && (r < fo + fi || r >= total - (fo + fi) || c < fo + fi || c >= total - (fo + fi));
+                    if (isO || isI) continue;
+                    let oR = r - (fo + fi), oC = c - (fo + fi);
+                    let qrR = r - coreStart, qrC = c - coreStart;
+                    let isC = (qrR >= 0 && qrR < mc && qrC >= 0 && qrC < mc);
+                    let vR = maskR[oR] && maskR[oR][oC] ? 200 : 50;
+                    let vG = maskG[oR] && maskG[oR][oC] ? 200 : 50;
+                    let vB = 50;
+                    if (isC) vB = qr.isDark(qrR, qrC) ? 200 : 50;
+                    els.cCreate.fillStyle = `rgb(${vR}, ${vG}, ${vB})`;
+                    els.cCreate.fillRect(c * mod, r * mod, mod + 0.5, mod + 0.5);
                 }
             }
             canvasEl.classList.add('show-canvas');
             els.qrWrapper.classList.add('active-shadow');
             els.btnSave.style.display = 'block';
-        } catch(e) {}
+        } catch(e) { console.error(e); }
     }
 
     function saveQR() {
         const a = document.createElement('a');
         a.download = 'crypto-artifact.png';
-        a.href = document.getElementById('canvas-create').toDataURL('image/png');
+        a.href = document.getElementById('canvas-create').toDataURL();
         a.click();
     }
 
-    // ========== НОВА ЛОГІКА СКАНУВАННЯ ТА РОЗШИФРУВАННЯ ==========
-    function openScanner() { els.modal.classList.remove('hidden'); }
-    function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
-
+    // 5. ОБРОБКА СКАНОВАНОГО ДАНИХ
     async function handleScanResult(data) {
-        state.locked = true; stopScanning(); playBeep(); flashScreen();
-        els.viewfinder.classList.add('viewfinder-hunting'); setTimeout(()=>els.viewfinder.classList.remove('viewfinder-hunting'), 300);
+        state.locked = true;
+        stopScanning();
+        playBeep();
+        flashScreen();
+        els.viewfinder.classList.add('viewfinder-hunting');
+        setTimeout(() => els.viewfinder.classList.remove('viewfinder-hunting'), 300);
 
         if (data.trim().endsWith('=')) {
-            // Зашифрований QR
+            // Криптографічний QR
             state.pendingDecrypt = data.trim();
-            enterScanMode();
+            state.isDecryptionMode = true;
+            els.artifact.classList.add('decryption-mode');
+
+            // Відображаємо орнамент
+            await generateQR(data.trim());
+
+            // Перемикаємо інтерфейс на введення ключа
+            els.text.style.display = 'none';
+            els.pass.placeholder = "🔑 ВВЕДИТЬ КЛЮЧ";
+            els.pass.value = "";
+            els.pass.disabled = false;
+            setTimeout(() => els.pass.focus(), 300);
+
+            // Обробник Enter для дешифрування
+            els.pass.onkeydown = async (e) => {
+                if (e.key === 'Enter' && state.isDecryptionMode && state.pendingDecrypt) {
+                    const pwd = els.pass.value.trim();
+                    if (!pwd) return;
+                    els.pass.disabled = true;
+                    els.pass.placeholder = "⏳ Дешифрування...";
+                    await new Promise(r => setTimeout(r, 100));
+
+                    const res = await decryptData(state.pendingDecrypt, pwd);
+                    els.pass.disabled = false;
+                    els.pass.placeholder = "🔑 ВВЕДИТЬ КЛЮЧ";
+
+                    if (res !== null) {
+                        // Успіх
+                        state.isDecryptionMode = false;
+                        state.pendingDecrypt = null;
+                        els.artifact.classList.remove('decryption-mode');
+
+                        const canvasEl = document.getElementById('canvas-create');
+                        canvasEl.style.opacity = '0.3';
+
+                        els.text.style.display = 'block';
+                        els.text.value = res;
+                        els.text.style.opacity = '0';
+                        setTimeout(() => { els.text.style.opacity = '1'; }, 50);
+
+                        updateLocks(0);
+                        els.pass.value = "";
+                        els.pass.placeholder = "••••••";
+                        els.pass.onkeydown = null;
+                        els.pass.blur();
+                        closeScanner();
+                    } else {
+                        // Помилка
+                        showSpyError();
+                        els.pass.value = "";
+                        setTimeout(() => els.pass.focus(), 500);
+                    }
+                }
+            };
         } else {
-            // Відкритий текст
+            // Звичайний QR
+            state.isDecryptionMode = false;
+            closeScanner();
+            els.text.style.display = 'block';
             els.text.value = data;
             els.pass.value = "";
-            els.artifact.classList.remove('scan-mode', 'decrypted');
+            els.pass.placeholder = "••••••";
             updateLocks(0);
             generateQR();
         }
     }
 
-    function enterScanMode() {
-        state.isScanMode = true;
-        els.artifact.classList.add('scan-mode');
-        els.text.disabled = true;
-        els.pass.value = "";
-        els.pass.focus();
-
-        // Показуємо орнамент відразу
-        document.getElementById('canvas-create').classList.add('show-canvas');
-        els.qrWrapper.classList.add('active-shadow');
-
-        // Прив'язуємо Enter для спроби розшифровки
-        els.pass.onkeydown = (e) => { if (e.key === 'Enter') attemptDecrypt(); };
+    // 6. СКАНЕР (з адаптивним пошуком)
+    function getOsc(t, p, mn, mx) {
+        const c = t % p, h = p / 2;
+        const ps = (c < h) ? c / h : (p - c) / h;
+        return mn + ps * (mx - mn);
     }
 
-    async function attemptDecrypt() {
-        const pwd = els.pass.value.trim();
-        if (!pwd || !state.pendingDecrypt) return;
-        els.pass.disabled = true;
-        const res = await decryptData(state.pendingDecrypt, pwd);
-        if (res !== null) {
-            completeSuccessfulDecryption(res, pwd);
-        } else {
-            els.pass.disabled = false;
-            showSpy();
-        }
-    }
-
-    function completeSuccessfulDecryption(plaintext, password) {
-        const canvas = document.getElementById('canvas-create');
-        canvas.style.opacity = '0.35';
-
-        els.text.value = plaintext;
-        els.artifact.classList.add('decrypted');
-
-        // Відкриваємо обидва замки синхронно
-        clearTimeout(lockTimers.left);
-        clearTimeout(lockTimers.right);
-        els.lockLeftGlow.style.opacity = '0';
-        els.lockRightGlow.style.opacity = '0';
-        els.lockLeftClosed.style.opacity = '0';
-        els.lockRightClosed.style.opacity = '0';
-
-        setTimeout(() => {
-            els.artifact.classList.remove('scan-mode');
-            state.isScanMode = false;
-            state.pendingDecrypt = null;
-            els.pass.onkeydown = null;
-            els.pass.disabled = false;
-            els.text.disabled = false;
-            updateLocks(password.length);
-            generateQR(true);
-        }, 900);
-    }
-
-    function showSpy() {
-        els.spyOv.classList.remove('hidden');
-        els.spyPass.value = "";
-        els.spyErr.style.opacity = '0';
-        setTimeout(() => els.spyPass.focus(), 80);
-    }
-
-    function closeSpy() {
-        els.spyOv.classList.add('hidden');
-        state.pendingDecrypt = null;
-    }
-
-    els.spyPass.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter' && state.pendingDecrypt) {
-            const pwd = els.spyPass.value.trim();
-            if (!pwd) return;
-            els.spyPass.disabled = true;
-            const res = await decryptData(state.pendingDecrypt, pwd);
-            els.spyPass.disabled = false;
-            if (res !== null) {
-                closeSpy();
-                completeSuccessfulDecryption(res, pwd);
-            } else {
-                els.spyErr.style.opacity = '1';
-                els.spyPass.classList.add('shake-anim');
-                setTimeout(() => els.spyPass.classList.remove('shake-anim'), 520);
-                els.spyPass.value = "";
+    function applyBradley(img, ch) {
+        const w = img.width, h = img.height, d = img.data;
+        const o = new Uint8ClampedArray(w * h * 4);
+        const ii = new Int32Array(w * h);
+        const s = Math.floor(w / 8), t = 15;
+        for (let y = 0; y < h; y++) {
+            let sum = 0;
+            for (let x = 0; x < w; x++) {
+                sum += d[(y * w + x) * 4 + ch];
+                ii[y * w + x] = (y > 0 ? ii[(y - 1) * w + x] : 0) + sum;
             }
         }
-    });
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                let x1 = Math.max(x - s, 0), x2 = Math.min(x + s, w - 1);
+                let y1 = Math.max(y - s, 0), y2 = Math.min(y + s, h - 1);
+                let c = (x2 - x1) * (y2 - y1);
+                let sum = ii[y2 * w + x2] - ii[y1 * w + x2] - ii[y2 * w + x1] + ii[y1 * w + x1];
+                let v = d[(y * w + x) * 4 + ch];
+                let r = (v * c < sum * (100 - t) / 100) ? 0 : 255;
+                let i = (y * w + x) * 4;
+                o[i] = o[i + 1] = o[i + 2] = r;
+                o[i + 3] = 255;
+            }
+        }
+        return new ImageData(o, w, h);
+    }
 
-    // === СКАНЕР (без змін) ===
-    function applyBradley(img,ch){const w=img.width,h=img.height,d=img.data,o=new Uint8ClampedArray(w*h*4),ii=new Int32Array(w*h),s=Math.floor(w/8),t=15;for(let y=0;y<h;y++){let sum=0;for(let x=0;x<w;x++){sum+=d[(y*w+x)*4+ch];ii[y*w+x]=(y>0?ii[(y-1)*w+x]:0)+sum;}}for(let y=0;y<h;y++){for(let x=0;x<w;x++){let x1=Math.max(x-s,0),x2=Math.min(x+s,w-1),y1=Math.max(y-s,0),y2=Math.min(y+s,h-1),c=(x2-x1)*(y2-y1);let sum=ii[y2*w+x2]-ii[y1*w+x2]-ii[y2*w+x1]+ii[y1*w+x1];let v=d[(y*w+x)*4+ch];let r=(v*c<sum*(100-t)/100)?0:255;let i=(y*w+x)*4;o[i]=o[i+1]=o[i+2]=r;o[i+3]=255;}}return new ImageData(o,w,h);}
-    function applySCI(img,cfg){const d=img.data;for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let res=(b-(r*cfg.k1+g*cfg.k2))*1.5;res=Math.max(0,Math.min(255,res));d[i]=res;d[i+1]=res;d[i+2]=res;d[i+3]=255;}}
-    function getOsc(t,p,mn,mx){const c=t%p,h=p/2,ps=(c<h)?c/h:(p-c)/h;return mn+ps*(mx-mn);}
-    function processLoop() { /* повна реалізація з оригіналу - опущена для стислості, але працює */ }
-    async function startCamera() { /* повна реалізація з оригіналу */ }
-    function handleFile(e){ /* повна реалізація з оригіналу */ }
-    function stopScanning(){ /* повна реалізація з оригіналу */ }
-    function playBeep(){ /* повна реалізація з оригіналу */ }
-    function flashScreen(){ /* повна реалізація з оригіналу */ }
+    function applySCI(img, cfg) {
+        const d = img.data;
+        for (let i = 0; i < d.length; i += 4) {
+            let r = d[i], g = d[i + 1], b = d[i + 2];
+            let res = (b - (r * cfg.k1 + g * cfg.k2)) * 1.5;
+            res = Math.max(0, Math.min(255, res));
+            d[i] = res; d[i + 1] = res; d[i + 2] = res; d[i + 3] = 255;
+        }
+    }
 
-    document.getElementById('file-input').addEventListener('change', handleFile);
-    bindInputs();
-    updateLocks(0);
-    </script>
-</body>
-</html>
+    function processLoop() {
+        if (!state.scanning) return;
+        let src = null;
+        if (!els.video.classList.contains('hidden') && els.video.readyState === els.video.HAVE_ENOUGH_DATA) {
+            els.cScan.drawImage(els.video, 0, 0, 512, 512);
+            src = els.cScan.getImageData(0, 0, 512, 512);
+        } else if (!document.getElementById('canvas-scan-freeze').classList.contains('hidden')) {
+            src = els.cFreeze.getImageData(0, 0, 512, 512);
+        }
+
+        if (src && !state.locked) {
+            if (state.failCount > 45 && !state.activeSearch) state.activeSearch = true;
+            let found = false;
+
+            if (state.activeSearch) {
+                state.time++;
+                const cfg = {
+                    ...state.cfg.B,
+                    gain: getOsc(state.time, 100, 0.5, 3.5),
+                    offset: getOsc(state.time, 250, -80, 0)
+                };
+                const w = new ImageData(new Uint8ClampedArray(src.data), 512, 512);
+                applySCI(w, cfg);
+                const m = applyBradley(w, 0);
+                const code = jsQR(m.data, 512, 512, { inversionAttempts: "attemptBoth" });
+                if (code) { handleScanResult(code.data); found = true; }
+                if (!found) els.cScan.putImageData(w, 0, 0);
+            } else {
+                state.failCount++;
+                const m = applyBradley(src, 2);
+                const code = jsQR(m.data, 512, 512, { inversionAttempts: "attemptBoth" });
+                if (code) { handleScanResult(code.data); found = true; state.failCount = 0; }
+                if (!found) els.cScan.putImageData(src, 0, 0);
+            }
+        }
+        requestAnimationFrame(processLoop);
+    }
+
+    // 7. УПРАВЛІННЯ КАМЕРОЮ ТА ФАЙЛАМИ
+    async function startCamera() {
+        state.locked = false;
+        state.pendingDecrypt = null;
+        state.failCount = 0;
+        state.activeSearch = false;
+        els.viewfinder.classList.remove('hidden');
+        els.video.classList.remove('hidden');
+        document.getElementById('canvas-scan-freeze').classList.add('hidden');
