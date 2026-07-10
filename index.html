@@ -275,13 +275,42 @@
         els.text.addEventListener('input', trig);
         els.pass.addEventListener('input', trig);
     }
-
-    async function generateQR() {
+async function generateQR() {
         const raw = els.text.value, pwd = els.pass.value;
         els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
         
+        // --- ЛОГИКА ИНДИКАТОРОВ (ЗАМКОВ) ---
+        const len = pwd.trim().length;
+        const indicator1 = document.getElementById('lock-1');
+        const indicator2 = document.getElementById('lock-2');
+        
+        if (indicator1 && indicator2) {
+            // Первый замок (от 3 символов)
+            if (len >= 3) {
+                indicator1.innerText = '🔓';
+                indicator1.style.textShadow = '0 0 10px #39ff14';
+                indicator1.style.opacity = '1';
+            } else {
+                indicator1.innerText = '🔒';
+                indicator1.style.textShadow = 'none';
+                indicator1.style.opacity = '0.4';
+            }
+            
+            // Второй замок (от 6 символов)
+            if (len >= 6) {
+                indicator2.innerText = '🔓';
+                indicator2.style.textShadow = '0 0 10px #39ff14';
+                indicator2.style.opacity = '1';
+            } else {
+                indicator2.innerText = '🔒';
+                indicator2.style.textShadow = 'none';
+                indicator2.style.opacity = '0.4';
+            }
+        }
+        // ------------------------------------
+
         // ЗАЩИТА: Если текста нет или ключ не введен, не запускаем шифрование
-        if (!raw.trim() || pwd.trim().length < 3) { 
+        if (!raw.trim() || len < 3) { 
             els.btnSave.style.display='none'; 
             return; 
         }
