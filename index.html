@@ -23,13 +23,14 @@
             width: 100vw;
         }
 
+        /* ИЗМЕНЕНО: Базовый фон теперь чистый камень (открытые замки, не светящееся название) */
         .crypto-container {
             position: relative;
             width: 100vw;
             height: 56.25vw;
             max-height: 100vh;
             max-width: 177.78vh;
-            background: url('bg1.jpg') center/cover no-repeat;
+            background: url('bg.jpg') center/cover no-repeat;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
             overflow: hidden;
         }
@@ -60,30 +61,30 @@
         #title-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(15% 0%, 85% 0%, 85% 20%, 15% 20%);
-            z-index: 2; transition: opacity 0.05s ease-out;
+            z-index: 2; transition: opacity 0.1s ease-out;
         }
         .flicker-active { opacity: 0.5 !important; }
 
-        #lock-left-glow {
+        /* ИЗМЕНЕНО: Источник закрытых замков теперь bg1.jpg, изначально скрыты */
+        #lock-left-glow, #lock-right-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
+            z-index: 3; transition: opacity 0.3s ease;
+        }
+        #lock-right-glow {
+            clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
+        }
+
+        #lock-left-closed, #lock-right-closed {
+            background-image: url('bg1.jpg'); /* Источник закрытых замков */
+            opacity: 0; /* Изначально скрыты */
             z-index: 3; transition: opacity 0.3s ease;
         }
         #lock-left-closed {
-            background-image: url('bg.jpg');
             clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
-            z-index: 3; transition: opacity 0.3s ease;
-        }
-
-        #lock-right-glow {
-            background-image: url('bg3.jpg');
-            clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
-            z-index: 3; transition: opacity 0.3s ease;
         }
         #lock-right-closed {
-            background-image: url('bg.jpg');
             clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
-            z-index: 3; transition: opacity 0.3s ease;
         }
 
         /* --- КОНТЕЙНЕР И ХОЛСТ ОРНАМЕНТА --- */
@@ -91,7 +92,16 @@
             position: absolute !important; left: 39.1% !important; top: 35.3% !important;
             width: 22.1% !important; height: 40.6% !important;
             display: flex !important; justify-content: center !important; align-items: center !important;
-            pointer-events: none; background: transparent !important; z-index: 4;
+            pointer-events: none; 
+            /* ИЗМЕНЕНО: Полная прозрачность, сквозь него виден базовый камень */
+            background: transparent !important; 
+            z-index: 4;
+            transition: box-shadow 0.6s ease;
+        }
+        
+        /* ИЗМЕНЕНО: Эффект внутренней тени при генерации */
+        #ui-qr-wrapper.active-shadow {
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8) !important;
         }
 
         #canvas-create {
@@ -185,9 +195,7 @@
     <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
-    // ==========================================
     // 1. КРИПТОГРАФІЯ
-    // ==========================================
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
         const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -208,9 +216,7 @@
         } catch(e) { return null; }
     }
 
-    // ==========================================
     // 2. ЯДРО ГЕНЕРАТОРА (ІДЕАЛЬНА 8-КРАТНА СИМЕТРІЯ)
-    // ==========================================
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -242,6 +248,7 @@
         let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
         let centerY = Math.floor(size / 2);
         let centerX = Math.floor(size / 2);
+        let pal = PAL[palId];
         let maxBlock = Math.ceil(centerY / 7) + 1;
         let blockMap = {};
 
@@ -280,10 +287,10 @@
         return matrix;
     }
 
-    // ==========================================
     // 3. ЛОГІКА ПРИЛОЖЕННЯ І МАСКИ
-    // ==========================================
     const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
+    const lockTimers = { left: null, right: null }; // Для анимации задержки замков
+    
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
         cCreate: document.getElementById('canvas-create').getContext('2d', {willReadFrequently:true}),
@@ -293,7 +300,7 @@
         modal: document.getElementById('scan-modal'), viewfinder: document.getElementById('viewfinder'),
         spyOv: document.getElementById('spy-overlay'), spyPass: document.getElementById('spy-pass'), spyErr: document.getElementById('spy-error'),
         btnSave: document.getElementById('btn-save'),
-        canvasEl: document.getElementById('canvas-create'),
+        qrWrapper: document.getElementById('ui-qr-wrapper'), // Добавлен контейнер для управления тенями
         titleGlow: document.getElementById('title-glow'),
         lockLeftGlow: document.getElementById('lock-left-glow'),
         lockLeftClosed: document.getElementById('lock-left-closed'),
@@ -301,67 +308,90 @@
         lockRightClosed: document.getElementById('lock-right-closed')
     };
 
-    // --- Интерактивность масок ---
     function flashTitle() {
         els.titleGlow.classList.add('flicker-active');
-        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 60);
+        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 100);
     }
 
+    // НОВАЯ ЛОГИКА АНИМАЦИИ ЗАМКОВ С ЗАДЕРЖКОЙ
     function updateLocks(len) {
+        // 1. Базовый сброс видимости
         els.lockLeftGlow.style.opacity = '0';
-        els.lockLeftClosed.style.opacity = '0';
         els.lockRightGlow.style.opacity = '0';
-        els.lockRightClosed.style.opacity = '0';
-
-        if (len >= 1 && len <= 2) {
-            els.lockLeftGlow.style.opacity = '1';
-        } else if (len >= 3) {
-            els.lockLeftClosed.style.opacity = '1';
+        
+        // Если стерли пароль - сбрасываем закрытые замки и очищаем таймеры
+        if (len === 0) {
+            clearTimeout(lockTimers.left);
+            clearTimeout(lockTimers.right);
+            els.lockLeftClosed.style.opacity = '0';
+            els.lockRightClosed.style.opacity = '0';
+            return;
         }
 
-        if (len >= 4 && len <= 5) {
+        // 2. Левый замок: свечение от 1 до 3 символов
+        if (len >= 1 && len <= 3) {
+            els.lockLeftGlow.style.opacity = '1';
+        }
+
+        // 3. Левый замок: на 3-м символе сбрасываем таймер и запускаем переход в закрытое состояние
+        if (len >= 3) {
+            clearTimeout(lockTimers.left);
+            lockTimers.left = setTimeout(() => {
+                els.lockLeftGlow.style.opacity = '0';
+                els.lockLeftClosed.style.opacity = '1';
+            }, 300); // Задержка 0.3с для эффекта вспышки
+        } else {
+            clearTimeout(lockTimers.left);
+            els.lockLeftClosed.style.opacity = '0';
+        }
+
+        // 4. Правый замок: свечение от 4 до 6 символов
+        if (len >= 4 && len <= 6) {
             els.lockRightGlow.style.opacity = '1';
-        } else if (len >= 6) {
-            els.lockRightClosed.style.opacity = '1';
+        }
+
+        // 5. Правый замок: на 6-м символе запускаем переход в закрытое состояние
+        if (len >= 6) {
+            clearTimeout(lockTimers.right);
+            lockTimers.right = setTimeout(() => {
+                els.lockRightGlow.style.opacity = '0';
+                els.lockRightClosed.style.opacity = '1';
+            }, 300);
+        } else {
+            clearTimeout(lockTimers.right);
+            els.lockRightClosed.style.opacity = '0';
         }
     }
 
-    // --- Привязка событий ---
     let genTimer;
     function bindGen() {
-        // Одно нажатие клавиши — одна вспышка до 50%
-        els.text.addEventListener('keydown', (e) => {
-            if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt") {
-                flashTitle();
-            }
-        });
-
         els.text.addEventListener('input', () => { 
+            flashTitle(); 
             clearTimeout(genTimer); 
-            genTimer = setTimeout(generateQR, 200); 
+            genTimer = setTimeout(generateQR, 300); 
         });
         
         els.pass.addEventListener('input', () => { 
             updateLocks(els.pass.value.trim().length); 
             clearTimeout(genTimer); 
-            genTimer = setTimeout(generateQR, 200); 
+            genTimer = setTimeout(generateQR, 300); 
         });
     }
 
     // --- Генератор QR ---
     async function generateQR() {
         const raw = els.text.value, pwd = els.pass.value;
+        const canvasEl = document.getElementById('canvas-create');
         
         if (!raw.trim()) { 
-            els.canvasEl.classList.remove('show-canvas');
+            canvasEl.classList.remove('show-canvas');
+            els.qrWrapper.classList.remove('active-shadow'); // Убираем тень при пустом вводе
             els.btnSave.style.display='none'; 
             return; 
         }
 
-        // Вместо заливки черным цветом (который исчезает в soft-light), 
-        // мы заливаем холст нейтральным серым цветом, чтобы режим смешивания работал корректно
-        els.cCreate.fillStyle="rgb(128,128,128)"; 
-        els.cCreate.fillRect(0,0,512,512);
+        canvasEl.classList.remove('show-canvas');
+        els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
 
         let data = raw;
         if (pwd.trim() !== "") { try { data = await encryptData(raw, pwd); } catch(e) { return; } }
@@ -375,8 +405,6 @@
             let total = ornSize + (fi*2) + (fo*2); if (total % 2 === 0) total += 1;
             
             const mod = 512 / total;
-            
-            // Внутренние подложки структуры орнамента
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
             els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
 
@@ -403,17 +431,15 @@
                 }
             }
             
-            // Плавное проявление орнамента поверх камня
-            els.canvasEl.classList.add('show-canvas');
+            canvasEl.classList.add('show-canvas');
+            els.qrWrapper.classList.add('active-shadow'); // Добавляем тень ниши при генерации
             els.btnSave.style.display='block';
         } catch(e) { console.error(e); }
     }
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
 
-    // ==========================================
     // 4. СКАНЕР І ШПІОН
-    // ==========================================
     function openScanner() { els.modal.classList.remove('hidden'); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
@@ -466,7 +492,6 @@
 
     document.getElementById('file-input').addEventListener('change', handleFile);
     
-    // Инициализация при старте
     bindGen();
     updateLocks(0);
     </script>
