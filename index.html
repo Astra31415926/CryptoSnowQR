@@ -1,156 +1,140 @@
+Вот полностью готовый, монолитный файл `index.html`. Я точно интегрировал твой новый интерфейс с послойными графическими масками (`clip-path`), логику вспышек заголовка и пошаговую анимацию замков. Старое ядро генерации идеальной 8-кратной симметрии, криптография и сканер сохранены и связаны с новой механикой.
+
+Убедись, что файлы `bg1.jpg`, `bg.jpg` и `bg3.jpg` лежат в той же папке.
+
+```html
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CryptoSnowQR Artifact</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Шрифты и библиотеки -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <style>
-        :root { --rune-gold: #d4af37; --rune-glow: #ffbf00; --neon-green: #39ff14; }
-        body { 
-            background: #000; margin: 0; padding: 0; 
-            font-family: 'Cinzel', serif; overflow: hidden; 
-            width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
+        /* --- БАЗОВЫЙ КАРКАС ИНТЕРФЕЙСА --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #1a1510;
+            font-family: 'Cinzel', serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
         }
 
         .crypto-container {
             position: relative;
             width: 100vw;
-            height: 56.25vw; 
+            height: 56.25vw;
             max-height: 100vh;
-            max-width: 177.78vh; 
-            background-image: url('bg.jpg');
-            background-size: cover;
-            background-position: center;
+            max-width: 177.78vh;
+            background: url('bg1.jpg') center/cover no-repeat;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
 
-        /* --- 1. ФОСФОРЕСЦИРУЮЩИЙ ЗАГОЛОВОК --- */
-        @keyframes phosphorBreathe {
-            0%, 100% { 
-                text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green), 0 0 20px #00b300; 
-                opacity: 0.8; 
-            }
-            50% { 
-                text-shadow: 0 0 10px var(--neon-green), 0 0 30px var(--neon-green), 0 0 60px var(--neon-green), 0 0 100px #00b300; 
-                opacity: 1; 
-            }
-        }
-        #artifact-title {
-            position: absolute !important; 
-            top: 5% !important; 
-            width: 100% !important; 
-            text-align: center !important;
-            color: var(--neon-green) !important; 
-            font-family: 'Cinzel', serif !important; 
-            font-size: 3vw !important; 
-            font-weight: 900 !important;
-            letter-spacing: 0.1em !important;
-            animation: phosphorBreathe 7s infinite ease-in-out !important; 
-            z-index: 5 !important; 
-            margin: 0 !important; 
-            padding: 0 !important;
-            pointer-events: none !important;
-            text-transform: uppercase !important;
-        }
-
-        /* --- 2. ИНТЕРАКТИВНЫЕ ИНДИКАТОРЫ ПАРОЛЯ --- */
-        #lock-indicators {
-            position: absolute !important; 
-            top: 77.5% !important; 
-            width: 100% !important; 
-            text-align: center !important;
-            z-index: 20 !important; 
-            pointer-events: none !important;
-            display: flex !important;
-            justify-content: center !important;
-            gap: 1.5vw !important;
-        }
-        .lock-icon { 
-            font-size: 2vw !important; 
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important; 
-            opacity: 0.4 !important; 
-            filter: grayscale(1) brightness(0.5) !important;
-            display: inline-block !important;
-        }
-        .lock-icon.active { 
-            opacity: 1 !important; 
-            filter: none !important; 
-            text-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green), 0 0 40px #00b300 !important;
-            transform: scale(1.2) !important;
-        }
-
-        /* --- БАЗОВЫЕ СТИЛИ ИНТЕРФЕЙСА --- */
-        @keyframes amberPulse {
-            0%, 100% { filter: drop-shadow(0 0 10px #5c3d00) drop-shadow(0 0 20px #2a1a00); }
-            50% { filter: drop-shadow(0 0 30px var(--rune-glow)) drop-shadow(0 0 60px #8b6914) brightness(1.15); }
-        }
-        .crypto-container.glow-active { animation: amberPulse 2s infinite ease-in-out; }
-
-        .ui-layer {
+        #ui-text {
             position: absolute;
-            background: transparent;
-            border: none; outline: none; resize: none;
-            color: var(--rune-gold);
-            text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
-            caret-color: var(--rune-glow);
-            font-family: 'Cinzel', serif; font-weight: 700;
-            letter-spacing: 0.05em;
-            box-sizing: border-box; padding: 0 1vw;
-        }
-        .ui-layer::placeholder { color: rgba(212, 175, 55, 0.4); text-shadow: none; }
-        .ui-layer:focus { outline: none; }
-
-        #ui-text { left: 26.5%; top: 21.6%; width: 47.2%; height: 8.4%; font-size: 2vw; text-align: center; line-height: 1.2; z-index: 10; }
-        
-        #ui-qr-wrapper { 
-            left: 39.1%; top: 35.3%; width: 22.1%; height: 40.6%; 
-            display: flex; justify-content: center; align-items: center; pointer-events: none; 
-        }
-        #canvas-create { 
-            width: 100%; height: auto; max-width: 100%; max-height: 100%; 
-            aspect-ratio: 1 / 1; image-rendering: pixelated; image-rendering: crisp-edges; 
+            left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%;
+            font-size: 1.8vw; text-align: left; padding-left: 1.5vw; line-height: 1.2;
+            background: transparent; border: none; color: #7fff00; resize: none; outline: none;
+            font-family: inherit; z-index: 5;
         }
 
-        #ui-pass { left: 35%; top: 82%; width: 30%; height: 5.5%; font-size: 1.6vw; text-align: center; letter-spacing: 0.3em; z-index: 10; }
+        #ui-pass {
+            position: absolute;
+            left: 35%; top: 82%; width: 30%; height: 5.5%;
+            font-size: 1.6vw; text-align: center; letter-spacing: 0.3em;
+            background: transparent; border: none; color: #7fff00; outline: none;
+            font-family: inherit; z-index: 5;
+        }
 
+        /* --- ГРАФИЧЕСКИЕ СЛОИ-МАСКИ --- */
+        .overlay-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; background-size: cover; background-position: center; background-repeat: no-repeat;
+            opacity: 0;
+        }
+
+        #title-glow {
+            background-image: url('bg3.jpg');
+            clip-path: polygon(15% 0%, 85% 0%, 85% 20%, 15% 20%);
+            z-index: 2; transition: opacity 0.1s ease-out;
+        }
+        .flicker-active { opacity: 0.5 !important; }
+
+        #lock-left-glow {
+            background-image: url('bg3.jpg');
+            clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
+            z-index: 3; transition: opacity 0.3s ease;
+        }
+        #lock-left-closed {
+            background-image: url('bg.jpg');
+            clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
+            z-index: 3; transition: opacity 0.3s ease;
+        }
+
+        #lock-right-glow {
+            background-image: url('bg3.jpg');
+            clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
+            z-index: 3; transition: opacity 0.3s ease;
+        }
+        #lock-right-closed {
+            background-image: url('bg.jpg');
+            clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
+            z-index: 3; transition: opacity 0.3s ease;
+        }
+
+        /* --- КОНТЕЙНЕР И ХОЛСТ ОРНАМЕНТА --- */
+        #ui-qr-wrapper {
+            position: absolute !important; left: 39.1% !important; top: 35.3% !important;
+            width: 22.1% !important; height: 40.6% !important;
+            display: flex !important; justify-content: center !important; align-items: center !important;
+            pointer-events: none; background: transparent !important; z-index: 4;
+        }
+
+        #canvas-create {
+            width: 100% !important; height: auto !important; max-width: 100% !important; max-height: 100% !important;
+            aspect-ratio: 1 / 1 !important; image-rendering: pixelated; image-rendering: crisp-edges;
+            mix-blend-mode: soft-light; opacity: 0; transition: opacity 0.6s ease;
+        }
+        .show-canvas { opacity: 1 !important; }
+
+        /* --- КНОПКИ УПРАВЛЕНИЯ --- */
         .action-btn {
-            position: absolute; background: rgba(0,0,0,0.6);
-            border: 1px solid rgba(212, 175, 55, 0.3); color: var(--rune-gold);
-            font-family: 'Cinzel', serif; font-weight: 700;
-            padding: 1vw 2vw; cursor: pointer; transition: all 0.3s;
-            border-radius: 4px; font-size: 1.2vw; z-index: 10;
+            position: absolute; background: rgba(0,0,0,0.6); border: 1px solid rgba(127, 255, 0, 0.3);
+            color: #7fff00; font-family: 'Cinzel', serif; font-weight: 700;
+            padding: 1vw 2vw; cursor: pointer; transition: all 0.3s; border-radius: 4px; font-size: 1.2vw; z-index: 10;
         }
-        .action-btn:hover { background: rgba(212, 175, 55, 0.2); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+        .action-btn:hover { background: rgba(127, 255, 0, 0.2); box-shadow: 0 0 15px rgba(127, 255, 0, 0.4); }
         #btn-save { bottom: 3%; left: 3%; display: none; }
         #btn-scan { bottom: 3%; right: 3%; }
 
+        /* --- МОДАЛЬНЫЕ ОКНА (СКАНЕР И ШПИОН) --- */
         .hidden { display: none !important; }
         .scan-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .scanner-box { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: #111; border-radius: 20px; overflow: hidden; border: 2px solid #333; }
+        .scanner-box { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: #111; border-radius: 20px; overflow: hidden; border: 2px solid #39ff14; }
         .viewfinder-corners { position: absolute; inset: 20px; pointer-events: none; z-index: 15; }
-        .corner { position: absolute; width: 30px; height: 30px; border-color: var(--rune-gold); }
+        .corner { position: absolute; width: 30px; height: 30px; border-color: #39ff14; }
         .tl { top: 0; left: 0; border-top: 4px solid; border-left: 4px solid; border-radius: 5px 0 0 0; }
         .tr { top: 0; right: 0; border-top: 4px solid; border-right: 4px solid; border-radius: 0 5px 0 0; }
         .bl { bottom: 0; left: 0; border-bottom: 4px solid; border-left: 4px solid; border-radius: 0 0 0 5px; }
         .br { bottom: 0; right: 0; border-bottom: 4px solid; border-right: 4px solid; border-radius: 0 0 5px 0; }
-        .viewfinder-hunting .corner { border-color: #00ff41; box-shadow: 0 0 20px #00ff41; }
+        .viewfinder-hunting .corner { border-color: #fff; box-shadow: 0 0 20px #fff; }
         .scanner-controls { margin-top: 20px; display: flex; gap: 15px; width: 100%; max-width: 400px; }
-        .scan-btn { flex: 1; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: 'Cinzel', serif; border-radius: 12px; cursor: pointer; font-size: 16px; }
+        .scan-btn { flex: 1; padding: 15px; background: rgba(57, 255, 20, 0.1); border: 1px solid rgba(57, 255, 20, 0.3); color: #39ff14; font-family: 'Cinzel', serif; border-radius: 12px; cursor: pointer; font-size: 16px; }
 
         .spy-overlay { backdrop-filter: blur(8px); }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-        .spy-container { box-shadow: 0 0 40px rgba(168, 85, 247, 0.3); background: #111; border: 2px solid #a855f7; }
+        .spy-container { box-shadow: 0 0 40px rgba(57, 255, 20, 0.3); background: #111; border: 2px solid #39ff14; }
         @keyframes flash { 0% { opacity: 0; } 20% { opacity: 0.8; } 100% { opacity: 0; } }
         .flash-anim { animation: flash 0.3s ease-out; }
     </style>
@@ -158,32 +142,33 @@
 <body>
 
     <div id="artifact" class="crypto-container">
-        <!-- ДОБАВЛЕННЫЙ ЗАГОЛОВОК -->
-        <h1 id="artifact-title">CryptoSnowQR Artifact</h1>
+        <!-- Слои масок -->
+        <div id="title-glow" class="overlay-layer"></div>
+        <div id="lock-left-glow" class="overlay-layer"></div>
+        <div id="lock-left-closed" class="overlay-layer"></div>
+        <div id="lock-right-glow" class="overlay-layer"></div>
+        <div id="lock-right-closed" class="overlay-layer"></div>
         
-        <textarea id="ui-text" class="ui-layer" placeholder="Введіть текст таємниці..."></textarea>
-        
+        <!-- Инпуты -->
+        <textarea id="ui-text" placeholder="Введіть текст таємниці..."></textarea>
+        <input type="password" id="ui-pass" placeholder="••••••" maxlength="12">
+
+        <!-- Холст орнамента -->
         <div id="ui-qr-wrapper">
-            <canvas id="canvas-create" width="512" height="512"></canvas>
+            <canvas id="canvas-create"></canvas>
         </div>
-        
-        <!-- ДОБАВЛЕННЫЕ ИНДИКАТОРЫ ПАРОЛЯ -->
-        <div id="lock-indicators">
-            <span id="lock1" class="lock-icon">🔒</span>
-            <span id="lock2" class="lock-icon">🔒</span>
-        </div>
-        
-        <input type="password" id="ui-pass" class="ui-layer" placeholder="• • • К Л Ю Ч • • •">
-        
+
+        <!-- Кнопки -->
         <button id="btn-save" class="action-btn" onclick="saveQR()">[+] ЗБЕРЕГТИ</button>
         <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
     </div>
 
+    <!-- Модалка сканера -->
     <div id="scan-modal" class="scan-modal hidden">
         <div class="scanner-box">
-            <video id="video-scan" class="absolute inset-0 w-full h-full object-cover hidden z-10" playsinline></video>
-            <canvas id="canvas-scan-freeze" class="absolute inset-0 w-full h-full object-cover hidden z-10" width="512" height="512"></canvas>
-            <canvas id="canvas-scan-main" class="absolute inset-0 w-full h-full object-cover z-20" width="512" height="512"></canvas>
+            <video id="video-scan" class="absolute inset-0 w-full h-full object-cover hidden z-10" playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
+            <canvas id="canvas-scan-freeze" class="hidden" width="512" height="512" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></canvas>
+            <canvas id="canvas-scan-main" width="512" height="512" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:20;"></canvas>
             <div id="viewfinder" class="viewfinder-corners hidden">
                 <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
             </div>
@@ -196,13 +181,14 @@
         <input type="file" id="file-input" accept="image/*" class="hidden">
     </div>
 
+    <!-- Модалка Шпиона -->
     <div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 z-[200] flex flex-col items-center justify-center p-6">
         <div class="spy-container p-8 rounded-3xl text-center max-w-sm w-full">
             <div class="text-7xl mb-2 animate-bounce">🕵️‍♂️</div>
             <div class="flex justify-center text-4xl mb-4 -mt-6">👀</div>
-            <h2 class="text-2xl font-black text-purple-300 mb-2" style="font-family: sans-serif;">АГЕНТ, СТОП!</h2>
+            <h2 class="text-2xl font-black text-green-300 mb-2" style="font-family: sans-serif;">АГЕНТ, СТОП!</h2>
             <p class="text-zinc-400 mb-6 text-sm" style="font-family: sans-serif;">Ці дані зашифровані. Назовьте секретне слово.</p>
-            <input type="password" id="spy-pass" class="w-full p-4 rounded-xl bg-black text-white text-center text-2xl tracking-widest mb-2 border-purple-500 focus:border-pink-500 outline-none" style="font-family: monospace;" placeholder="••••••••">
+            <input type="password" id="spy-pass" class="w-full p-4 rounded-xl bg-black text-white text-center text-2xl tracking-widest mb-2 border-green-500 outline-none" style="font-family: monospace;" placeholder="••••••••">
             <p id="spy-error" class="text-red-500 text-sm h-6 font-bold transition-opacity opacity-0" style="font-family: sans-serif;">ДЕРЖАВА НЕ ДОВІРЯЄ ВАМ</p>
             <button onclick="closeSpy()" class="mt-4 text-zinc-600 text-xs underline" style="font-family: sans-serif;">Відміна</button>
         </div>
@@ -211,7 +197,9 @@
     <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
+    // ==========================================
     // 1. КРИПТОГРАФІЯ
+    // ==========================================
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
         const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -232,7 +220,9 @@
         } catch(e) { return null; }
     }
 
+    // ==========================================
     // 2. ЯДРО ГЕНЕРАТОРА (ІДЕАЛЬНА 8-КРАТНА СИМЕТРІЯ)
+    // ==========================================
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -303,7 +293,9 @@
         return matrix;
     }
 
-    // 3. ЛОГІКА ПРИЛОЖЕННЯ
+    // ==========================================
+    // 3. ЛОГІКА ПРИЛОЖЕННЯ І МАСКИ
+    // ==========================================
     const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
@@ -314,44 +306,65 @@
         modal: document.getElementById('scan-modal'), viewfinder: document.getElementById('viewfinder'),
         spyOv: document.getElementById('spy-overlay'), spyPass: document.getElementById('spy-pass'), spyErr: document.getElementById('spy-error'),
         btnSave: document.getElementById('btn-save'),
-        lock1: document.getElementById('lock1'), lock2: document.getElementById('lock2') // Новые элементы
+        // Новые элементы масок
+        titleGlow: document.getElementById('title-glow'),
+        lockLeftGlow: document.getElementById('lock-left-glow'),
+        lockLeftClosed: document.getElementById('lock-left-closed'),
+        lockRightGlow: document.getElementById('lock-right-glow'),
+        lockRightClosed: document.getElementById('lock-right-closed')
     };
 
-    // Функция обновления замков
-    function updatePasswordIndicators() {
-        let len = els.pass.value.trim().length;
-        
-        // Сброс к базовому состоянию
-        els.lock1.classList.remove('active'); els.lock1.textContent = '🔒';
-        els.lock2.classList.remove('active'); els.lock2.textContent = '🔒';
-        
-        // Логика активации
-        if (len >= 3) { 
-            els.lock1.classList.add('active'); 
-            els.lock1.textContent = '🔓'; 
+    // --- Интерактивность масок ---
+    function flashTitle() {
+        els.titleGlow.classList.add('flicker-active');
+        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 100);
+    }
+
+    function updateLocks(len) {
+        // Базовый сброс (все скрыты)
+        els.lockLeftGlow.style.opacity = '0';
+        els.lockLeftClosed.style.opacity = '0';
+        els.lockRightGlow.style.opacity = '0';
+        els.lockRightClosed.style.opacity = '0';
+
+        // Логика переключения состояний (идеально работает и при вводе, и при удалении)
+        if (len >= 1 && len <= 2) {
+            els.lockLeftGlow.style.opacity = '1';
+        } else if (len >= 3) {
+            els.lockLeftClosed.style.opacity = '1';
         }
-        if (len >= 6) { 
-            els.lock2.classList.add('active'); 
-            els.lock2.textContent = '🔓'; 
+
+        if (len >= 4 && len <= 5) {
+            els.lockRightGlow.style.opacity = '1';
+        } else if (len >= 6) {
+            els.lockRightClosed.style.opacity = '1';
         }
     }
 
-    els.pass.addEventListener('focus', () => els.artifact.classList.add('glow-active'));
-    els.pass.addEventListener('blur', () => els.artifact.classList.remove('glow-active'));
-
+    // --- Привязка событий ---
     let genTimer;
     function bindGen() {
-        const trig = () => { 
-            updatePasswordIndicators(); // Вызов индикаторов
+        els.text.addEventListener('input', () => { 
+            flashTitle(); 
             clearTimeout(genTimer); 
             genTimer = setTimeout(generateQR, 300); 
-        };
-        els.text.addEventListener('input', trig);
-        els.pass.addEventListener('input', trig);
+        });
+        
+        els.pass.addEventListener('input', () => { 
+            updateLocks(els.pass.value.trim().length); 
+            clearTimeout(genTimer); 
+            genTimer = setTimeout(generateQR, 300); 
+        });
     }
 
+    // --- Генератор QR ---
     async function generateQR() {
         const raw = els.text.value, pwd = els.pass.value;
+        
+        // Управление отображением холста
+        const canvasEl = document.getElementById('canvas-create');
+        canvasEl.classList.remove('show-canvas');
+        
         els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
         if (!raw.trim()) { els.btnSave.style.display='none'; return; }
 
@@ -392,12 +405,18 @@
                     els.cCreate.fillRect(c*mod, r*mod, mod+0.5, mod+0.5);
                 }
             }
+            
+            // Плавное проявление орнамента
+            canvasEl.classList.add('show-canvas');
             els.btnSave.style.display='block';
         } catch(e) { console.error(e); }
     }
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
 
+    // ==========================================
+    // 4. СКАНЕР І ШПІОН
+    // ==========================================
     function openScanner() { els.modal.classList.remove('hidden'); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
@@ -405,7 +424,7 @@
         state.locked=true; stopScanning(); playBeep(); flashScreen();
         els.viewfinder.classList.add('viewfinder-hunting'); setTimeout(()=>els.viewfinder.classList.remove('viewfinder-hunting'),300);
         if (data.trim().endsWith('=')) { state.pendingDecrypt=data.trim(); showSpy(); }
-        else { closeScanner(); els.text.value=data; els.pass.value=""; updatePasswordIndicators(); generateQR(); }
+        else { closeScanner(); els.text.value=data; els.pass.value=""; updateLocks(0); generateQR(); }
     }
 
     function showSpy() { els.spyOv.classList.remove('hidden'); els.spyPass.value=""; els.spyErr.style.opacity='0'; setTimeout(()=>els.spyPass.focus(),100); }
@@ -418,7 +437,7 @@
             await new Promise(r=>setTimeout(r,50));
             let res = await decryptData(state.pendingDecrypt, pwd);
             els.spyPass.disabled=false; els.spyPass.placeholder="••••••••";
-            if(res!==null) { closeSpy(); closeScanner(); els.text.value=res; els.pass.value=pwd; updatePasswordIndicators(); generateQR(); }
+            if(res!==null) { closeSpy(); closeScanner(); els.text.value=res; els.pass.value=pwd; updateLocks(pwd.length); generateQR(); }
             else { els.spyErr.style.opacity='1'; els.spyPass.classList.add('shake-anim'); setTimeout(()=>els.spyPass.classList.remove('shake-anim'),500); els.spyPass.value=""; els.spyPass.focus(); }
         }
     });
@@ -450,9 +469,10 @@
 
     document.getElementById('file-input').addEventListener('change', handleFile);
     
-    // Инициализация
+    // Инициализация при старте
     bindGen();
-    updatePasswordIndicators();
+    updateLocks(0);
     </script>
 </body>
 </html>
+```
