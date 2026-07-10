@@ -1,10 +1,3 @@
-Понял в чем была ошибка! В прошлом варианте я задал `background-position: center`. Из-за этого браузер центрировал огромную фоновую картинку относительно *маленького контейнера*, что сдвинуло текстуру и сломало стыковку. 
-
-Чтобы фрагмент камня внутри окна идеально, до пикселя совпал с общим фоном плиты, нужно привязать фон к левому верхнему углу (`0 0`). Тогда глобальный масштаб `100vw 56.25vw` сработает как лазерная резка — ты не увидишь никаких швов.
-
-Вот исправленный монолитный код (изменен только 1 блок в CSS):
-
-```html
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -67,7 +60,7 @@
         #title-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(15% 0%, 85% 0%, 85% 20%, 15% 20%);
-            z-index: 2; transition: opacity 0.1s ease-out;
+            z-index: 2; transition: opacity 0.05s ease-out;
         }
         .flicker-active { opacity: 0.5 !important; }
 
@@ -98,11 +91,7 @@
             position: absolute !important; left: 39.1% !important; top: 35.3% !important;
             width: 22.1% !important; height: 40.6% !important;
             display: flex !important; justify-content: center !important; align-items: center !important;
-            pointer-events: none; 
-            /* ИСПРАВЛЕНО: Фон привязан к левому верхнему углу (0 0), чтобы текстура не съезжала */
-            background: url('bg.jpg') no-repeat 0 0 !important;
-            background-size: 100vw 56.25vw !important; 
-            z-index: 4;
+            pointer-events: none; background: transparent !important; z-index: 4;
         }
 
         #canvas-create {
@@ -157,7 +146,7 @@
         <input type="password" id="ui-pass" placeholder="••••••" maxlength="12">
 
         <div id="ui-qr-wrapper">
-            <canvas id="canvas-create"></canvas>
+            <canvas id="canvas-create" width="512" height="512"></canvas>
         </div>
 
         <button id="btn-save" class="action-btn" onclick="saveQR()">[+] ЗБЕРЕГТИ</button>
@@ -196,7 +185,9 @@
     <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
+    // ==========================================
     // 1. КРИПТОГРАФІЯ
+    // ==========================================
     async function encryptData(plaintext, password) {
         const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
         const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
@@ -217,7 +208,9 @@
         } catch(e) { return null; }
     }
 
+    // ==========================================
     // 2. ЯДРО ГЕНЕРАТОРА (ІДЕАЛЬНА 8-КРАТНА СИМЕТРІЯ)
+    // ==========================================
     const PATTERNS = [
         [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
         [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
@@ -249,7 +242,6 @@
         let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
         let centerY = Math.floor(size / 2);
         let centerX = Math.floor(size / 2);
-        let pal = PAL[palId];
         let maxBlock = Math.ceil(centerY / 7) + 1;
         let blockMap = {};
 
@@ -288,7 +280,9 @@
         return matrix;
     }
 
+    // ==========================================
     // 3. ЛОГІКА ПРИЛОЖЕННЯ І МАСКИ
+    // ==========================================
     const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
@@ -299,6 +293,7 @@
         modal: document.getElementById('scan-modal'), viewfinder: document.getElementById('viewfinder'),
         spyOv: document.getElementById('spy-overlay'), spyPass: document.getElementById('spy-pass'), spyErr: document.getElementById('spy-error'),
         btnSave: document.getElementById('btn-save'),
+        canvasEl: document.getElementById('canvas-create'),
         titleGlow: document.getElementById('title-glow'),
         lockLeftGlow: document.getElementById('lock-left-glow'),
         lockLeftClosed: document.getElementById('lock-left-closed'),
@@ -306,9 +301,10 @@
         lockRightClosed: document.getElementById('lock-right-closed')
     };
 
+    // --- Интерактивность масок ---
     function flashTitle() {
         els.titleGlow.classList.add('flicker-active');
-        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 100);
+        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 60);
     }
 
     function updateLocks(len) {
@@ -330,35 +326,42 @@
         }
     }
 
+    // --- Привязка событий ---
     let genTimer;
     function bindGen() {
+        // Одно нажатие клавиши — одна вспышка до 50%
+        els.text.addEventListener('keydown', (e) => {
+            if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt") {
+                flashTitle();
+            }
+        });
+
         els.text.addEventListener('input', () => { 
-            flashTitle(); 
             clearTimeout(genTimer); 
-            genTimer = setTimeout(generateQR, 300); 
+            genTimer = setTimeout(generateQR, 200); 
         });
         
         els.pass.addEventListener('input', () => { 
             updateLocks(els.pass.value.trim().length); 
             clearTimeout(genTimer); 
-            genTimer = setTimeout(generateQR, 300); 
+            genTimer = setTimeout(generateQR, 200); 
         });
     }
 
     // --- Генератор QR ---
     async function generateQR() {
         const raw = els.text.value, pwd = els.pass.value;
-        const canvasEl = document.getElementById('canvas-create');
         
-        // Гарантированно скрываем холст и ничего не рисуем при пустом вводе
         if (!raw.trim()) { 
-            canvasEl.classList.remove('show-canvas');
+            els.canvasEl.classList.remove('show-canvas');
             els.btnSave.style.display='none'; 
             return; 
         }
 
-        canvasEl.classList.remove('show-canvas');
-        els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
+        // Вместо заливки черным цветом (который исчезает в soft-light), 
+        // мы заливаем холст нейтральным серым цветом, чтобы режим смешивания работал корректно
+        els.cCreate.fillStyle="rgb(128,128,128)"; 
+        els.cCreate.fillRect(0,0,512,512);
 
         let data = raw;
         if (pwd.trim() !== "") { try { data = await encryptData(raw, pwd); } catch(e) { return; } }
@@ -372,6 +375,8 @@
             let total = ornSize + (fi*2) + (fo*2); if (total % 2 === 0) total += 1;
             
             const mod = 512 / total;
+            
+            // Внутренние подложки структуры орнамента
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
             els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
 
@@ -398,14 +403,17 @@
                 }
             }
             
-            canvasEl.classList.add('show-canvas');
+            // Плавное проявление орнамента поверх камня
+            els.canvasEl.classList.add('show-canvas');
             els.btnSave.style.display='block';
         } catch(e) { console.error(e); }
     }
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
 
+    // ==========================================
     // 4. СКАНЕР І ШПІОН
+    // ==========================================
     function openScanner() { els.modal.classList.remove('hidden'); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
@@ -458,9 +466,9 @@
 
     document.getElementById('file-input').addEventListener('change', handleFile);
     
+    // Инициализация при старте
     bindGen();
     updateLocks(0);
     </script>
 </body>
 </html>
-```
