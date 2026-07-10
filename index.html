@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CryptoSnowQR Artifact</title>
+    <title>CryptoSnowQR Artifact v2</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,6 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* БАЗОВЫЙ АДАПТИВНЫЙ КОНТЕЙНЕР (16:9) */
         .crypto-container {
             position: relative;
             width: 100vw;
@@ -35,14 +34,12 @@
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
-        /* АНИМАЦИЯ ЯНТАРНОГО ПУЛЬСА */
         @keyframes amberPulse {
             0%, 100% { filter: drop-shadow(0 0 10px #5c3d00) drop-shadow(0 0 20px #2a1a00); }
             50% { filter: drop-shadow(0 0 30px var(--rune-glow)) drop-shadow(0 0 60px #8b6914) brightness(1.15); }
         }
         .crypto-container.glow-active { animation: amberPulse 2s infinite ease-in-out; }
 
-        /* ИЗОЛИРОВАННЫЕ КООРДИНАТЫ ИНТЕРФЕЙСА */
         .ui-layer {
             position: absolute;
             background: transparent;
@@ -67,7 +64,6 @@
             line-height: 1.2; 
         }
 
-        /* ИСПРАВЛЕНО: Жесткое позиционирование и Flex-центровка узора внутри выемки */
         #ui-qr-wrapper { 
             position: absolute !important;
             left: 39.1% !important; 
@@ -81,7 +77,6 @@
             background: transparent !important;
         }
 
-        /* ИСПРАВЛЕНО: Квадратные пропорции холста 1:1 без деформаций */
         #canvas-create { 
             width: 100% !important;
             height: auto !important;
@@ -172,23 +167,38 @@
     <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
-    // КРИПТОГРАФИЯ
-    async function encryptData(plaintext, password) {
-        const enc = new TextEncoder(), salt = crypto.getRandomValues(new Uint8Array(16));
-        const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
-        const key = await crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:390000,hash:"SHA-256"}, km, {name:"AES-GCM",length:256}, false, ["encrypt"]);
-        const nonce = crypto.getRandomValues(new Uint8Array(12));
-        const ct = await crypto.subtle.encrypt({name:"AES-GCM",iv:nonce}, key, enc.encode(plaintext));
-        const comb = new Uint8Array(40 + ct.byteLength); comb.set(salt,0); comb.set(nonce,16); comb.set(new Uint8Array(ct),28);
-        return btoa(String.fromCharCode.apply(null, comb));
+    // ИСПРАВЛЕННАЯ СТАБИЛЬНАЯ КРИПТОГРАФИЯ (ДЕТЕРМИНИРОВАННЫЙ СОЛЕВОЙ СДВИГ)
+    async function getKey(password, salt) {
+        const enc = new TextEncoder();
+        const baseKey = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+        return crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+            baseKey,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt", "decrypt"]
+        );
     }
+
+    async function encryptData(plaintext, password) {
+        const enc = new TextEncoder();
+        const salt = new Uint8Array([42, 13, 99, 101, 85, 220, 14, 73, 91, 104, 2, 55, 88, 19, 120, 6]);
+        const iv = new Uint8Array([5, 9, 12, 88, 43, 21, 90, 11, 33, 44, 55, 66]);
+        const key = await getKey(password, salt);
+        const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(plaintext));
+        
+        const comb = new Uint8Array(ct);
+        return btoa(String.fromCharCode.apply(null, comb)) + "==STABLE==";
+    }
+
     async function decryptData(b64, password) {
         try {
-            const enc = new TextEncoder(), comb = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
-            const salt=comb.slice(0,16), nonce=comb.slice(16,28), ct=comb.slice(28);
-            const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
-            const key = await crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:390000,hash:"SHA-256"}, km, {name:"AES-GCM",length:256}, false, ["decrypt"]);
-            const dec = await crypto.subtle.decrypt({name:"AES-GCM",iv:nonce}, key, ct);
+            const cleanB64 = b64.replace("==STABLE==", "");
+            const salt = new Uint8Array([42, 13, 99, 101, 85, 220, 14, 73, 91, 104, 2, 55, 88, 19, 120, 6]);
+            const iv = new Uint8Array([5, 9, 12, 88, 43, 21, 90, 11, 33, 44, 55, 66]);
+            const comb = Uint8Array.from(atob(cleanB64), c => c.charCodeAt(0));
+            const key = await getKey(password, salt);
+            const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, comb);
             return new TextDecoder().decode(dec);
         } catch(e) { return null; }
     }
@@ -204,75 +214,46 @@
         [[1,1,1,1,1,0,0],[1,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1],[0,0,0,0,0,0,1],[0,0,0,0,0,0,1],[0,0,1,1,1,1,1]],
         [[0,0,0,0,1,1,1],[0,0,0,1,1,1,0],[0,0,1,1,1,0,0],[0,1,1,1,0,0,0],[1,1,1,0,0,0,0],[1,1,0,0,0,0,0],[1,0,0,0,0,0,0]],
         [[1,1,0,0,0,1,1],[1,1,0,0,0,1,1],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[1,1,0,0,0,1,1],[1,1,0,0,0,1,1]],
-        [[0,0,0,1,0,0,0],[0,0,1,1,1,0,0],[0,1,1,1,1,1,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0]],
-        [[1,1,1,1,1,1,0],[1,0,0,0,0,1,0],[1,0,1,1,1,1,0],[1,0,1,0,0,0,0],[1,0,1,1,1,1,1],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1]],
-        [[0,0,0,0,0,0,1],[0,0,0,0,0,1,1],[0,0,0,0,1,1,0],[0,0,0,1,1,0,0],[0,0,1,1,0,0,0],[0,1,1,0,0,0,0],[1,1,0,0,0,0,0]],
-        [[0,0,0,1,0,0,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[1,0,0,0,0,0,1],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,0,0,1,0,0,0]],
-        [[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1]],
-        [[0,0,1,1,1,0,0],[0,0,1,1,1,0,0],[1,1,0,1,0,1,1],[1,1,1,0,1,1,1],[1,1,0,1,0,1,1],[0,0,1,1,1,0,0],[0,0,1,1,1,0,0]],
-        [[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1],[0,0,0,0,0,0,0],[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0]],
-        [[0,1,1,0,1,1,0],[1,0,1,0,1,0,1],[1,1,0,0,0,1,1],[0,0,0,1,0,0,0],[1,1,0,0,0,1,1],[1,0,1,0,1,0,1],[0,1,1,0,1,1,0]],
-        [[0,1,0,1,0,1,0],[1,1,0,1,0,1,1],[0,0,0,1,0,0,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[1,1,0,1,0,1,1],[0,1,0,1,0,1,0]],
-        [[1,1,1,1,1,1,1],[0,1,1,1,1,1,1],[0,0,1,1,1,1,1],[0,0,0,1,1,1,1],[0,0,0,0,1,1,1],[0,0,0,0,0,1,1],[0,0,0,0,0,0,1]],
-        [[0,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,0,0,0,0,0],[1,1,1,0,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,1,0,0],[1,1,1,1,1,1,0]]
+        [[0,0,0,1,0,0,0],[0,0,1,1,1,0,0],[0,1,1,1,1,1,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0]]
     ];
     const solidBlock = Array.from({length:7}, ()=>Array(7).fill(1));
-    const FILLER_IDX = [0, 8, 13, 16, 17]; 
+    const FILLER_IDX = [0, 8, 3, 6, 7]; 
     const PAL = [[80, 120, 180], [180, 200, 160]];
 
-    // МАТЕМАТИЧЕСКИЙ МАТРИЧНЫЙ ГЕНЕРАТОР
     function generateMask(size, palId) {
-        if (size % 2 === 0) size += 1; // Нечетность
-
+        if (size % 2 === 0) size += 1;
         let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
         let centerY = Math.floor(size / 2);
         let centerX = Math.floor(size / 2);
-        
-        let pal = PAL[palId];
         let maxBlock = Math.ceil(centerY / 7) + 1;
         let blockMap = {};
 
         for(let by = 0; by < maxBlock; by++) {
             for(let bx = by; bx < maxBlock; bx++) {
                 let pat = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-                if(JSON.stringify(pat) === JSON.stringify(solidBlock)) {
-                    pat = PATTERNS[FILLER_IDX[Math.floor(Math.random() * FILLER_IDX.length)]];
-                }
                 blockMap[`${bx},${by}`] = pat;
             }
         }
 
-        // Отрисовка октанта с 8-кратным зеркалированием относительно ядра
         for(let y = 0; y <= centerY; y++) {
             for(let x = y; x <= centerX; x++) {
-                let bx = Math.floor(x / 7);
-                let by = Math.floor(y / 7);
-                let key = `${bx},${by}`;
-                if(!blockMap[key]) key = `${by},${bx}`;
-                
-                let pat = blockMap[key];
-                if(!pat) continue;
-
-                let px = x % 7;
-                let py = y % 7;
+                let bx = Math.floor(x / 7); let by = Math.floor(y / 7);
+                let key = `${bx},${by}`; if(!blockMap[key]) key = `${by},${bx}`;
+                let pat = blockMap[key]; if(!pat) continue;
+                let px = x % 7; let py = y % 7;
                 
                 if(pat[py][px] === 1) {
                     let value = 1;
-                    matrix[centerY + y][centerX + x] = value;
-                    matrix[centerY + x][centerX + y] = value;
-                    matrix[centerY - y][centerX + x] = value;
-                    matrix[centerY - x][centerX + y] = value;
-                    matrix[centerY + y][centerX - x] = value;
-                    matrix[centerY + x][centerX - y] = value;
-                    matrix[centerY - y][centerX - x] = value;
-                    matrix[centerY - x][centerX - y] = value;
+                    matrix[centerY + y][centerX + x] = value; matrix[centerY + x][centerX + y] = value;
+                    matrix[centerY - y][centerX + x] = value; matrix[centerY - x][centerX + y] = value;
+                    matrix[centerY + y][centerX - x] = value; matrix[centerY + x][centerX - y] = value;
+                    matrix[centerY - y][centerX - x] = value; matrix[centerY - x][centerX - y] = value;
                 }
             }
         }
         return matrix;
     }
 
-    // УПРАВЛЕНИЕ ПРИЛОЖЕНИЕМ
     const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
@@ -298,23 +279,25 @@
     async function generateQR() {
         const raw = els.text.value, pwd = els.pass.value;
         els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
-        if (!raw.trim()) { els.btnSave.style.display='none'; return; }
+        
+        // ЗАЩИТА: Если текста нет или ключ не введен, не запускаем шифрование
+        if (!raw.trim() || pwd.trim().length < 3) { 
+            els.btnSave.style.display='none'; 
+            return; 
+        }
 
         let data = raw;
-        if (pwd.trim() !== "") { try { data = await encryptData(raw, pwd); } catch(e) { return; } }
+        try { data = await encryptData(raw, pwd); } catch(e) { return; }
 
         try {
             const utf8 = unescape(encodeURIComponent(data));
             const qr = qrcode(0, 'M'); qr.addData(utf8); qr.make();
             let mc = qr.getModuleCount();
             let qz=2, fi=1, fo=2;
-            
             let ornSize = mc + (qz*2);
             if (ornSize % 2 === 0) ornSize += 1;
-            
             let total = ornSize + (fi*2) + (fo*2);
             if (total % 2 === 0) total += 1;
-            
             const mod = 512 / total;
             
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
@@ -347,13 +330,15 @@
     }
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
-    function openScanner() { els.modal.classList.remove('hidden'); }
+    function openScanner() { els.modal.classList.remove('hidden'); startCamera(); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
     async function handleScanResult(data) {
         state.locked=true; stopScanning(); playBeep(); flashScreen();
         els.viewfinder.classList.add('viewfinder-hunting'); setTimeout(()=>els.viewfinder.classList.remove('viewfinder-hunting'),300);
-        if (data.trim().endsWith('=')) { state.pendingDecrypt=data.trim(); showSpy(); }
+        
+        // Маркер стабильной дешифровки нового типа
+        if (data.trim().includes('==STABLE==')) { state.pendingDecrypt=data.trim(); showSpy(); }
         else { closeScanner(); els.text.value=data; els.pass.value=""; generateQR(); }
     }
 
@@ -372,7 +357,6 @@
         }
     });
 
-    // ДВИЖОК СКАНИРОВАНИЯ БИНАРИЗАЦИИ
     function applyBradley(img,ch){const w=img.width,h=img.height,d=img.data,o=new Uint8ClampedArray(w*h*4),ii=new Int32Array(w*h),s=Math.floor(w/8),t=15;for(let y=0;y<h;y++){let sum=0;for(let x=0;x<w;x++){sum+=d[(y*w+x)*4+ch];ii[y*w+x]=(y>0?ii[(y-1)*w+x]:0)+sum;}}for(let y=0;y<h;y++){for(let x=0;x<w;x++){let x1=Math.max(x-s,0),x2=Math.min(x+s,w-1),y1=Math.max(y-s,0),y2=Math.min(y+s,h-1),c=(x2-x1)*(y2-y1);let sum=ii[y2*w+x2]-ii[y1*w+x2]-ii[y2*w+x1]+ii[y1*w+x1];let v=d[(y*w+x)*4+ch];let r=(v*c<sum*(100-t)/100)?0:255;let i=(y*w+x)*4;o[i]=o[i+1]=o[i+2]=r;o[i+3]=255;}}return new ImageData(o,w,h);}
     function applySCI(img,cfg){const d=img.data;for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let res=(b-(r*cfg.k1+g*cfg.k2))*1.5;res=Math.max(0,Math.min(255,res));d[i]=res;d[i+1]=res;d[i+2]=res;d[i+3]=255;}}
     function getOsc(t,p,mn,mx){const c=t%p,h=p/2,ps=(c<h)?c/h:(p-c)/h;return mn+ps*(mx-mn);}
