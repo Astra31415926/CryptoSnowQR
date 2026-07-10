@@ -92,8 +92,8 @@
             width: 22.1% !important; height: 40.6% !important;
             display: flex !important; justify-content: center !important; align-items: center !important;
             pointer-events: none; 
-            /* ИСПРАВЛЕНО: Фон привязан к левому верхнему углу (0 0), чтобы текстура не съезжала */
-            background: url('bg.jpg') no-repeat 0 0 !important;
+            /* ИСПРАВЛЕНО: Жесткая привязка к масштабу вьюпорта для бесшовной стыковки с главным фоном */
+            background: url('bg.jpg') no-repeat center !important;
             background-size: 100vw 56.25vw !important; 
             z-index: 4;
         }
@@ -343,13 +343,15 @@
         const raw = els.text.value, pwd = els.pass.value;
         const canvasEl = document.getElementById('canvas-create');
         
-        // Гарантированно скрываем холст и ничего не рисуем при пустом вводе
+        // ИСПРАВЛЕНО: Сначала скрываем холст и выходим, не рисуя черный квадрат, 
+        // чтобы mix-blend-mode не размывал подложку
         if (!raw.trim()) { 
             canvasEl.classList.remove('show-canvas');
             els.btnSave.style.display='none'; 
             return; 
         }
 
+        // Если есть текст - подготавливаем холст к отрисовке
         canvasEl.classList.remove('show-canvas');
         els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
 
