@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CryptoSnowQR Artifact</title>
     
-    <!-- Шрифты и библиотеки -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -61,7 +60,7 @@
         #title-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(15% 0%, 85% 0%, 85% 20%, 15% 20%);
-            z-index: 2; transition: opacity 0.1s ease-out;
+            z-index: 2; transition: opacity 0.05s ease-out;
         }
         .flicker-active { opacity: 0.5 !important; }
 
@@ -112,7 +111,7 @@
         #btn-save { bottom: 3%; left: 3%; display: none; }
         #btn-scan { bottom: 3%; right: 3%; }
 
-        /* --- МОДАЛЬНЫЕ ОКНА (СКАНЕР И ШПИОН) --- */
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
         .hidden { display: none !important; }
         .scan-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .scanner-box { position: relative; width: 100%; max-width: 400px; aspect-ratio: 1; background: #111; border-radius: 20px; overflow: hidden; border: 2px solid #39ff14; }
@@ -137,28 +136,23 @@
 <body>
 
     <div id="artifact" class="crypto-container">
-        <!-- Слои масок -->
         <div id="title-glow" class="overlay-layer"></div>
         <div id="lock-left-glow" class="overlay-layer"></div>
         <div id="lock-left-closed" class="overlay-layer"></div>
         <div id="lock-right-glow" class="overlay-layer"></div>
         <div id="lock-right-closed" class="overlay-layer"></div>
         
-        <!-- Инпуты -->
         <textarea id="ui-text" placeholder="Введіть текст таємниці..."></textarea>
         <input type="password" id="ui-pass" placeholder="••••••" maxlength="12">
 
-        <!-- Холст орнамента -->
         <div id="ui-qr-wrapper">
-            <canvas id="canvas-create"></canvas>
+            <canvas id="canvas-create" width="512" height="512"></canvas>
         </div>
 
-        <!-- Кнопки -->
         <button id="btn-save" class="action-btn" onclick="saveQR()">[+] ЗБЕРЕГТИ</button>
         <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
     </div>
 
-    <!-- Модалка сканера -->
     <div id="scan-modal" class="scan-modal hidden">
         <div class="scanner-box">
             <video id="video-scan" class="absolute inset-0 w-full h-full object-cover hidden z-10" playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
@@ -176,7 +170,6 @@
         <input type="file" id="file-input" accept="image/*" class="hidden">
     </div>
 
-    <!-- Модалка Шпиона -->
     <div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 z-[200] flex flex-col items-center justify-center p-6">
         <div class="spy-container p-8 rounded-3xl text-center max-w-sm w-full">
             <div class="text-7xl mb-2 animate-bounce">🕵️‍♂️</div>
@@ -249,7 +242,6 @@
         let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
         let centerY = Math.floor(size / 2);
         let centerX = Math.floor(size / 2);
-        let pal = PAL[palId];
         let maxBlock = Math.ceil(centerY / 7) + 1;
         let blockMap = {};
 
@@ -301,7 +293,7 @@
         modal: document.getElementById('scan-modal'), viewfinder: document.getElementById('viewfinder'),
         spyOv: document.getElementById('spy-overlay'), spyPass: document.getElementById('spy-pass'), spyErr: document.getElementById('spy-error'),
         btnSave: document.getElementById('btn-save'),
-        // Новые элементы масок
+        canvasEl: document.getElementById('canvas-create'),
         titleGlow: document.getElementById('title-glow'),
         lockLeftGlow: document.getElementById('lock-left-glow'),
         lockLeftClosed: document.getElementById('lock-left-closed'),
@@ -312,17 +304,15 @@
     // --- Интерактивность масок ---
     function flashTitle() {
         els.titleGlow.classList.add('flicker-active');
-        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 100);
+        setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 60);
     }
 
     function updateLocks(len) {
-        // Базовый сброс (все скрыты)
         els.lockLeftGlow.style.opacity = '0';
         els.lockLeftClosed.style.opacity = '0';
         els.lockRightGlow.style.opacity = '0';
         els.lockRightClosed.style.opacity = '0';
 
-        // Логика переключения состояний (идеально работает и при вводе, и при удалении)
         if (len >= 1 && len <= 2) {
             els.lockLeftGlow.style.opacity = '1';
         } else if (len >= 3) {
@@ -339,16 +329,22 @@
     // --- Привязка событий ---
     let genTimer;
     function bindGen() {
+        // Одно нажатие клавиши — одна вспышка до 50%
+        els.text.addEventListener('keydown', (e) => {
+            if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt") {
+                flashTitle();
+            }
+        });
+
         els.text.addEventListener('input', () => { 
-            flashTitle(); 
             clearTimeout(genTimer); 
-            genTimer = setTimeout(generateQR, 300); 
+            genTimer = setTimeout(generateQR, 200); 
         });
         
         els.pass.addEventListener('input', () => { 
             updateLocks(els.pass.value.trim().length); 
             clearTimeout(genTimer); 
-            genTimer = setTimeout(generateQR, 300); 
+            genTimer = setTimeout(generateQR, 200); 
         });
     }
 
@@ -356,12 +352,16 @@
     async function generateQR() {
         const raw = els.text.value, pwd = els.pass.value;
         
-        // Управление отображением холста
-        const canvasEl = document.getElementById('canvas-create');
-        canvasEl.classList.remove('show-canvas');
-        
-        els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
-        if (!raw.trim()) { els.btnSave.style.display='none'; return; }
+        if (!raw.trim()) { 
+            els.canvasEl.classList.remove('show-canvas');
+            els.btnSave.style.display='none'; 
+            return; 
+        }
+
+        // Вместо заливки черным цветом (который исчезает в soft-light), 
+        // мы заливаем холст нейтральным серым цветом, чтобы режим смешивания работал корректно
+        els.cCreate.fillStyle="rgb(128,128,128)"; 
+        els.cCreate.fillRect(0,0,512,512);
 
         let data = raw;
         if (pwd.trim() !== "") { try { data = await encryptData(raw, pwd); } catch(e) { return; } }
@@ -375,6 +375,8 @@
             let total = ornSize + (fi*2) + (fo*2); if (total % 2 === 0) total += 1;
             
             const mod = 512 / total;
+            
+            // Внутренние подложки структуры орнамента
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
             els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
 
@@ -401,8 +403,8 @@
                 }
             }
             
-            // Плавное проявление орнамента
-            canvasEl.classList.add('show-canvas');
+            // Плавное проявление орнамента поверх камня
+            els.canvasEl.classList.add('show-canvas');
             els.btnSave.style.display='block';
         } catch(e) { console.error(e); }
     }
