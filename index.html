@@ -64,7 +64,7 @@
         }
         .flicker-active { opacity: 0.5 !important; }
 
-        #lock-left-glow {
+       #lock-left-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
             z-index: 3; transition: opacity 0.3s ease;
@@ -91,7 +91,9 @@
             position: absolute !important; left: 39.1% !important; top: 35.3% !important;
             width: 22.1% !important; height: 40.6% !important;
             display: flex !important; justify-content: center !important; align-items: center !important;
-            pointer-events: none; background: transparent !important; z-index: 4;
+            pointer-events: none; 
+            background: url('bg.jpg') center/cover no-repeat !important; 
+            z-index: 4;
         }
 
         #canvas-create {
@@ -201,13 +203,7 @@
         try {
             const enc = new TextEncoder(), comb = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
             const salt=comb.slice(0,16), nonce=comb.slice(16,28), ct=comb.slice(28);
-            const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
-            const key = await crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:390000,hash:"SHA-256"}, km, {name:"AES-GCM",length:256}, false, ["decrypt"]);
-            const dec = await crypto.subtle.decrypt({name:"AES-GCM",iv:nonce}, key, ct);
-            return new TextDecoder().decode(dec);
-        } catch(e) { return null; }
-    }
-
+            const km = await crypto.sub
     // ==========================================
     // 2. ЯДРО ГЕНЕРАТОРА (ІДЕАЛЬНА 8-КРАТНА СИМЕТРІЯ)
     // ==========================================
