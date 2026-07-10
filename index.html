@@ -26,31 +26,32 @@
             width: 100vw;
         }
 
-        /* Главный контейнер 16:9 */
+        /* Главный контейнер (Базовый фон теперь bg1.jpg с открытыми замками) */
         .crypto-container {
             position: relative;
             width: 100vw;
             height: 56.25vw;
             max-height: 100vh;
             max-width: 177.78vh;
-            background: url('bg.jpg') center/cover no-repeat;
+            background: url('bg1.jpg') center/cover no-repeat;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
             overflow: hidden;
         }
 
-        /* ТЕКСТОВОЕ ПОЛЕ (СЕКРЕТ) */
+        /* ТЕКСТОВОЕ ПОЛЕ (Смещено ниже, курсор слева, цвет светло-зеленый) */
         #ui-text {
             position: absolute;
             left: 26.5%;
-            top: 21.6%;
+            top: 23.5%; /* Смещено чуть ниже для центра */
             width: 47.2%;
-            height: 8.4%;
-            font-size: 2vw;
-            text-align: center;
+            height: 6.5%;
+            font-size: 1.8vw;
+            text-align: left; /* Курсор теперь в начале окна */
+            padding-left: 1.5vw;
             line-height: 1.2;
             background: transparent;
             border: none;
-            color: #fff;
+            color: #7fff00; /* Светло-зеленый цвет текста */
             resize: none;
             outline: none;
             font-family: inherit;
@@ -69,13 +70,13 @@
             letter-spacing: 0.3em;
             background: transparent;
             border: none;
-            color: #fff;
+            color: #7fff00;
             outline: none;
             font-family: inherit;
             z-index: 5;
         }
 
-        /* СЛОИ ДЛЯ ЭФФЕКТОВ ИЗ ДРУГИХ КАРТИНОК */
+        /* СЛОИ ДЛЯ ЭФФЕКТОВ */
         .overlay-layer {
             position: absolute;
             top: 0;
@@ -87,7 +88,6 @@
             background-position: center;
             background-repeat: no-repeat;
             opacity: 0;
-            transition: opacity 0.4s ease;
         }
 
         /* Слой с фосфорным текстом из bg3.jpg */
@@ -95,33 +95,47 @@
             background-image: url('bg3.jpg');
             clip-path: polygon(15% 0%, 85% 0%, 85% 20%, 15% 20%);
             z-index: 2;
+            transition: opacity 0.1s ease-out;
         }
 
-        /* Анимация искрения названия при вводе текста */
-        .flicker {
-            animation: glitchFlicker 0.15s ease-in-out infinite alternate;
+        /* Вспышка до 50% при вводе */
+        .flicker-active {
+            opacity: 0.5 !important;
         }
 
-        @keyframes glitchFlicker {
-            0% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-
-        /* Маски для левого замка (Координаты области замка) */
-        #lock-left-open-glow {
+        /* Маска для левого замка (Свечение из bg3.jpg) */
+        #lock-left-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
             z-index: 3;
+            transition: opacity 0.3s ease;
         }
 
-        /* Маски для правого замка */
-        #lock-right-open-glow {
+        /* Маска для правого замка (Свечение из bg3.jpg) */
+        #lock-right-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
             z-index: 3;
+            transition: opacity 0.3s ease;
         }
 
-        /* СЛОЙ ДЛЯ РАЗМЫТИЯ ПОДЛОЖКИ ОРНАМЕНТА */
+        /* Маска для закрытия левого замка (Берется из исходного bg.jpg) */
+        #lock-left-closed {
+            background-image: url('bg.jpg');
+            clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
+            z-index: 3;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Маска для закрытия правого замка (Берется из исходного bg.jpg) */
+        #lock-right-closed {
+            background-image: url('bg.jpg');
+            clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
+            z-index: 3;
+            transition: opacity 0.3s ease;
+        }
+
+        /* РАЗМЫТИЕ ПОДЛОЖКИ ОРНАМЕНТА */
         #canvas-blur-bg {
             position: absolute;
             left: 39.1%;
@@ -134,7 +148,7 @@
             transition: backdrop-filter 0.6s ease;
         }
 
-        /* КОНТЕЙНЕР ДЛЯ CANVAS ОРНАМЕНТА */
+        /* КОНТЕЙНЕР ДЛЯ CANVAS */
         #ui-qr-wrapper {
             position: absolute !important;
             left: 39.1% !important;
@@ -174,8 +188,10 @@
     <div id="artifact" class="crypto-container">
         
         <div id="title-glow" class="overlay-layer"></div>
-        <div id="lock-left-open-glow" class="overlay-layer"></div>
-        <div id="lock-right-open-glow" class="overlay-layer"></div>
+        <div id="lock-left-glow" class="overlay-layer"></div>
+        <div id="lock-right-glow" class="overlay-layer"></div>
+        <div id="lock-left-closed" class="overlay-layer"></div>
+        <div id="lock-right-closed" class="overlay-layer"></div>
         
         <div id="canvas-blur-bg"></div>
 
@@ -189,64 +205,74 @@
     </div>
 
     <script>
-        // Имитация твоих существующих элементов и функций для связки логики
         const els = {
             text: document.getElementById('ui-text'),
             pass: document.getElementById('ui-pass'),
             titleGlow: document.getElementById('title-glow'),
-            lockLeft: document.getElementById('lock-left-open-glow'),
-            lockRight: document.getElementById('lock-right-open-glow'),
+            lockLeftGlow: document.getElementById('lock-left-glow'),
+            lockRightGlow: document.getElementById('lock-right-glow'),
+            lockLeftClosed: document.getElementById('lock-left-closed'),
+            lockRightClosed: document.getElementById('lock-right-closed'),
             blurBg: document.getElementById('canvas-blur-bg'),
             canvas: document.getElementById('canvas-create')
         };
 
-        // Твоя основная функция генерации (заглушка для связки)
+        // Интеграция вызова отрисовки вашего орнамента
         function generateQR() {
-            // Здесь работает твой старый JS код генератора.
-            // Мы просто плавно отображаем canvas, когда он готов.
-            if(els.text.value.trim().length > 0) {
+            if(els.text.value.trim().length > 0 && typeof drawOrnament === "function") {
+                drawOrnament(); // Вызов вашей функции генерации рисунка
+                els.canvas.classList.add('show-canvas');
+            } else if (els.text.value.trim().length > 0) {
+                // Если функция еще не инициализирована, просто активируем видимость холста
                 els.canvas.classList.add('show-canvas');
             } else {
                 els.canvas.classList.remove('show-canvas');
             }
         }
 
-        // 1. РЕАКЦИЯ НА ВВОД СЕКРЕТНОГО ТЕКСТА (Вспышки названия)
-        let titleTimeout;
-        els.text.addEventListener('input', () => {
-            els.titleGlow.classList.add('flicker');
-            els.titleGlow.style.opacity = '1';
-            
-            clearTimeout(titleTimeout);
-            titleTimeout = setTimeout(() => {
-                els.titleGlow.classList.remove('flicker');
-                els.titleGlow.style.opacity = '0';
-            }, 400); // Гаснет через 0.4 сек после остановки ввода
+        // 1. ОДНО КРАТКОВРЕМЕННОЕ МЕРЦАНИЕ НА 50% ПРИ НАЖАТИИ КЛАВИШИ
+        els.text.addEventListener('keydown', () => {
+            els.titleGlow.classList.add('flicker-active');
+        });
 
+        els.text.addEventListener('keyup', () => {
+            setTimeout(() => {
+                els.titleGlow.classList.remove('flicker-active');
+            }, 50); // Мгновенный сброс яркости обратно
             generateQR();
         });
 
-        // 2. УПРАВЛЕНИЕ ЗАМКАМИ И РАЗМЫТИЕМ ОТ ДЛИНЫ КЛЮЧА
+        // 2. УПРАВЛЕНИЕ ЗАМКАМИ (ПООЧЕРЕДНОЕ ЗАКРЫТИЕ ПРИ ВВОДЕ КЛЮЧА)
         els.pass.addEventListener('input', () => {
             const len = els.pass.value.length;
 
-            // Логика Левого Замка
+            // ЛЕВЫЙ ЗАМОК
             if (len >= 1 && len <= 2) {
-                els.lockLeft.style.opacity = '1'; // Светится открытым (bg3)
+                els.lockLeftGlow.style.opacity = '1';     // Загорается открытым (bg3)
+                els.lockLeftClosed.style.opacity = '0';   
+            } else if (len >= 3) {
+                els.lockLeftGlow.style.opacity = '0';     // Гаснет открытый
+                els.lockLeftClosed.style.opacity = '1';   // Накладывается закрытый замок (bg)
             } else {
-                els.lockLeft.style.opacity = '0'; // Темный закрытый (bg.jpg)
+                els.lockLeftGlow.style.opacity = '0';     // Исходное состояние (bg1 - открытый темный)
+                els.lockLeftClosed.style.opacity = '0';
             }
 
-            // Логика Правого Замка
+            // ПРАВЫЙ ЗАМОК
             if (len >= 4 && len <= 5) {
-                els.lockRight.style.opacity = '1'; // Светится открытым (bg3)
+                els.lockRightGlow.style.opacity = '1';    // Загорается открытым (bg3)
+                els.lockRightClosed.style.opacity = '0';
+            } else if (len >= 6) {
+                els.lockRightGlow.style.opacity = '0';    // Гаснет открытый
+                els.lockRightClosed.style.opacity = '1';  // Накладывается закрытый замок (bg)
             } else {
-                els.lockRight.style.opacity = '0'; // Темный закрытый (bg.jpg)
+                els.lockRightGlow.style.opacity = '0';    // Исходное состояние (bg1 - открытый темный)
+                els.lockRightClosed.style.opacity = '0';
             }
 
-            // Размытие подложки камня при наличии готового шифра (например, от 1 символа)
+            // РАЗМЫТИЕ ПОДЛОЖКИ ОРНАМЕНТА
             if (len > 0 && els.text.value.trim().length > 0) {
-                els.blurBg.style.backdropFilter = 'blur(10px)';
+                els.blurBg.style.backdropFilter = 'blur(8px)';
             } else {
                 els.blurBg.style.backdropFilter = 'blur(0px)';
             }
