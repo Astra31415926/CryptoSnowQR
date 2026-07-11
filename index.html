@@ -23,6 +23,7 @@
             width: 100vw;
         }
 
+        /* ИЗМЕНЕНО: Базовый фон теперь чистый камень (открытые замки, не светящееся название) */
         .crypto-container {
             position: relative;
             width: 100vw;
@@ -39,7 +40,7 @@
             left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%;
             font-size: 1.8vw; text-align: left; padding-left: 1.5vw; line-height: 1.2;
             background: transparent; border: none; color: #7fff00; resize: none; outline: none;
-            font-family: inherit; z-index: 5; transition: opacity 0.6s ease;
+            font-family: inherit; z-index: 5;
         }
 
         #ui-pass {
@@ -64,20 +65,27 @@
         }
         .flicker-active { opacity: 0.5 !important; }
 
+        /* ИЗМЕНЕНО: Источник закрытых замков теперь bg1.jpg, изначально скрыты */
         #lock-left-glow, #lock-right-glow {
             background-image: url('bg3.jpg');
             clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
             z-index: 3; transition: opacity 0.3s ease;
         }
-        #lock-right-glow { clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%); }
+        #lock-right-glow {
+            clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
+        }
 
         #lock-left-closed, #lock-right-closed {
-            background-image: url('bg1.jpg'); 
-            opacity: 0; 
+            background-image: url('bg1.jpg'); /* Источник закрытых замков */
+            opacity: 0; /* Изначально скрыты */
             z-index: 3; transition: opacity 0.3s ease;
         }
-        #lock-left-closed { clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%); }
-        #lock-right-closed { clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%); }
+        #lock-left-closed {
+            clip-path: polygon(30% 70%, 40% 70%, 40% 92%, 30% 92%);
+        }
+        #lock-right-closed {
+            clip-path: polygon(60% 70%, 70% 70%, 70% 92%, 60% 92%);
+        }
 
         /* --- КОНТЕЙНЕР И ХОЛСТ ОРНАМЕНТА --- */
         #ui-qr-wrapper {
@@ -85,10 +93,13 @@
             width: 22.1% !important; height: 40.6% !important;
             display: flex !important; justify-content: center !important; align-items: center !important;
             pointer-events: none; 
+            /* ИЗМЕНЕНО: Полная прозрачность, сквозь него виден базовый камень */
             background: transparent !important; 
             z-index: 4;
             transition: box-shadow 0.6s ease;
         }
+        
+        /* ИЗМЕНЕНО: Эффект внутренней тени при генерации */
         #ui-qr-wrapper.active-shadow {
             box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8) !important;
         }
@@ -96,8 +107,7 @@
         #canvas-create {
             width: 100% !important; height: auto !important; max-width: 100% !important; max-height: 100% !important;
             aspect-ratio: 1 / 1 !important; image-rendering: pixelated; image-rendering: crisp-edges;
-            mix-blend-mode: soft-light; opacity: 0; 
-            transition: opacity 0.6s ease; /* Плавное затухание при расшифровке */
+            mix-blend-mode: soft-light; opacity: 0; transition: opacity 0.6s ease;
         }
         .show-canvas { opacity: 1 !important; }
 
@@ -125,11 +135,10 @@
         .scanner-controls { margin-top: 20px; display: flex; gap: 15px; width: 100%; max-width: 400px; }
         .scan-btn { flex: 1; padding: 15px; background: rgba(57, 255, 20, 0.1); border: 1px solid rgba(57, 255, 20, 0.3); color: #39ff14; font-family: 'Cinzel', serif; border-radius: 12px; cursor: pointer; font-size: 16px; }
 
-        /* --- ОШИБКА ДЕШИФРОВКИ (Спец. оверлей для тряски) --- */
-        .spy-overlay { backdrop-filter: blur(8px); z-index: 300; }
+        .spy-overlay { backdrop-filter: blur(8px); }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-        .spy-container { box-shadow: 0 0 40px rgba(255, 0, 0, 0.3); background: rgba(0,0,0,0.9); border: 2px solid #ff0000; }
+        .spy-container { box-shadow: 0 0 40px rgba(57, 255, 20, 0.3); background: #111; border: 2px solid #39ff14; }
         @keyframes flash { 0% { opacity: 0; } 20% { opacity: 0.8; } 100% { opacity: 0; } }
         .flash-anim { animation: flash 0.3s ease-out; }
     </style>
@@ -154,7 +163,6 @@
         <button id="btn-scan" class="action-btn" onclick="openScanner()">[👁] СКАНУВАТИ</button>
     </div>
 
-    <!-- Модалка сканера -->
     <div id="scan-modal" class="scan-modal hidden">
         <div class="scanner-box">
             <video id="video-scan" class="absolute inset-0 w-full h-full object-cover hidden z-10" playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
@@ -172,16 +180,19 @@
         <input type="file" id="file-input" accept="image/*" class="hidden">
     </div>
 
-    <!-- Оверлей ошибки дешифровки (без поля ввода, только визуал) -->
-    <div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 flex flex-col items-center justify-center p-6 pointer-events-none">
-        <div id="spy-shake-container" class="spy-container p-8 rounded-3xl text-center max-w-sm w-full pointer-events-auto">
-            <div class="text-7xl mb-2">🕵️‍♂️</div>
+    <div id="spy-overlay" class="spy-overlay hidden fixed inset-0 bg-black/80 z-[200] flex flex-col items-center justify-center p-6">
+        <div class="spy-container p-8 rounded-3xl text-center max-w-sm w-full">
+            <div class="text-7xl mb-2 animate-bounce">🕵️‍♂️</div>
             <div class="flex justify-center text-4xl mb-4 -mt-6">👀</div>
-            <p id="spy-error" class="text-red-500 text-xl h-10 font-bold transition-opacity opacity-0" style="font-family: sans-serif;">ДЕРЖАВА НЕ ДОВІРЯЄ ВАМ</p>
+            <h2 class="text-2xl font-black text-green-300 mb-2" style="font-family: sans-serif;">АГЕНТ, СТОП!</h2>
+            <p class="text-zinc-400 mb-6 text-sm" style="font-family: sans-serif;">Ці дані зашифровані. Назовьте секретне слово.</p>
+            <input type="password" id="spy-pass" class="w-full p-4 rounded-xl bg-black text-white text-center text-2xl tracking-widest mb-2 border-green-500 outline-none" style="font-family: monospace;" placeholder="••••••••">
+            <p id="spy-error" class="text-red-500 text-sm h-6 font-bold transition-opacity opacity-0" style="font-family: sans-serif;">ДЕРЖАВА НЕ ДОВІРЯЄ ВАМ</p>
+            <button onclick="closeSpy()" class="mt-4 text-zinc-600 text-xs underline" style="font-family: sans-serif;">Відміна</button>
         </div>
     </div>
 
-    <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[400]"></div>
+    <div id="flash-layer" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[300]"></div>
 
     <script>
     // 1. КРИПТОГРАФІЯ
@@ -205,9 +216,28 @@
         } catch(e) { return null; }
     }
 
-    // 2. ЯДРО ГЕНЕРАТОРА
+    // 2. ЯДРО ГЕНЕРАТОРА (ІДЕАЛЬНА 8-КРАТНА СИМЕТРІЯ)
     const PATTERNS = [
-        [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,1,0,1,1,0],[0,0,0,0,1,1,0],[1,1,1,1,1,1,1],[0,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,1,1,1,0,0],[0,0,0,0,1,1,1],[0,0,0,1,1,1,0],[0,0,1,1,1,0,0],[1,0,0,0,1,0,1],[0,1,1,0,1,1,0],[0,0,0,1,0,0,0],[1,1,1,0,0,0,0],[1,1,0,0,0,1,1],[0,0,1,0,1,0,0],[1,0,1,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,1,1,0,0],[0,1,1,0,1,1,0],[1,0,1,0,1,0,1],[0,0,0,1,0,0,0],[0,1,1,0,1,1,0],[1,1,0,0,0,1,1],[0,1,0,1,0,1,0],[1,1,1,1,1,1,1],[0,1,1,1,1,1,1],[0,0,1,1,1,1,1],[0,0,0,1,1,1,1],[0,0,0,0,1,1,1],[0,0,0,0,0,0,1]
+        [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
+        [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
+        [[1,1,1,1,1,1,1],[0,0,0,0,0,0,1],[1,1,1,1,1,0,1],[1,0,0,0,1,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]],
+        [[1,1,1,1,1,1,1],[1,0,0,0,0,0,0],[1,0,1,1,1,1,1],[1,0,1,0,0,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]],
+        [[1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,1,1,1,0,1],[1,0,1,0,1,0,1],[1,0,1,0,0,0,1],[1,0,1,1,1,1,1],[1,0,0,0,0,0,0]],
+        [[0,0,0,0,0,1,1],[0,0,0,0,1,1,0],[0,0,0,1,1,0,0],[1,1,1,1,1,1,1],[0,0,0,1,1,0,0],[0,0,0,0,1,1,0],[0,0,0,0,0,1,1]],
+        [[1,1,1,1,1,0,0],[1,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1],[0,0,0,0,0,0,1],[0,0,0,0,0,0,1],[0,0,1,1,1,1,1]],
+        [[0,0,0,0,1,1,1],[0,0,0,1,1,1,0],[0,0,1,1,1,0,0],[0,1,1,1,0,0,0],[1,1,1,0,0,0,0],[1,1,0,0,0,0,0],[1,0,0,0,0,0,0]],
+        [[1,1,0,0,0,1,1],[1,1,0,0,0,1,1],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[1,1,0,0,0,1,1],[1,1,0,0,0,1,1]],
+        [[0,0,0,1,0,0,0],[0,0,1,1,1,0,0],[0,1,1,1,1,1,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0]],
+        [[1,1,1,1,1,1,0],[1,0,0,0,0,1,0],[1,0,1,1,1,1,0],[1,0,1,0,0,0,0],[1,0,1,1,1,1,1],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1]],
+        [[0,0,0,0,0,0,1],[0,0,0,0,0,1,1],[0,0,0,0,1,1,0],[0,0,0,1,1,0,0],[0,0,1,1,0,0,0],[0,1,1,0,0,0,0],[1,1,0,0,0,0,0]],
+        [[0,0,0,1,0,0,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[1,0,0,0,0,0,1],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,0,0,1,0,0,0]],
+        [[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1]],
+        [[0,0,1,1,1,0,0],[0,0,1,1,1,0,0],[1,1,0,1,0,1,1],[1,1,1,0,1,1,1],[1,1,0,1,0,1,1],[0,0,1,1,1,0,0],[0,0,1,1,1,0,0]],
+        [[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1],[0,0,0,0,0,0,0],[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0]],
+        [[0,1,1,0,1,1,0],[1,0,1,0,1,0,1],[1,1,0,0,0,1,1],[0,0,0,1,0,0,0],[1,1,0,0,0,1,1],[1,0,1,0,1,0,1],[0,1,1,0,1,1,0]],
+        [[0,1,0,1,0,1,0],[1,1,0,1,0,1,1],[0,0,0,1,0,0,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[1,1,0,1,0,1,1],[0,1,0,1,0,1,0]],
+        [[1,1,1,1,1,1,1],[0,1,1,1,1,1,1],[0,0,1,1,1,1,1],[0,0,0,1,1,1,1],[0,0,0,0,1,1,1],[0,0,0,0,0,1,1],[0,0,0,0,0,0,1]],
+        [[0,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,0,0,0,0,0],[1,1,1,0,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,1,0,0],[1,1,1,1,1,1,0]]
     ];
     const solidBlock = Array.from({length:7}, ()=>Array(7).fill(1));
     const FILLER_IDX = [0, 8, 13, 16, 17]; 
@@ -221,6 +251,7 @@
         let pal = PAL[palId];
         let maxBlock = Math.ceil(centerY / 7) + 1;
         let blockMap = {};
+
         for(let by = 0; by < maxBlock; by++) {
             for(let bx = by; bx < maxBlock; bx++) {
                 let pat = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
@@ -230,6 +261,7 @@
                 blockMap[`${bx},${by}`] = pat;
             }
         }
+
         for(let y = 0; y <= centerY; y++) {
             for(let x = y; x <= centerX; x++) {
                 let bx = Math.floor(x / 7);
@@ -238,24 +270,26 @@
                 if(!blockMap[key]) key = `${by},${bx}`;
                 let pat = blockMap[key];
                 if(!pat) continue;
+
                 if(pat[y % 7][x % 7] === 1) {
                     let value = 1;
-                    matrix[centerY + y][centerX + x] = value; matrix[centerY + x][centerX + y] = value;
-                    matrix[centerY - y][centerX + x] = value; matrix[centerY - x][centerX + y] = value;
-                    matrix[centerY + y][centerX - x] = value; matrix[centerY + x][centerX - y] = value;
-                    matrix[centerY - y][centerX - x] = value; matrix[centerY - x][centerX - y] = value;
+                    matrix[centerY + y][centerX + x] = value;
+                    matrix[centerY + x][centerX + y] = value;
+                    matrix[centerY - y][centerX + x] = value;
+                    matrix[centerY - x][centerX + y] = value;
+                    matrix[centerY + y][centerX - x] = value;
+                    matrix[centerY + x][centerX - y] = value;
+                    matrix[centerY - y][centerX - x] = value;
+                    matrix[centerY - x][centerX - y] = value;
                 }
             }
         }
         return matrix;
     }
 
-    // 3. ЛОГІКА ПРИЛОЖЕННЯ
-    const state = { 
-        scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, 
-        cfg: { B: { k1: 0.05, k2: 0.13 }, isDecryptionMode: false 
-    };
-    const lockTimers = { left: null, right: null };
+    // 3. ЛОГІКА ПРИЛОЖЕННЯ І МАСКИ
+    const state = { scanning: false, locked: false, pendingDecrypt: null, failCount: 0, activeSearch: false, time: 0, cfg: { B: { k1: 0.05, k2: 0.13 } } };
+    const lockTimers = { left: null, right: null }; // Для анимации задержки замков
     
     const els = {
         text: document.getElementById('ui-text'), pass: document.getElementById('ui-pass'),
@@ -264,12 +298,14 @@
         cFreeze: document.getElementById('canvas-scan-freeze').getContext('2d', {willReadFrequently:true}),
         video: document.getElementById('video-scan'), artifact: document.getElementById('artifact'),
         modal: document.getElementById('scan-modal'), viewfinder: document.getElementById('viewfinder'),
-        spyOv: document.getElementById('spy-overlay'), spyContainer: document.getElementById('spy-shake-container'), spyErr: document.getElementById('spy-error'),
+        spyOv: document.getElementById('spy-overlay'), spyPass: document.getElementById('spy-pass'), spyErr: document.getElementById('spy-error'),
         btnSave: document.getElementById('btn-save'),
-        qrWrapper: document.getElementById('ui-qr-wrapper'), 
+        qrWrapper: document.getElementById('ui-qr-wrapper'), // Добавлен контейнер для управления тенями
         titleGlow: document.getElementById('title-glow'),
-        lockLeftGlow: document.getElementById('lock-left-glow'), lockLeftClosed: document.getElementById('lock-left-closed'),
-        lockRightGlow: document.getElementById('lock-right-glow'), lockRightClosed: document.getElementById('lock-right-closed')
+        lockLeftGlow: document.getElementById('lock-left-glow'),
+        lockLeftClosed: document.getElementById('lock-left-closed'),
+        lockRightGlow: document.getElementById('lock-right-glow'),
+        lockRightClosed: document.getElementById('lock-right-closed')
     };
 
     function flashTitle() {
@@ -277,115 +313,84 @@
         setTimeout(() => els.titleGlow.classList.remove('flicker-active'), 100);
     }
 
+    // НОВАЯ ЛОГИКА АНИМАЦИИ ЗАМКОВ С ЗАДЕРЖКОЙ
     function updateLocks(len) {
+        // 1. Базовый сброс видимости
         els.lockLeftGlow.style.opacity = '0';
         els.lockRightGlow.style.opacity = '0';
+        
+        // Если стерли пароль - сбрасываем закрытые замки и очищаем таймеры
         if (len === 0) {
-            clearTimeout(lockTimers.left); clearTimeout(lockTimers.right);
-            els.lockLeftClosed.style.opacity = '0'; els.lockRightClosed.style.opacity = '0';
+            clearTimeout(lockTimers.left);
+            clearTimeout(lockTimers.right);
+            els.lockLeftClosed.style.opacity = '0';
+            els.lockRightClosed.style.opacity = '0';
             return;
         }
-        if (len >= 1 && len <= 3) { els.lockLeftGlow.style.opacity = '1'; }
+
+        // 2. Левый замок: свечение от 1 до 3 символов
+        if (len >= 1 && len <= 3) {
+            els.lockLeftGlow.style.opacity = '1';
+        }
+
+        // 3. Левый замок: на 3-м символе сбрасываем таймер и запускаем переход в закрытое состояние
         if (len >= 3) {
             clearTimeout(lockTimers.left);
-            lockTimers.left = setTimeout(() => { els.lockLeftGlow.style.opacity = '0'; els.lockLeftClosed.style.opacity = '1'; }, 300);
-        } else { clearTimeout(lockTimers.left); els.lockLeftClosed.style.opacity = '0'; }
-        if (len >= 4 && len <= 6) { els.lockRightGlow.style.opacity = '1'; }
+            lockTimers.left = setTimeout(() => {
+                els.lockLeftGlow.style.opacity = '0';
+                els.lockLeftClosed.style.opacity = '1';
+            }, 300); // Задержка 0.3с для эффекта вспышки
+        } else {
+            clearTimeout(lockTimers.left);
+            els.lockLeftClosed.style.opacity = '0';
+        }
+
+        // 4. Правый замок: свечение от 4 до 6 символов
+        if (len >= 4 && len <= 6) {
+            els.lockRightGlow.style.opacity = '1';
+        }
+
+        // 5. Правый замок: на 6-м символе запускаем переход в закрытое состояние
         if (len >= 6) {
             clearTimeout(lockTimers.right);
-            lockTimers.right = setTimeout(() => { els.lockRightGlow.style.opacity = '0'; els.lockRightClosed.style.opacity = '1'; }, 300);
-        } else { clearTimeout(lockTimers.right); els.lockRightClosed.style.opacity = '0'; }
+            lockTimers.right = setTimeout(() => {
+                els.lockRightGlow.style.opacity = '0';
+                els.lockRightClosed.style.opacity = '1';
+            }, 300);
+        } else {
+            clearTimeout(lockTimers.right);
+            els.lockRightClosed.style.opacity = '0';
+        }
     }
 
     let genTimer;
     function bindGen() {
         els.text.addEventListener('input', () => { 
-            flashTitle(); clearTimeout(genTimer); genTimer = setTimeout(generateQR, 300); 
+            flashTitle(); 
+            clearTimeout(genTimer); 
+            genTimer = setTimeout(generateQR, 300); 
         });
-        // При вводе пароля не триггерить генерацию, если мы в режиме расшифровки
+        
         els.pass.addEventListener('input', () => { 
-            if(!state.isDecryptionMode) {
-                updateLocks(els.pass.value.trim().length); 
-                clearTimeout(genTimer); genTimer = setTimeout(generateQR, 300); 
-            }
+            updateLocks(els.pass.value.trim().length); 
+            clearTimeout(genTimer); 
+            genTimer = setTimeout(generateQR, 300); 
         });
-        
-        // Перехватываем Enter для режима дешифровки
-        els.pass.addEventListener('keydown', handleDecryptAttempt);
     }
 
-    // --- Обработчик попытки расшифровки на главном экране ---
-    async function handleDecryptAttempt(e) {
-        if (e.key === 'Enter' && state.isDecryptionMode && state.pendingDecrypt) {
-            let pwd = els.pass.value.trim();
-            if (!pwd) return;
-            
-            els.pass.disabled = true;
-            els.pass.placeholder = "⏳ Дешифрування...";
-            await new Promise(r => setTimeout(r, 100));
-            
-            let res = await decryptData(state.pendingDecrypt, pwd);
-            
-            els.pass.disabled = false;
-            els.pass.placeholder = "••••••";
-            
-            if (res !== null) {
-                // УСПЕХ: Эффекты проявления
-                state.isDecryptionMode = false;
-                state.pendingDecrypt = null;
-                
-                // 1. Узор затухает
-                const canvasEl = document.getElementById('canvas-create');
-                canvasEl.style.opacity = '0.3';
-                
-                // 2. Текст проявляется
-                els.text.style.display = 'block';
-                els.text.value = res;
-                els.text.style.opacity = '0';
-                setTimeout(() => { els.text.style.opacity = '1'; }, 50);
-                
-                // 3. Замки открываются
-                updateLocks(0);
-                
-                // 4. Сброс поля ключа
-                els.pass.value = "";
-                els.pass.blur();
-            } else {
-                // НЕУДАЧА: Тряска агента
-                showSpyError();
-                els.pass.value = "";
-                setTimeout(() => els.pass.focus(), 500);
-            }
-        }
-    }
-
-    // Визуализация ошибки (без поля ввода, только тряска)
-    function showSpyError() {
-        els.spyOv.classList.remove('hidden');
-        els.spyErr.style.opacity = '1';
-        els.spyContainer.classList.add('shake-anim');
-        setTimeout(() => {
-            els.spyOv.classList.add('hidden');
-            els.spyContainer.classList.remove('shake-anim');
-            els.spyErr.style.opacity = '0';
-        }, 1500);
-    }
-
-    // --- Генератор QR (для ручного ввода) ---
+    // --- Генератор QR ---
     async function generateQR() {
-        if (state.isDecryptionMode) return; // Блокируем при сканировании
-        
         const raw = els.text.value, pwd = els.pass.value;
         const canvasEl = document.getElementById('canvas-create');
         
         if (!raw.trim()) { 
-            canvasEl.classList.remove('show-canvas'); canvasEl.style.opacity = '0';
-            els.qrWrapper.classList.remove('active-shadow'); 
+            canvasEl.classList.remove('show-canvas');
+            els.qrWrapper.classList.remove('active-shadow'); // Убираем тень при пустом вводе
             els.btnSave.style.display='none'; 
             return; 
         }
 
-        canvasEl.classList.remove('show-canvas'); canvasEl.style.opacity = '1';
+        canvasEl.classList.remove('show-canvas');
         els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
 
         let data = raw;
@@ -398,6 +403,7 @@
             let qz=2, fi=1, fo=2;
             let ornSize = mc + (qz*2); if (ornSize % 2 === 0) ornSize += 1;
             let total = ornSize + (fi*2) + (fo*2); if (total % 2 === 0) total += 1;
+            
             const mod = 512 / total;
             els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
             els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
@@ -411,99 +417,54 @@
                     let isO = (r<fo||r>=total-fo||c<fo||c>=total-fo);
                     let isI = !isO && (r<fo+fi||r>=total-(fo+fi)||c<fo+fi||c>=total-(fo+fi));
                     if (isO || isI) continue;
+
                     let oR=r-(fo+fi), oC=c-(fo+fi), qrR=r-coreStart, qrC=c-coreStart;
                     let isC = (qrR>=0&&qrR<mc&&qrC>=0&&qrC<mc);
+
                     let vR = maskR[oR] && maskR[oR][oC] ? 200 : 50;
                     let vG = maskG[oR] && maskG[oR][oC] ? 200 : 50;
                     let vB = 50;
                     if (isC) vB = qr.isDark(qrR, qrC) ? 200 : 50;
+
                     els.cCreate.fillStyle = `rgb(${vR}, ${vG}, ${vB})`;
                     els.cCreate.fillRect(c*mod, r*mod, mod+0.5, mod+0.5);
                 }
             }
+            
             canvasEl.classList.add('show-canvas');
-            els.qrWrapper.classList.add('active-shadow');
+            els.qrWrapper.classList.add('active-shadow'); // Добавляем тень ниши при генерации
             els.btnSave.style.display='block';
-        } catch(e) { console.error(e); }
-    }
-
-    // Вспомогогательная функция: генерация QR из строки (для сканирования)
-    async function generateQRFromString(data) {
-        const canvasEl = document.getElementById('canvas-create');
-        canvasEl.style.opacity = '1';
-        els.cCreate.fillStyle="#000"; els.cCreate.fillRect(0,0,512,512);
-        try {
-            const utf8 = unescape(encodeURIComponent(data));
-            const qr = qrcode(0, 'M'); qr.addData(utf8); qr.make();
-            let mc = qr.getModuleCount();
-            let qz=2, fi=1, fo=2;
-            let ornSize = mc + (qz*2); if (ornSize % 2 === 0) ornSize += 1;
-            let total = ornSize + (fi*2) + (fo*2); if (total % 2 === 0) total += 1;
-            const mod = 512 / total;
-            els.cCreate.fillStyle="rgb(200,200,200)"; els.cCreate.fillRect(0,0,512,512);
-            els.cCreate.fillStyle="rgb(50,50,50)"; els.cCreate.fillRect(fo*mod, fo*mod, 512-(fo*mod*2), 512-(fo*mod*2));
-            const maskR = generateMask(ornSize, 0);
-            const maskG = generateMask(ornSize, 1);
-            const coreStart = fo + fi + qz;
-            for (let r = 0; r < total; r++) {
-                for (let c = 0; c < total; c++) {
-                    let isO = (r<fo||r>=total-fo||c<fo||c>=total-fo);
-                    let isI = !isO && (r<fo+fi||r>=total-(fo+fi)||c<fo+fi||c>=total-(fo+fi));
-                    if (isO || isI) continue;
-                    let oR=r-(fo+fi), oC=c-(fo+fi), qrR=r-coreStart, qrC=c-coreStart;
-                    let isC = (qrR>=0&&qrR<mc&&qrC>=0&&qrC<mc);
-                    let vR = maskR[oR] && maskR[oR][oC] ? 200 : 50;
-                    let vG = maskG[oR] && maskG[oR][oC] ? 200 : 50;
-                    let vB = 50;
-                    if (isC) vB = qr.isDark(qrR, qrC) ? 200 : 50;
-                    els.cCreate.fillStyle = `rgb(${vR}, ${vG}, ${vB})`;
-                    els.cCreate.fillRect(c*mod, r*mod, mod+0.5, mod+0.5);
-                }
-            }
-            canvasEl.classList.add('show-canvas');
-            els.qrWrapper.classList.add('active-shadow');
         } catch(e) { console.error(e); }
     }
 
     function saveQR() { const a=document.createElement('a'); a.download='crypto-artifact.png'; a.href=document.getElementById('canvas-create').toDataURL(); a.click(); }
 
-    // 4. СКАНЕР
+    // 4. СКАНЕР І ШПІОН
     function openScanner() { els.modal.classList.remove('hidden'); }
     function closeScanner() { stopScanning(); els.modal.classList.add('hidden'); }
 
     async function handleScanResult(data) {
         state.locked=true; stopScanning(); playBeep(); flashScreen();
         els.viewfinder.classList.add('viewfinder-hunting'); setTimeout(()=>els.viewfinder.classList.remove('viewfinder-hunting'),300);
-        
-        if (data.trim().endsWith('=')) { 
-            // Криптографический QR
-            state.pendingDecrypt = data.trim();
-            state.isDecryptionMode = true;
-            
-            // Отрисовываем узор на главном экране
-            await generateQRFromString(data.trim());
-            
-            // Меняем интерфейс для ожидания ключа
-            els.text.style.display = 'none';
-            els.text.style.opacity = '1'; // На случай если мы вернемся к генерации
-            els.pass.placeholder = "🔑 ВВЕДИТЬ КЛЮЧ ДЛЯ РОЗШИФРУВАННЯ";
-            els.pass.value = "";
-            setTimeout(() => els.pass.focus(), 300);
-            
-        } else { 
-            // Обычный QR
-            state.isDecryptionMode = false;
-            closeScanner(); 
-            els.text.style.display = 'block'; 
-            els.text.value = data; 
-            els.pass.value = ""; 
-            els.pass.placeholder = "••••••"; 
-            updateLocks(0); 
-            generateQR(); 
-        }
+        if (data.trim().endsWith('=')) { state.pendingDecrypt=data.trim(); showSpy(); }
+        else { closeScanner(); els.text.value=data; els.pass.value=""; updateLocks(0); generateQR(); }
     }
 
-    // 5. СКАНЕР ЯДРО
+    function showSpy() { els.spyOv.classList.remove('hidden'); els.spyPass.value=""; els.spyErr.style.opacity='0'; setTimeout(()=>els.spyPass.focus(),100); }
+    function closeSpy() { els.spyOv.classList.add('hidden'); state.pendingDecrypt=null; }
+
+    els.spyPass.addEventListener('keydown', async (e) => {
+        if (e.key==='Enter' && state.pendingDecrypt) {
+            let pwd=els.spyPass.value; if(!pwd)return;
+            els.spyPass.disabled=true; els.spyPass.placeholder="⏳ Дешифрування...";
+            await new Promise(r=>setTimeout(r,50));
+            let res = await decryptData(state.pendingDecrypt, pwd);
+            els.spyPass.disabled=false; els.spyPass.placeholder="••••••••";
+            if(res!==null) { closeSpy(); closeScanner(); els.text.value=res; els.pass.value=pwd; updateLocks(pwd.length); generateQR(); }
+            else { els.spyErr.style.opacity='1'; els.spyPass.classList.add('shake-anim'); setTimeout(()=>els.spyPass.classList.remove('shake-anim'),500); els.spyPass.value=""; els.spyPass.focus(); }
+        }
+    });
+
     function applyBradley(img,ch){const w=img.width,h=img.height,d=img.data,o=new Uint8ClampedArray(w*h*4),ii=new Int32Array(w*h),s=Math.floor(w/8),t=15;for(let y=0;y<h;y++){let sum=0;for(let x=0;x<w;x++){sum+=d[(y*w+x)*4+ch];ii[y*w+x]=(y>0?ii[(y-1)*w+x]:0)+sum;}}for(let y=0;y<h;y++){for(let x=0;x<w;x++){let x1=Math.max(x-s,0),x2=Math.min(x+s,w-1),y1=Math.max(y-s,0),y2=Math.min(y+s,h-1),c=(x2-x1)*(y2-y1);let sum=ii[y2*w+x2]-ii[y1*w+x2]-ii[y2*w+x1]+ii[y1*w+x1];let v=d[(y*w+x)*4+ch];let r=(v*c<sum*(100-t)/100)?0:255;let i=(y*w+x)*4;o[i]=o[i+1]=o[i+2]=r;o[i+3]=255;}}return new ImageData(o,w,h);}
     function applySCI(img,cfg){const d=img.data;for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let res=(b-(r*cfg.k1+g*cfg.k2))*1.5;res=Math.max(0,Math.min(255,res));d[i]=res;d[i+1]=res;d[i+2]=res;d[i+3]=255;}}
     function getOsc(t,p,mn,mx){const c=t%p,h=p/2,ps=(c<h)?c/h:(p-c)/h;return mn+ps*(mx-mn);}
