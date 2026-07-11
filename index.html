@@ -547,7 +547,10 @@
       }
     }
 
-    // --- SECURE CRYPTOGRAPHY API (PBKDF2 + AES-GCM) ---
+
+
+    
+   // --- SECURE CRYPTOGRAPHY API (PBKDF2 + AES-GCM) ---
     async function encryptData(plaintext, passwordKey) {
       const enc = new TextEncoder();
       const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -561,7 +564,7 @@
       );
       const nonce = crypto.getRandomValues(new Uint8Array(12));
       const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, enc.encode(plaintext));
-      const comb = new Uint8Array(40 + ct.byteLength);
+      const comb = new Uint8Array(28 + ct.byteLength);
       comb.set(salt, 0);
       comb.set(nonce, 16);
       comb.set(new Uint8Array(ct), 28);
@@ -600,7 +603,7 @@
         return null;
       }
     }
-
+    
     // --- CANVAS DRAW RENDERING (CYBER ORNAMENT QR SEAL) ---
     function drawCanvas(dataString) {
       const ctx = elSealCanvas.getContext('2d');
