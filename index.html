@@ -897,8 +897,9 @@
             stopWebcam();
 
             const trimmed = qrCodeData.trim();
-            if (trimmed.endsWith('=')) {
-              pendingCiphertext = trimmed;
+            // ИЗМЕНЕНО: Используем префикс | вместо проверки на =
+            if (trimmed.startsWith('|')) {
+              pendingCiphertext = trimmed.substring(1);
               mode = 'decrypt_pending';
               password = '';
               syncLockStates();
@@ -957,8 +958,9 @@
               playBeep(880, 0.12);
               triggerScreenFlash();
               const trimmed = code.data.trim();
-              if (trimmed.endsWith('=')) {
-                pendingCiphertext = trimmed;
+              // ИЗМЕНЕНО: Используем префикс | вместо проверки на =
+              if (trimmed.startsWith('|')) {
+                pendingCiphertext = trimmed.substring(1);
                 mode = 'decrypt_pending';
                 password = '';
                 syncLockStates();
@@ -998,7 +1000,7 @@
 
     // --- DECRYPTION ATTEMPT TRIGGER ---
     async function handleDecryptAttempt() {
-      const activePass = elSpyOverlay.classList.contains('hidden') ? password : elSpyPass.value;
+      const activePass = elSpyOverlay.classList.contains('hidden') ? password.trim() : elSpyPass.value.trim();
       if (!activePass) return;
 
       if (mode === 'decrypt_pending' && pendingCiphertext) {
@@ -1030,7 +1032,8 @@
         text = e.target.value;
         const pass = password.trim();
         if (pass && text.trim()) {
-          const cipher = await encryptData(text, pass);
+          // ИЗМЕНЕНО: Добавляем префикс | перед Base64 строкой
+          const cipher = '|' + await encryptData(text, pass);
           drawCanvas(cipher);
         } else {
           drawCanvas(text);
@@ -1047,7 +1050,8 @@
         const pass = password.trim();
         if (mode === 'idle') {
           if (pass && text.trim()) {
-            const cipher = await encryptData(text, pass);
+            // ИЗМЕНЕНО: Добавляем префикс | перед Base64 строкой
+            const cipher = '|' + await encryptData(text, pass);
             drawCanvas(cipher);
           } else {
             drawCanvas(text);
