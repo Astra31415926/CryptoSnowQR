@@ -4,24 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Крипто-Сніг QR: Секретний Термінал</title>
- 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
- 
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-  
   <style>
-    body { background-color: #040405; color: #c2c5c8; font-family: 'Inter', sans-serif; }
+    body {
+      background-color: #040405;
+      color: #c2c5c8;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-sans { font-family: 'Inter', sans-serif; }
     .font-display { font-family: 'Space Grotesk', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
-    
-    @keyframes shake { 0%,100%{transform:translate(0,0)} 10%,30%,50%,70%,90%{transform:translate(-8px,0)} 20%,40%,60%,80%{transform:translate(8px,0)} }
+
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-8px, 0); }
+      20%, 40%, 60%, 80% { transform: translate(8px, 0); }
+    }
     .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-    
-    @keyframes scan { 0%{top:0%} 50%{top:100%} 100%{top:0%} }
+
+    @keyframes scan {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
     .scan-line-anim { animation: scan 2.5s ease-in-out infinite; }
 
     .action-btn {
@@ -36,124 +46,1206 @@
       font-weight: 700;
       border-radius: 4px;
       transition: all 0.25s ease-in-out;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(16,185,129,0.05);
+      backdrop-filter: blur(4px);
     }
     .action-btn:hover {
       background-color: #10b981;
       color: #08090a;
       border-color: #10b981;
+      box-shadow: 0 0 20px rgba(16,185,129,0.4);
+    }
+    .action-btn:disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* ТЗ: поле ключа визуально неактивно до ввода текста */
+    .pass-inactive {
+      opacity: 0.3;
+      pointer-events: none;
+      border-color: rgba(100,100,100,0.2) !important;
+      box-shadow: none !important;
+    }
+    .pass-active {
+      opacity: 1;
+      pointer-events: auto;
+      border-color: rgba(16,185,129,0.3) !important;
+    }
+    .pass-active:focus-within {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 15px rgba(16,185,129,0.12) !important;
+    }
+
+    /* Текстовое поле заблокировано в режиме сканирования */
+    .text-locked {
+      background-color: rgba(20,15,10,0.85) !important;
     }
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-[#030405] p-2 md:p-6 select-none overflow-hidden">
 
-<div id="artifact" class="relative w-full aspect-[16/9] max-w-[1200px] bg-[#08090a] text-[#c2c5c8] shadow-[0_0_60px_rgba(16,185,129,0.15)] overflow-hidden rounded-2xl border-[12px] border-[#1a1c1e]">
+  <div
+    id="artifact"
+    class="relative w-full aspect-[16/9] max-w-[1200px] bg-[#08090a] text-[#c2c5c8] shadow-[0_0_60px_rgba(16,185,129,0.15)] overflow-hidden rounded-2xl border-[12px] border-[#1a1c1e] transition-all duration-500"
+  >
+    <!-- Фоновая сетка -->
+    <div class="absolute inset-0 opacity-10 pointer-events-none z-0" style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 20px 20px;"></div>
 
-  <!-- Header -->
-  <div class="absolute top-[4.5%] left-[15%] w-[70%] text-center pointer-events-none select-none z-10">
-    <div class="text-[0.6vw] md:text-[0.7vw] uppercase tracking-[0.3em] text-[#10b981] font-bold mb-1">System Status: Monitoring</div>
-    <h1 class="text-[2.2vw] font-light tracking-[0.2em] text-white uppercase font-display">КРИПТО-СНІГ QR <span class="text-[#10b981] opacity-50 font-mono text-[1.4vw]">v4.1</span></h1>
-  </div>
-
-  <!-- Creation Mode Container -->
-  <div id="creation-mode" class="absolute inset-0">
-    <!-- Text Field -->
-    <div class="absolute transition-all duration-500 border border-[#10b981]/25 bg-[#0c0e10]/85 rounded-lg p-1" style="left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%; z-index: 5;">
-      <textarea id="ui-text" placeholder="Введіть текст таємниці..." class="w-full h-full bg-transparent border-none text-[#10b981] placeholder-[#10b981]/30 font-mono resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-1"></textarea>
+    <!-- Калибровочные кольца -->
+    <div class="absolute inset-0 opacity-[0.05] pointer-events-none -z-10 flex items-center justify-center">
+      <svg class="w-[85%] h-[85%] text-[#10b981]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.15">
+        <circle cx="50" cy="50" r="46" stroke-dasharray="3 3" />
+        <circle cx="50" cy="50" r="38" />
+        <circle cx="50" cy="50" r="28" />
+        <path d="M 50 0 L 50 100 M 0 50 L 100 50 M 15 15 L 85 85 M 15 85 L 85 15" />
+        <polygon points="50,4 96,50 50,96 4,50" stroke-width="0.08" />
+        <polygon points="50,12 88,50 50,88 12,50" stroke-width="0.08" />
+      </svg>
     </div>
 
-    <!-- Password Field -->
-    <div class="absolute flex items-center border-b border-[#10b981]/30 bg-[#0c0e10]/40 rounded px-2" style="left: 35%; top: 82%; width: 30%; height: 5.5%; z-index: 15;">
-      <input type="password" id="ui-pass" maxlength="12" placeholder="КЛЮЧ / PASSWORD" class="w-full h-full bg-transparent border-none text-[#10b981] text-center text-[1.6vw] tracking-[0.3em] font-mono outline-none">
+    <!-- Заголовок терминала -->
+    <div class="absolute top-[4.5%] left-[15%] w-[70%] text-center pointer-events-none select-none z-10">
+      <div class="text-[0.6vw] md:text-[0.7vw] uppercase tracking-[0.3em] text-[#10b981] font-bold mb-1 animate-pulse">
+        System Status: Monitoring
+      </div>
+      <h1 class="text-[2.2vw] font-light tracking-[0.2em] text-white uppercase font-display leading-tight">
+        КРИПТО-СНІГ QR <span class="text-[#10b981] opacity-50 font-mono text-[1.4vw] ml-1">v4.02</span>
+      </h1>
+      <p class="text-[0.7vw] text-[#10b981]/60 font-mono tracking-[0.35em] uppercase mt-1">
+        ANCIENT ORNAMENT CRYPTO DECODER // SECURE TERMINAL
+      </p>
     </div>
 
-    <!-- Ornament -->
-    <div id="ui-qr-wrapper" class="absolute flex items-center justify-center overflow-hidden rounded-xl border border-[#10b981]/20 bg-[#0c0e10] shadow-[0_0_60px_rgba(0,0,0,0.85)]" style="left: 39.1%; top: 35.3%; width: 22.1%; height: 40.6%;">
-      <canvas id="seal-canvas" width="512" height="512" class="w-full h-full"></canvas>
+    <!-- Оператор -->
+    <div class="absolute top-[4.5%] right-[3%] text-right pointer-events-none select-none z-10">
+      <div class="text-[0.5vw] uppercase tracking-[0.2em] opacity-40">Operator Auth</div>
+      <div class="text-[0.8vw] font-mono text-[#10b981]/80">DPT-993-XLS</div>
     </div>
 
-    <!-- Locks -->
-    <div id="lock-left" class="absolute left-[30%] top-[70%] w-[10%] h-[22%] flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2"></div>
-    <div id="lock-right" class="absolute left-[60%] top-[70%] w-[10%] h-[22%] flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2"></div>
-  </div>
+    <!-- Блок замка L1 (Сектор Альфа) -->
+    <div id="lock-left" class="absolute left-[30%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
+      <div id="lock-left-icon-container"></div>
+      <span id="lock-left-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L1</span>
+    </div>
 
-  <!-- Scanning Mode -->
-  <div id="scan-mode" class="hidden absolute inset-0 flex flex-col">
-    <div class="flex-1 relative">
-      <video id="scan-video" class="w-full h-full object-cover" playsinline></video>
-      <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div class="w-80 h-80 border-2 border-[#10b981] border-dashed rounded-3xl relative">
-          <div id="scan-laser" class="absolute left-0 w-full h-[3px] bg-[#10b981] scan-line-anim"></div>
+    <!-- Блок замка L2 (Сектор Бета) -->
+    <div id="lock-right" class="absolute left-[60%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
+      <div id="lock-right-icon-container"></div>
+      <span id="lock-right-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L2</span>
+    </div>
+
+    <!-- Поле ввода текста -->
+    <div
+      id="text-field-wrapper"
+      class="absolute transition-all duration-500 border border-[#10b981]/25 bg-[#0c0e10]/85 rounded-lg p-1 shadow-[0_0_15px_rgba(16,185,129,0.05)] focus-within:border-[#10b981]/60 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+      style="left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%; z-index: 5;"
+    >
+      <textarea
+        id="ui-text"
+        placeholder="Введіть текст таємниці / Enter secret payload..."
+        class="w-full h-full bg-transparent border-none text-[#10b981] placeholder-[#10b981]/30 font-mono resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-1 transition-all duration-500"
+      ></textarea>
+
+      <!-- Оверлей блокировки при ожидании ключа -->
+      <div id="lock-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-[1px] rounded border border-red-950/30 pointer-events-none">
+        <span class="text-red-500 text-[0.8vw] font-mono tracking-[0.2em] uppercase flex items-center gap-2">
+          <svg class="w-4 h-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+          AWAITING KEY VERIFICATION
+        </span>
+      </div>
+
+      <!-- Индикатор успешной дешифровки -->
+      <div id="decrypted-indicator" class="hidden absolute bottom-1 right-2 pointer-events-none">
+        <span class="text-[#10b981] text-[0.6vw] font-mono tracking-widest uppercase flex items-center gap-1">
+          <svg class="w-3 h-3 animate-ping" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          DECRYPTED
+        </span>
+      </div>
+
+      <!-- ТЗ: кликабельные ссылки после дешифровки -->
+      <a id="btn-open-link" class="hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-[#10b981]/20 hover:bg-[#10b981]/40 text-[#10b981] border border-[#10b981]/40 rounded text-[0.65vw] font-bold tracking-widest transition-all cursor-pointer no-underline z-10" target="_blank" rel="noopener noreferrer">
+        OPEN LINK
+      </a>
+    </div>
+
+    <!-- Центральная область QR / орнамента -->
+    <div
+      id="ui-qr-wrapper"
+      class="absolute flex items-center justify-center pointer-events-auto overflow-hidden transition-all duration-500 rounded-xl z-40 border border-[#10b981]/20 bg-[#0c0e10] shadow-[0_0_60px_rgba(0,0,0,0.85)]"
+      style="left: 39.1%; top: 35.3%; width: 22.1%; height: 40.6%;"
+    >
+      <!-- Угловые маркеры -->
+      <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#10b981] pointer-events-none z-50"></div>
+      <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#10b981] pointer-events-none z-50"></div>
+      <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#10b981] pointer-events-none z-50"></div>
+      <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#10b981] pointer-events-none z-50"></div>
+
+      <!-- Стандартный экран ожидания -->
+      <div id="standby-seal" class="absolute inset-0 flex flex-col items-center justify-center text-center p-3 select-none pointer-events-none">
+        <div class="w-[60%] h-[60%] border border-[#10b981]/20 rounded-full flex items-center justify-center opacity-30 animate-spin" style="animation-duration: 30s;">
+          <svg class="w-full h-full text-[#10b981]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 2v20M2 12h20" stroke-width="0.5" />
+            <circle cx="12" cy="12" r="10" stroke-width="0.5" stroke-dasharray="2 2" />
+          </svg>
+        </div>
+        <p class="absolute text-[0.7vw] text-[#10b981]/40 tracking-[0.2em] font-mono leading-tight uppercase">STANDBY SEAL</p>
+      </div>
+
+      <!-- ТЗ: Селектор источника сканирования (Галерея / Камера) -->
+      <div id="scan-selector" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#0c0e10] z-[60] p-4 gap-3">
+        <p class="text-[#10b981]/50 text-[0.75vw] font-mono tracking-[0.35em] uppercase mb-1">Оберіть джерело</p>
+        <button id="btn-gallery" class="action-btn w-[75%] text-[0.9vw] py-3 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          ГАЛЕРЕЯ
+        </button>
+        <button id="btn-camera" class="action-btn w-[75%] text-[0.9vw] py-3 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          КАМЕРА
+        </button>
+      </div>
+
+      <!-- Область камеры со сканированием -->
+      <div id="scanner-view" class="hidden absolute inset-0 w-full h-full flex-col justify-between p-3 select-none bg-black/90">
+        <div class="absolute inset-3 pointer-events-none z-30 flex flex-col justify-between">
+          <div class="flex justify-between">
+            <div class="w-4 h-4 border-t-2 border-l-2 border-[#10b981] rounded-tl-sm animate-pulse"></div>
+            <div class="w-4 h-4 border-t-2 border-r-2 border-[#10b981] rounded-tr-sm animate-pulse"></div>
+          </div>
+          <div class="flex justify-between">
+            <div class="w-4 h-4 border-b-2 border-l-2 border-[#10b981] rounded-bl-sm animate-pulse"></div>
+            <div class="w-4 h-4 border-b-2 border-r-2 border-[#10b981] rounded-br-sm animate-pulse"></div>
+          </div>
+        </div>
+        <video id="scan-video" class="w-full h-full object-cover rounded" playsinline></video>
+        <div id="scan-laser" class="absolute left-0 w-full h-[3px] bg-[#10b981] opacity-80 shadow-[0_0_12px_#10b981] scan-line-anim z-20 pointer-events-none"></div>
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black/70 z-20">
+          <div id="camera-error-view" class="hidden flex-col items-center justify-center">
+            <svg class="w-8 h-8 text-[#10b981]/90 mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg>
+            <p class="text-[0.8vw] text-emerald-200/90 leading-tight">Камера недоступна.</p>
+            <p class="text-[0.6vw] text-zinc-400 mt-1">Виберіть файл вручну.</p>
+          </div>
+          <button type="button" id="btn-manual-upload" class="mt-2 px-3 py-1.5 bg-[#10b981]/15 hover:bg-[#10b981]/30 text-[#10b981] text-[0.7vw] font-bold border border-[#10b981]/40 rounded-md transition-all cursor-pointer shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+            ВИБРАТИ ФАЙЛ
+          </button>
         </div>
       </div>
+
+      <!-- Канвас орнамента -->
+      <canvas id="seal-canvas" width="512" height="512" class="w-full h-full object-contain transition-all duration-500"></canvas>
+
+      <!-- ТЗ: Сообщение об ошибке дешифровки (заменяет изображение) -->
+      <div id="decrypt-error-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#0c0e10] z-[60] p-4 text-center">
+        <svg class="w-10 h-10 text-red-500 mb-3 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+        <p class="text-red-500 text-[1.1vw] font-mono tracking-[0.15em] uppercase font-bold">Пароль неверный</p>
+        <p class="text-red-400/60 text-[0.75vw] font-mono mt-2 tracking-wide">Попробуйте еще раз</p>
+      </div>
     </div>
-    <div class="p-6 flex justify-center gap-6 border-t border-[#10b981]/20">
-      <button id="btn-manual-upload" class="action-btn">ВИБРАТИ ФАЙЛ</button>
-      <button id="btn-cancel-scan" class="action-btn text-red-400">СКАСУВАТИ СКАНУВАННЯ</button>
+
+    <!-- Поле ввода ключа -->
+    <div
+      id="pass-field-wrapper"
+      class="pass-inactive absolute flex items-center justify-center border-b border-[#10b981]/30 transition-all bg-[#0c0e10]/40 rounded px-2"
+      style="left: 35%; top: 82%; width: 30%; height: 5.5%; z-index: 15;"
+    >
+      <input
+        type="password"
+        id="ui-pass"
+        placeholder="КЛЮЧ / PASSWORD"
+        maxlength="12"
+        class="w-full h-full bg-transparent border-none text-[#10b981] text-center text-[1.6vw] tracking-[0.3em] font-mono outline-none placeholder-emerald-950/40 px-2 transition-all duration-300"
+      />
+      <!-- ТЗ: Кнопка «Ввод» при сканировании зашифрованного QR -->
+      <button
+        id="btn-inline-decrypt"
+        class="hidden absolute right-2 px-2.5 py-1 bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 rounded text-[0.7vw] font-bold tracking-widest hover:bg-[#10b981]/35 transition-all"
+      >
+        ВВЕСТИ
+      </button>
     </div>
+
+    <!-- Скрытый файловый инпут -->
+    <input type="file" id="file-input-hidden" accept="image/*" class="hidden" />
+
+    <!-- ТЗ: Кнопка Download (экспорт PNG) -->
+    <button id="btn-save" class="hidden absolute bottom-[3%] left-[3%] action-btn">
+      [+] ЗБЕРЕГТИ
+    </button>
+
+    <!-- ТЗ: Кнопка «Обновить» орнамент -->
+    <button id="btn-refresh" class="hidden absolute bottom-[3%] left-[19%] action-btn">
+      [↻] ОНОВИТИ
+    </button>
+
+    <!-- Кнопка сброса -->
+    <button id="btn-reset" class="hidden absolute bottom-[3%] left-[3%] action-btn text-emerald-500 border-emerald-950/40 hover:bg-emerald-950/10 hover:shadow-emerald-950/20">
+      [↺] СТИРАТИ
+    </button>
+
+    <!-- ТЗ: Кнопка Scan / отмена -->
+    <button id="btn-scan" class="absolute bottom-[3%] right-[3%] action-btn">
+      [◉] СКАНУВАТИ
+    </button>
   </div>
 
-  <!-- Bottom Controls -->
-  <div class="absolute bottom-[3%] left-1/2 -translate-x-1/2 flex gap-4 z-20">
-    <button id="btn-scan-toggle" class="action-btn">👁 СКАНУВАТИ</button>
-    <button id="btn-save" class="hidden action-btn">ЗБЕРЕГТИ PNG</button>
-    <button id="btn-reset" class="hidden action-btn">СТИРАТИ</button>
-  </div>
+  <!-- Вспышка при сканировании -->
+  <div id="flash-layer" class="fixed inset-0 bg-white pointer-events-none z-[300] transition-opacity duration-300 opacity-0"></div>
 
-  <!-- Decrypt Overlay -->
-  <div id="decrypt-overlay" class="hidden absolute inset-0 bg-black/95 flex items-center justify-center z-50">
-    <div class="bg-[#08090a] border border-[#10b981]/40 rounded-3xl p-12 max-w-md w-full text-center">
-      <h2 class="text-2xl font-bold text-[#10b981] mb-6">ВВЕДІТЬ КЛЮЧ ДЛЯ РОЗШИФРУВАННЯ</h2>
-      <input id="decrypt-pass" type="password" maxlength="12" class="w-full text-center text-3xl tracking-widest font-mono bg-transparent border-b border-[#10b981] py-4 focus:outline-none">
-      <button id="btn-confirm-decrypt" class="mt-8 w-full py-4 action-btn text-lg">РОЗШИФРУВАТИ</button>
-    </div>
-  </div>
+  <script>
+    // =====================================================================
+    // Crypto Seal — Полная переработка по ТЗ
+    // Режимы: 'create' | 'scan_select' | 'scan_camera' | 'decrypt_pending' | 'decrypted'
+    // =====================================================================
 
-  <input type="file" id="file-input" accept="image/*" class="hidden">
-</div>
+    // === СОСТОЯНИЕ ПРИЛОЖЕНИЯ ===
+    let mode = 'create';
+    let text = '';
+    let password = '';
+    let pendingCiphertext = null;
+    let showDecryptError = false;
 
-<script>
-// Повна логіка (скорочено для відповіді, але в реальному файлі всі функції з вашого оригіналу)
-let mode = 'creation';
-let text = '';
-let password = '';
-let pendingCiphertext = null;
+    // Состояния замков: 'empty' | 'filling' | 'closed'
+    let lockL1 = 'empty';
+    let lockL2 = 'empty';
+    let lockTimeoutL1 = null;
+    let lockTimeoutL2 = null;
 
-const textInput = document.getElementById('ui-text');
-const passInput = document.getElementById('ui-pass');
-const sealCanvas = document.getElementById('seal-canvas');
-const ctx = sealCanvas.getContext('2d');
+    // Поток камеры
+    let videoStream = null;
+    let scanFrameId = null;
 
-// ... (тут зберігаються всі функції generateMask, drawCanvas, encryptData, decryptData, lock logic, webcam тощо з вашого оригінального коду)
+    // === КАШИРОВАНИЕ DOM-ЭЛЕМЕНТОВ ===
+    const elArtifact       = document.getElementById('artifact');
+    const elTextarea       = document.getElementById('ui-text');
+    const elTextFieldWrap  = document.getElementById('text-field-wrapper');
+    const elPassInput      = document.getElementById('ui-pass');
+    const elPassFieldWrap  = document.getElementById('pass-field-wrapper');
+    const elInlineDecrypt  = document.getElementById('btn-inline-decrypt');
+    const elBtnSave        = document.getElementById('btn-save');
+    const elBtnRefresh     = document.getElementById('btn-refresh');
+    const elBtnReset       = document.getElementById('btn-reset');
+    const elBtnScan        = document.getElementById('btn-scan');
+    const elStandbySeal    = document.getElementById('standby-seal');
+    const elScanSelector   = document.getElementById('scan-selector');
+    const elScannerView    = document.getElementById('scanner-view');
+    const elScanVideo      = document.getElementById('scan-video');
+    const elCameraError    = document.getElementById('camera-error-view');
+    const elBtnManualUpload= document.getElementById('btn-manual-upload');
+    const elFileInput      = document.getElementById('file-input-hidden');
+    const elSealCanvas     = document.getElementById('seal-canvas');
+    const elLockOverlay    = document.getElementById('lock-overlay');
+    const elDecryptInd     = document.getElementById('decrypted-indicator');
+    const elDecryptError   = document.getElementById('decrypt-error-overlay');
+    const elBtnOpenLink    = document.getElementById('btn-open-link');
+    const elBtnGallery     = document.getElementById('btn-gallery');
+    const elBtnCamera      = document.getElementById('btn-camera');
+    const elFlashLayer     = document.getElementById('flash-layer');
 
-textInput.focus();
+    // Замки
+    const elLockL1Icon  = document.getElementById('lock-left-icon-container');
+    const elLockL2Icon  = document.getElementById('lock-right-icon-container');
+    const elLockL1Block = document.getElementById('lock-left');
+    const elLockL2Block = document.getElementById('lock-right');
+    const elLockL1Label = document.getElementById('lock-left-label');
+    const elLockL2Label = document.getElementById('lock-right-label');
 
-textInput.addEventListener('input', () => {
-  text = textInput.value;
-  updateUI();
-});
+    // === SVG-ИКОНКИ ЗАМКОВ ===
+    const SVG_UNLOCKED  = `<svg class="w-8 h-8 text-[#10b981]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h16.5a1.5 1.5 0 0 0 1.5-1.5V12a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 12v8.25a1.5 1.5 0 0 0 1.5 1.5z" /></svg>`;
+    const SVG_FILLING   = `<svg class="w-8 h-8 text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.6)] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>`;
+    const SVG_CLOSED    = `<svg class="w-8 h-8 text-[#10b981] drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
+    const SVG_LOCKED_RED = `<svg class="w-8 h-8 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
 
-passInput.addEventListener('input', () => {
-  password = passInput.value;
-  updateLocks();
-  updateUI();
-});
+    // === ЗВУКОВАЯ СИСТЕМА ===
+    function playBeep(freq = 880, duration = 0.15) {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) { /*音频上下文被阻止 */ }
+    }
 
-// Далі йде весь оригінальний JS (scan, decrypt, canvas drawing, PATTERNS тощо)
+    function playSuccessSound() {
+      playBeep(880, 0.1);
+      setTimeout(() => playBeep(1200, 0.18), 100);
+    }
 
-document.getElementById('btn-scan-toggle').addEventListener('click', () => {
-  if (mode === 'creation') {
-    mode = 'scanning';
-    document.getElementById('creation-mode').classList.add('hidden');
-    document.getElementById('scan-mode').classList.remove('hidden');
-    // запуск камери...
-  } else {
-    // повернення в creation
-  }
-});
+    function playFailureSound() {
+      playBeep(220, 0.4);
+      setTimeout(() => playBeep(180, 0.4), 150);
+    }
 
-document.getElementById('btn-confirm-decrypt').addEventListener('click', async () => {
-  // логіка розшифрування
-});
-</script>
+    function triggerFlash() {
+      elFlashLayer.classList.remove('opacity-0');
+      elFlashLayer.classList.add('opacity-100');
+      setTimeout(() => {
+        elFlashLayer.classList.remove('opacity-100');
+        elFlashLayer.classList.add('opacity-0');
+      }, 400);
+    }
+
+    // === МАТРИЧНЫЕ ПАТТЕРНЫ ОРНАМЕНТА ===
+    const PATTERNS = [
+      [[0,1,0,1,0,1,0],[1,0,0,0,0,0,1],[0,0,1,1,1,0,0],[1,0,1,1,1,0,1],[0,0,1,1,1,0,0],[1,0,0,0,0,0,1],[0,1,0,1,0,1,0]],
+      [[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0]],
+      [[1,1,1,1,1,1,1],[0,0,0,0,0,0,1],[1,1,1,1,1,0,1],[1,0,0,0,1,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]],
+      [[1,1,1,1,1,1,1],[1,0,0,0,0,0,0],[1,0,1,1,1,1,1],[1,0,1,0,0,0,1],[1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1]],
+      [[1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,1,1,1,0,1],[1,0,1,0,1,0,1],[1,0,1,0,0,0,1],[1,0,1,1,1,1,1],[1,0,0,0,0,0,0]],
+      [[0,0,0,0,0,1,1],[0,0,0,0,1,1,0],[0,0,0,1,1,0,0],[1,1,1,1,1,1,1],[0,0,0,1,1,0,0],[0,0,0,0,1,1,0],[0,0,0,0,0,1,1]],
+      [[1,1,1,1,1,0,0],[1,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1],[0,0,0,0,0,0,1],[0,0,0,0,0,0,1],[0,0,1,1,1,1,1]],
+      [[0,0,0,0,1,1,1],[0,0,0,1,1,1,0],[0,0,1,1,1,0,0],[0,1,1,1,0,0,0],[1,1,1,0,0,0,0],[1,1,0,0,0,0,0],[1,0,0,0,0,0,0]],
+      [[1,1,0,0,0,1,1],[1,1,0,0,0,1,1],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[1,1,0,0,0,1,1],[1,1,0,0,0,1,1]],
+      [[0,0,0,1,0,0,0],[0,0,1,1,1,0,0],[0,1,1,1,1,1,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0],[0,0,0,1,0,0,0]],
+      [[1,1,1,1,1,1,0],[1,0,0,0,0,1,0],[1,0,1,1,1,1,0],[1,0,1,0,0,0,0],[1,0,1,1,1,1,1],[1,0,0,0,0,0,0],[1,1,1,1,1,1,1]],
+      [[0,0,0,0,0,0,1],[0,0,0,0,0,1,1],[0,0,0,0,1,1,0],[0,0,0,1,1,0,0],[0,0,1,1,0,0,0],[0,1,1,0,0,0,0],[1,1,0,0,0,0,0]],
+      [[0,0,0,1,0,0,0],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[1,0,0,0,0,0,1],[0,1,1,0,1,1,0],[0,1,1,0,1,1,0],[0,0,0,1,0,0,0]],
+      [[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0],[0,0,0,1,0,0,0],[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1]],
+      [[0,0,1,1,1,0,0],[0,0,1,1,1,0,0],[1,1,0,1,0,1,1],[1,1,1,0,1,1,1],[1,1,0,1,0,1,1],[0,0,1,1,1,0,0],[0,0,1,1,1,0,0]],
+      [[0,0,1,0,1,0,0],[0,1,0,0,0,1,0],[1,0,0,0,0,0,1],[0,0,0,0,0,0,0],[1,0,0,0,0,0,1],[0,1,0,0,0,1,0],[0,0,1,0,1,0,0]],
+      [[0,1,1,0,1,1,0],[1,0,1,0,1,0,1],[1,1,0,0,0,1,1],[0,0,0,1,0,0,0],[1,1,0,0,0,1,1],[1,0,1,0,1,0,1],[0,1,1,0,1,1,0]],
+      [[0,1,0,1,0,1,0],[1,1,0,1,0,1,1],[0,0,0,1,0,0,0],[1,1,1,1,1,1,1],[0,0,0,1,0,0,0],[1,1,0,1,0,1,1],[0,1,0,1,0,1,0]],
+      [[1,1,1,1,1,1,1],[0,1,1,1,1,1,1],[0,0,1,1,1,1,1],[0,0,0,1,1,1,1],[0,0,0,0,1,1,1],[0,0,0,0,0,1,1],[0,0,0,0,0,0,1]],
+      [[0,0,0,0,0,0,0],[1,0,0,0,0,0,0],[1,1,0,0,0,0,0],[1,1,1,0,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,1,0,0],[1,1,1,1,1,1,0]]
+    ];
+
+    const solidBlock = Array.from({ length: 7 }, () => Array(7).fill(1));
+    const FILLER_IDX = [0, 8, 13, 16, 17];
+
+    // Генерация симметричной маски орнамента (каждый вызов — уникальная мандала)
+    function generateMask(size) {
+      if (size % 2 === 0) size += 1;
+      let matrix = Array(size).fill(null).map(() => Array(size).fill(0));
+      let centerY = Math.floor(size / 2);
+      let centerX = Math.floor(size / 2);
+      let maxBlock = Math.ceil(centerY / 7) + 1;
+      let blockMap = {};
+
+      for (let by = 0; by < maxBlock; by++) {
+        for (let bx = by; bx < maxBlock; bx++) {
+          let pat = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+          if (JSON.stringify(pat) === JSON.stringify(solidBlock)) {
+            pat = PATTERNS[FILLER_IDX[Math.floor(Math.random() * FILLER_IDX.length)]];
+          }
+          blockMap[`${bx},${by}`] = pat;
+        }
+      }
+
+      for (let y = 0; y <= centerY; y++) {
+        for (let x = y; x <= centerX; x++) {
+          let bx = Math.floor(x / 7);
+          let by = Math.floor(y / 7);
+          let key = `${bx},${by}`;
+          if (!blockMap[key]) key = `${by},${bx}`;
+          let pat = blockMap[key];
+          if (!pat) continue;
+
+          if (pat[y % 7][x % 7] === 1) {
+            matrix[centerY + y][centerX + x] = 1;
+            matrix[centerY + x][centerX + y] = 1;
+            matrix[centerY - y][centerX + x] = 1;
+            matrix[centerY - x][centerX + y] = 1;
+            matrix[centerY + y][centerX - x] = 1;
+            matrix[centerY + x][centerX - y] = 1;
+            matrix[centerY - y][centerX - x] = 1;
+            matrix[centerY - x][centerX - y] = 1;
+          }
+        }
+      }
+      return matrix;
+    }
+
+    // === БИНАРИЗАТОР БРЭДЛИ И СПЕКТРАЛЬНЫЙ ДЕКОДЕР ===
+    // ТЗ: стеганография сохранена в синем канале (B)
+    function applyBradley(img, ch) {
+      const w = img.width, h = img.height, d = img.data;
+      const o = new Uint8ClampedArray(w * h * 4);
+      const ii = new Int32Array(w * h);
+      const s = Math.floor(w / 8), t = 15;
+
+      for (let y = 0; y < h; y++) {
+        let sum = 0;
+        for (let x = 0; x < w; x++) {
+          sum += d[(y * w + x) * 4 + ch];
+          ii[y * w + x] = (y > 0 ? ii[(y - 1) * w + x] : 0) + sum;
+        }
+      }
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let x1 = Math.max(x - s, 0), x2 = Math.min(x + s, w - 1);
+          let y1 = Math.max(y - s, 0), y2 = Math.min(y + s, h - 1);
+          let c = (x2 - x1) * (y2 - y1);
+          let sum = ii[y2 * w + x2] - ii[y1 * w + x2] - ii[y2 * w + x1] + ii[y1 * w + x1];
+          let v = d[(y * w + x) * 4 + ch];
+          let r = (v * c < sum * (100 - t) / 100) ? 0 : 255;
+          let i = (y * w + x) * 4;
+          o[i] = o[i + 1] = o[i + 2] = r;
+          o[i + 3] = 255;
+        }
+      }
+      return new ImageData(o, w, h);
+    }
+
+    function applySCI(img, cfg) {
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        let r = d[i], g = d[i + 1], b = d[i + 2];
+        let res = (b - (r * cfg.k1 + g * cfg.k2)) * 1.5;
+        res = Math.max(0, Math.min(255, res));
+        d[i] = d[i + 1] = d[i + 2] = res;
+        d[i + 3] = 255;
+      }
+    }
+
+    // === КРИПТОГРАФИЯ (PBKDF2 + AES-GCM) ===
+    async function encryptData(plaintext, passwordKey) {
+      const enc = new TextEncoder();
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const km = await crypto.subtle.importKey("raw", enc.encode(passwordKey), "PBKDF2", false, ["deriveKey"]);
+      const key = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: 390000, hash: "SHA-256" }, km,
+        { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+      );
+      const nonce = crypto.getRandomValues(new Uint8Array(12));
+      const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, enc.encode(plaintext));
+      const comb = new Uint8Array(28 + ct.byteLength);
+      comb.set(salt, 0);
+      comb.set(nonce, 16);
+      comb.set(new Uint8Array(ct), 28);
+      let binary = '';
+      for (let i = 0; i < comb.byteLength; i++) binary += String.fromCharCode(comb[i]);
+      return btoa(binary);
+    }
+
+    async function decryptData(b64, passwordKey) {
+      try {
+        const enc = new TextEncoder();
+        const bs = atob(b64);
+        const comb = new Uint8Array(bs.length);
+        for (let i = 0; i < bs.length; i++) comb[i] = bs.charCodeAt(i);
+        const salt = comb.slice(0, 16);
+        const nonce = comb.slice(16, 28);
+        const ct = comb.slice(28);
+        const km = await crypto.subtle.importKey("raw", enc.encode(passwordKey), "PBKDF2", false, ["deriveKey"]);
+        const key = await crypto.subtle.deriveKey(
+          { name: "PBKDF2", salt, iterations: 390000, hash: "SHA-256" }, km,
+          { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+        );
+        const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, key, ct);
+        return new TextDecoder().decode(dec);
+      } catch (e) {
+        // ТЗ: исключить показ мусорных данных при неверном ключе
+        return null;
+      }
+    }
+
+    // === РЕНДЕРИНГ ОРНАМЕНТА НА CANVAS ===
+    // ТЗ: стеганография в синем канале (B) — QR-данные внедряются в B
+    function drawSeal(dataString) {
+      const ctx = elSealCanvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.fillStyle = "#110e0b";
+      ctx.fillRect(0, 0, 512, 512);
+
+      if (!dataString || !dataString.trim()) {
+        elSealCanvas.style.opacity = "0";
+        return;
+      }
+      elSealCanvas.style.opacity = "1";
+
+      try {
+        const utf8 = unescape(encodeURIComponent(dataString));
+        const qrObj = qrcode(0, 'M');
+        qrObj.addData(utf8);
+        qrObj.make();
+        let mc = qrObj.getModuleCount();
+
+        let qz = 2, fi = 1, fo = 2;
+        let ornSize = mc + (qz * 2);
+        if (ornSize % 2 === 0) ornSize += 1;
+        let total = ornSize + (fi * 2) + (fo * 2);
+        if (total % 2 === 0) total += 1;
+
+        const mod = 512 / total;
+
+        // Базовая плита
+        ctx.fillStyle = "rgb(180, 160, 140)";
+        ctx.fillRect(0, 0, 512, 512);
+        ctx.fillStyle = "rgb(25, 20, 15)";
+        ctx.fillRect(fo * mod, fo * mod, 512 - (fo * mod * 2), 512 - (fo * mod * 2));
+
+        // ТЗ: каждая генерация — новая мандала (Math.random в generateMask)
+        const maskR = generateMask(ornSize);
+        const maskG = generateMask(ornSize);
+        const coreStart = fo + fi + qz;
+
+        for (let r = 0; r < total; r++) {
+          for (let c = 0; c < total; c++) {
+            let isO = (r < fo || r >= total - fo || c < fo || c >= total - fo);
+            let isI = !isO && (r < fo + fi || r >= total - (fo + fi) || c < fo + fi || c >= total - (fo + fi));
+            if (isO || isI) continue;
+
+            let oR = r - (fo + fi);
+            let oC = c - (fo + fi);
+            let qrR = r - coreStart;
+            let qrC = c - coreStart;
+            let isC = (qrR >= 0 && qrR < mc && qrC >= 0 && qrC < mc);
+
+            // R и G — декоративные маски; B — QR-данные (стеганография)
+            let vR = maskR[oR] && maskR[oR][oC] ? 210 : 35;
+            let vG = maskG[oR] && maskG[oR][oC] ? 210 : 35;
+            let vB = 35;
+            if (isC) vB = qrObj.isDark(qrR, qrC) ? 210 : 35;
+
+            ctx.fillStyle = `rgb(${vR}, ${vG}, ${vB})`;
+            ctx.fillRect(c * mod, r * mod, mod + 0.4, mod + 0.4);
+          }
+        }
+      } catch (e) {
+        console.error("Seal render failed:", e);
+      }
+    }
+
+    // === СБОРКА QR-ДАННЫХ (с префиксом | для шифрования) ===
+    async function buildQRData() {
+      const t = text.trim();
+      const p = password.trim();
+      if (p && t) {
+        return '|' + await encryptData(t, p);
+      }
+      return t;
+    }
+
+    // === ПОЛНАЯ ПЕРЕРИСОВКА ОРНАМЕНТА ===
+    async function regenerateSeal() {
+      const data = await buildQRData();
+      drawSeal(data);
+    }
+
+    // =====================================================================
+    // УПРАВЛЕНИЕ UI-СОСТОЯНИЯМИ
+    // =====================================================================
+    function updateUI() {
+      const isScanMode = (mode === 'scan_select' || mode === 'scan_camera');
+      const isCreateMode = (mode === 'create');
+      const isDecryptPending = (mode === 'decrypt_pending');
+      const isDecrypted = (mode === 'decrypted');
+      const hasText = text.trim().length > 0;
+      const hasPass = password.trim().length > 0;
+
+      // --- Текстовое поле ---
+      if (isScanMode) {
+        // ТЗ: скрывать поля ввода в режиме сканирования
+        elTextFieldWrap.style.display = 'none';
+      } else if (isDecryptPending) {
+        // ТЗ: заблокировать поле ввода текста, визуальная сигнализация
+        elTextFieldWrap.style.display = '';
+        elTextarea.value = '';
+        elTextarea.readOnly = true;
+        elTextarea.classList.add('text-locked');
+        elLockOverlay.classList.remove('hidden');
+        elDecryptInd.classList.add('hidden');
+        elBtnOpenLink.classList.add('hidden');
+      } else if (isDecrypted) {
+        // ТЗ: текст/ссылка отображаются, интерактивны
+        elTextFieldWrap.style.display = '';
+        elTextarea.value = text;
+        elTextarea.readOnly = true;
+        elTextarea.classList.remove('text-locked');
+        elLockOverlay.classList.add('hidden');
+        elDecryptInd.classList.remove('hidden');
+
+        // ТЗ: кликабельные ссылки
+        const isUrl = /^https?:\/\//i.test(text.trim());
+        if (isUrl) {
+          elBtnOpenLink.classList.remove('hidden');
+          elBtnOpenLink.href = text.trim();
+        } else {
+          elBtnOpenLink.classList.add('hidden');
+          elBtnOpenLink.removeAttribute('href');
+        }
+      } else {
+        // Режим создания
+        elTextFieldWrap.style.display = '';
+        elTextarea.value = text;
+        elTextarea.readOnly = false;
+        elTextarea.classList.remove('text-locked');
+        elLockOverlay.classList.add('hidden');
+        elDecryptInd.classList.add('hidden');
+        elBtnOpenLink.classList.add('hidden');
+      }
+
+      // --- Поле ключа ---
+      if (isScanMode) {
+        // ТЗ: скрывать в режиме сканирования
+        elPassFieldWrap.style.display = 'none';
+      } else if (isDecryptPending) {
+        // ТЗ: отобразить поле ввода ключа
+        elPassFieldWrap.style.display = '';
+        elPassFieldWrap.classList.remove('pass-inactive');
+        elPassFieldWrap.classList.add('pass-active');
+        elPassInput.disabled = false;
+        elPassInput.value = password;
+      } else if (isDecrypted) {
+        elPassFieldWrap.style.display = '';
+        elPassFieldWrap.classList.remove('pass-inactive');
+        elPassFieldWrap.classList.add('pass-active');
+        elPassInput.disabled = true;
+        elPassInput.value = password;
+      } else {
+        // ТЗ: поле ключа неактивно до первого символа текста
+        elPassFieldWrap.style.display = '';
+        elPassInput.value = password;
+        elPassInput.disabled = false;
+        if (hasText) {
+          elPassFieldWrap.classList.remove('pass-inactive');
+          elPassFieldWrap.classList.add('pass-active');
+        } else {
+          elPassFieldWrap.classList.add('pass-inactive');
+          elPassFieldWrap.classList.remove('pass-active');
+        }
+      }
+
+      // --- Кнопка «ВВОД» (inline decrypt) ---
+      if (isDecryptPending && hasPass) {
+        elInlineDecrypt.classList.remove('hidden');
+      } else {
+        elInlineDecrypt.classList.add('hidden');
+      }
+
+      // --- Блоки замков ---
+      if (isScanMode) {
+        elLockL1Block.style.display = 'none';
+        elLockL2Block.style.display = 'none';
+      } else {
+        elLockL1Block.style.display = '';
+        elLockL2Block.style.display = '';
+      }
+
+      // --- Центральная панель ---
+      elStandbySeal.classList.add('hidden');
+      elScanSelector.classList.add('hidden');
+      elScannerView.classList.add('hidden');
+      elSealCanvas.classList.add('hidden');
+      elDecryptError.classList.add('hidden');
+
+      if (mode === 'scan_select') {
+        elScanSelector.classList.remove('hidden');
+      } else if (mode === 'scan_camera') {
+        elScannerView.classList.remove('hidden');
+      } else if (isDecryptPending || isDecrypted) {
+        if (showDecryptError && isDecryptPending) {
+          // ТЗ: заменить изображение на сообщение об ошибке
+          elDecryptError.classList.remove('hidden');
+        } else {
+          elSealCanvas.classList.remove('hidden');
+        }
+      } else if (isCreateMode) {
+        if (hasText || pendingCiphertext) {
+          elSealCanvas.classList.remove('hidden');
+        } else {
+          elStandbySeal.classList.remove('hidden');
+        }
+      }
+
+      // --- Кнопки действий ---
+      elBtnSave.classList.add('hidden');
+      elBtnRefresh.classList.add('hidden');
+      elBtnReset.classList.add('hidden');
+
+      if (isCreateMode) {
+        // ТЗ: Download при наличии текста
+        if (hasText) {
+          elBtnSave.classList.remove('hidden');
+        }
+        // ТЗ: «Обновить» при 1+ символе в ключе
+        if (hasPass) {
+          elBtnRefresh.classList.remove('hidden');
+        }
+      } else if (isDecryptPending || isDecrypted) {
+        elBtnReset.classList.remove('hidden');
+      }
+
+      // Кнопка Scan / Отмена
+      if (isScanMode || isDecryptPending || isDecrypted) {
+        elBtnScan.textContent = "✖ СКАСУВАТИ";
+        elBtnScan.classList.add('text-red-500', 'border-red-950/40', 'hover:bg-red-950/10');
+      } else {
+        elBtnScan.textContent = "[◉] СКАНУВАТИ";
+        elBtnScan.classList.remove('text-red-500', 'border-red-950/40', 'hover:bg-red-950/10');
+      }
+    }
+
+    // =====================================================================
+    // ЛОГИКА ЗАМКОВ: L1 заполнение на 3 символа, L2 на 6, макс 12
+    // =====================================================================
+    function syncLocks() {
+      if (lockTimeoutL1) { clearTimeout(lockTimeoutL1); lockTimeoutL1 = null; }
+      if (lockTimeoutL2) { clearTimeout(lockTimeoutL2); lockTimeoutL2 = null; }
+
+      // В режиме ожидания дешифровки — оба замка красные (заблокированы)
+      if (mode === 'decrypt_pending') {
+        lockL1 = 'locked_red';
+        lockL2 = 'locked_red';
+        renderLocks();
+        return;
+      }
+
+      // После дешифровки — оба открыты
+      if (mode === 'decrypted') {
+        lockL1 = 'empty';
+        lockL2 = 'empty';
+        renderLocks();
+        return;
+      }
+
+      // Режим создания — индикация по длине ключа
+      const len = password.trim().length;
+
+      // ТЗ: L1 заполняется на 3 символа
+      if (len >= 3) {
+        lockL1 = 'closed';
+      } else if (len >= 1) {
+        lockL1 = 'filling';
+      } else {
+        lockL1 = 'empty';
+      }
+
+      // ТЗ: L2 заполняется на 6 символов
+      if (len >= 6) {
+        lockL2 = 'closed';
+      } else if (len >= 4) {
+        lockL2 = 'filling';
+      } else {
+        lockL2 = 'empty';
+      }
+
+      // Анимация перехода filling → closed с задержкой
+      if (len >= 3 && lockL1 === 'closed') {
+        lockTimeoutL1 = setTimeout(() => { lockL1 = 'closed'; renderLocks(); }, 300);
+      }
+      if (len >= 6 && lockL2 === 'closed') {
+        lockTimeoutL2 = setTimeout(() => { lockL2 = 'closed'; renderLocks(); }, 300);
+      }
+
+      renderLocks();
+    }
+
+    function renderLocks() {
+      // L1
+      switch (lockL1) {
+        case 'empty':
+          elLockL1Icon.innerHTML = SVG_UNLOCKED;
+          elLockL1Block.className = elLockL1Block.className.replace(/bg-\[#\w]+\s*/g, '').replace(/border-\[#[\w/]+\]\/?\d*\s*/g, '');
+          elLockL1Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/20');
+          elLockL1Label.textContent = 'L1';
+          elLockL1Label.className = 'text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+        case 'filling':
+          elLockL1Icon.innerHTML = SVG_FILLING;
+          elLockL1Block.classList.add('bg-[#0c0e10]/80', 'border-yellow-500/30');
+          elLockL1Block.classList.remove('border-[#10b981]/20', 'border-red-900/40');
+          elLockL1Label.textContent = 'L1';
+          elLockL1Label.className = 'text-[0.6vw] text-yellow-500/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+        case 'closed':
+          elLockL1Icon.innerHTML = SVG_CLOSED;
+          elLockL1Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/40');
+          elLockL1Block.classList.remove('border-yellow-500/30', 'border-red-900/40');
+          elLockL1Label.textContent = 'L1';
+          elLockL1Label.className = 'text-[0.6vw] text-[#10b981] mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+        case 'locked_red':
+          elLockL1Icon.innerHTML = SVG_LOCKED_RED;
+          elLockL1Block.classList.add('bg-[#110e0b]', 'border-red-900/40', 'shadow-inner');
+          elLockL1Block.classList.remove('border-[#10b981]/20', 'border-yellow-500/30', 'border-[#10b981]/40');
+          elLockL1Label.textContent = 'LOCKED';
+          elLockL1Label.className = 'text-[0.6vw] text-red-500/90 mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+      }
+
+      // L2
+      switch (lockL2) {
+        case 'empty':
+          elLockL2Icon.innerHTML = SVG_UNLOCKED;
+          elLockL2Block.className = elLockL2Block.className.replace(/bg-\[#\w]+\s*/g, '').replace(/border-\[#[\w/]+\]\/?\d*\s*/g, '');
+          elLockL2Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/20');
+          elLockL2Label.textContent = 'L2';
+          elLockL2Label.className = 'text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+        case 'filling':
+          elLockL2Icon.innerHTML = SVG_FILLING;
+          elLockL2Block.classList.add('bg-[#0c0e10]/80', 'border-yellow-500/30');
+          elLockL2Block.classList.remove('border-[#10b981]/20', 'border-red-900/40');
+          elLockL2Label.textContent = 'L2';
+          elLockL2Label.className = 'text-[0.6vw] text-yellow-500/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+        case 'closed':
+          elLockL2Icon.innerHTML = SVG_CLOSED;
+          elLockL2Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/40');
+          elLockL2Block.classList.remove('border-yellow-500/30', 'border-red-900/40');
+          elLockL2Label.textContent = 'L2';
+          elLockL2Label.className = 'text-[0.6vw] text-[#10b981] mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+        case 'locked_red':
+          elLockL2Icon.innerHTML = SVG_LOCKED_RED;
+          elLockL2Block.classList.add('bg-[#110e0b]', 'border-red-900/40', 'shadow-inner');
+          elLockL2Block.classList.remove('border-[#10b981]/20', 'border-yellow-500/30', 'border-[#10b981]/40');
+          elLockL2Label.textContent = 'LOCKED';
+          elLockL2Label.className = 'text-[0.6vw] text-red-500/90 mt-1 font-mono tracking-widest uppercase font-bold';
+          break;
+      }
+    }
+
+    // =====================================================================
+    // РЕЖИМ СКАНИРОВАНИЯ
+    // =====================================================================
+    function enterScanMode() {
+      mode = 'scan_select';
+      stopCamera();
+      updateUI();
+    }
+
+    function exitScanMode() {
+      stopCamera();
+      // ТЗ: возврат в режим «Создание»
+      if (mode === 'decrypt_pending' || mode === 'decrypted') {
+        // Очистка состояния сканирования
+        text = '';
+        password = '';
+        pendingCiphertext = null;
+        showDecryptError = false;
+      }
+      mode = 'create';
+      updateUI();
+      syncLocks();
+      drawSeal('');
+      // ТЗ: автофокус при возврате в создание
+      setTimeout(() => elTextarea.focus(), 100);
+    }
+
+    function stopCamera() {
+      if (scanFrameId) {
+        cancelAnimationFrame(scanFrameId);
+        scanFrameId = null;
+      }
+      if (videoStream) {
+        videoStream.getTracks().forEach(t => t.stop());
+        videoStream = null;
+      }
+      elScanVideo.srcObject = null;
+    }
+
+    function startCamera() {
+      mode = 'scan_camera';
+      elCameraError.classList.add('hidden');
+      updateUI();
+
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = 512;
+      offCanvas.height = 512;
+      const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+
+      let failCount = 0;
+      let activeSearch = false;
+
+      function frameLoop() {
+        if (mode !== 'scan_camera') return;
+
+        if (elScanVideo.readyState === elScanVideo.HAVE_ENOUGH_DATA && offCtx) {
+          offCtx.drawImage(elScanVideo, 0, 0, 512, 512);
+          const imgData = offCtx.getImageData(0, 0, 512, 512);
+
+          let detected = false;
+          let qrData = '';
+
+          // Обычное сканирование
+          const code = jsQR(imgData.data, 512, 512, { inversionAttempts: "attemptBoth" });
+          if (code) {
+            qrData = code.data;
+            detected = true;
+          } else {
+            failCount++;
+            if (failCount > 40) activeSearch = true;
+
+            if (activeSearch) {
+              const wImg = new ImageData(new Uint8ClampedArray(imgData.data), 512, 512);
+              applySCI(wImg, { k1: 0.05, k2: 0.13 });
+              const mImg = applyBradley(wImg, 0);
+              const codeAlt = jsQR(mImg.data, 512, 512, { inversionAttempts: "attemptBoth" });
+              if (codeAlt) { qrData = codeAlt.data; detected = true; failCount = 0; }
+            } else {
+              const mImg = applyBradley(imgData, 2);
+              const codeAlt = jsQR(mImg.data, 512, 512, { inversionAttempts: "attemptBoth" });
+              if (codeAlt) { qrData = codeAlt.data; detected = true; failCount = 0; }
+            }
+          }
+
+          if (detected && qrData) {
+            playBeep(880, 0.12);
+            triggerFlash();
+            stopCamera();
+            processQRData(qrData.trim());
+            return;
+          }
+        }
+        scanFrameId = requestAnimationFrame(frameLoop);
+      }
+
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 640 } }
+      }).then(stream => {
+        videoStream = stream;
+        elScanVideo.srcObject = stream;
+        elScanVideo.play().then(() => {
+          scanFrameId = requestAnimationFrame(frameLoop);
+        }).catch(() => {
+          elCameraError.classList.remove('hidden');
+        });
+      }).catch(() => {
+        elCameraError.classList.remove('hidden');
+      });
+    }
+
+    // ТЗ: обработка обнаруженных QR-данных
+    function processQRData(raw) {
+      if (raw.startsWith('|')) {
+        // ТЗ: QR зашифрован (префикс |)
+        pendingCiphertext = raw.substring(1);
+        text = '';
+        password = '';
+        showDecryptError = false;
+        mode = 'decrypt_pending';
+        syncLocks();
+        updateUI();
+        // Рисуем зашифрованный QR в канвас
+        drawSeal(raw);
+        // Фокус на поле ключа
+        setTimeout(() => elPassInput.focus(), 100);
+      } else {
+        // ТЗ: QR не зашифрован — сразу вывести текст
+        text = raw;
+        password = '';
+        pendingCiphertext = null;
+        showDecryptError = false;
+        mode = 'create';
+        syncLocks();
+        updateUI();
+        drawSeal(text);
+        playSuccessSound();
+      }
+    }
+
+    // Обработка загрузки файла (Галерея)
+    function handleFileUpload(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const tc = document.createElement('canvas');
+          tc.width = 512;
+          tc.height = 512;
+          const tCtx = tc.getContext('2d');
+          if (!tCtx) return;
+          tCtx.drawImage(img, 0, 0, 512, 512);
+          const imgData = tCtx.getImageData(0, 0, 512, 512);
+
+          let code = jsQR(imgData.data, 512, 512, { inversionAttempts: "attemptBoth" });
+          if (!code) {
+            const mImg = applyBradley(imgData, 2);
+            code = jsQR(mImg.data, 512, 512, { inversionAttempts: "attemptBoth" });
+          }
+
+          if (code && code.data) {
+            playBeep(880, 0.12);
+            triggerFlash();
+            stopCamera();
+            processQRData(code.data.trim());
+          } else {
+            // QR не обнаружен — тряска и сообщение
+            playFailureSound();
+            elArtifact.classList.add('shake-anim');
+            setTimeout(() => elArtifact.classList.remove('shake-anim'), 500);
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // =====================================================================
+    // ПОПЫТКА ДЕШИФРОВКИ
+    // =====================================================================
+    async function attemptDecrypt() {
+      const key = password.trim();
+      if (!key || mode !== 'decrypt_pending' || !pendingCiphertext) return;
+
+      const result = await decryptData(pendingCiphertext, key);
+
+      if (result !== null) {
+        // ТЗ: при успехе — текст/ссылка отображаются, интерактивны
+        text = result;
+        showDecryptError = false;
+        mode = 'decrypted';
+        playSuccessSound();
+        syncLocks();
+        updateUI();
+        // Показываем орнамент (скрываем ошибку)
+        drawSeal('|' + pendingCiphertext);
+      } else {
+        // ТЗ: при ошибке — заменить изображение на сообщение
+        playFailureSound();
+        showDecryptError = true;
+        elArtifact.classList.add('shake-anim');
+        setTimeout(() => elArtifact.classList.remove('shake-anim'), 500);
+        updateUI();
+        // Фокус обратно на ключ
+        setTimeout(() => {
+          elPassInput.focus();
+          elPassInput.select();
+        }, 600);
+      }
+    }
+
+    // =====================================================================
+    // ОБРАБОТЧИКИ СОБЫТИЙ
+    // =====================================================================
+
+    // ТЗ: при вводе каждого символа текста — новая мандала
+    elTextarea.addEventListener('input', () => {
+      if (mode !== 'create') return;
+      text = elTextarea.value;
+      showDecryptError = false;
+      regenerateSeal();
+      updateUI();
+      syncLocks();
+    });
+
+    // ТЗ: ввод ключа — обновление орнамента + индикация замков
+    elPassInput.addEventListener('input', () => {
+      if (mode === 'decrypted') return;
+      password = elPassInput.value;
+      showDecryptError = false;
+
+      if (mode === 'create') {
+        regenerateSeal();
+        updateUI();
+      } else if (mode === 'decrypt_pending') {
+        // Скрыть ошибку при изменении ключа, показать канвас обратно
+        updateUI();
+      }
+
+      syncLocks();
+    });
+
+    // ТЗ: Enter в поле ключа → попытка дешифровки
+    elPassInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && mode === 'decrypt_pending') {
+        e.preventDefault();
+        attemptDecrypt();
+      }
+    });
+
+    // ТЗ: кнопка «ВВОД»
+    elInlineDecrypt.addEventListener('click', attemptDecrypt);
+
+    // ТЗ: Download — сохранить canvas как PNG
+    elBtnSave.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `crypto-seal-${Date.now()}.png`;
+      link.href = elSealCanvas.toDataURL('image/png');
+      link.click();
+      playBeep(660, 0.1);
+    });
+
+    // ТЗ: «Обновить» — сохранить текст/ключ, новая мандала
+    elBtnRefresh.addEventListener('click', () => {
+      if (mode !== 'create') return;
+      regenerateSeal();
+      playBeep(550, 0.08);
+    });
+
+    // Сброс
+    elBtnReset.addEventListener('click', () => {
+      text = '';
+      password = '';
+      pendingCiphertext = null;
+      showDecryptError = false;
+      mode = 'create';
+      syncLocks();
+      updateUI();
+      drawSeal('');
+      setTimeout(() => elTextarea.focus(), 100);
+    });
+
+    // ТЗ: Scan / Отмена
+    elBtnScan.addEventListener('click', () => {
+      if (mode === 'create') {
+        enterScanMode();
+      } else {
+        exitScanMode();
+      }
+    });
+
+    // ТЗ: Селектор — Галерея
+    elBtnGallery.addEventListener('click', () => {
+      elFileInput.click();
+    });
+
+    // ТЗ: Селектор — Камера
+    elBtnCamera.addEventListener('click', () => {
+      startCamera();
+    });
+
+    // Резервная кнопка загрузки файла в режиме камеры
+    elBtnManualUpload.addEventListener('click', () => {
+      elFileInput.click();
+    });
+
+    // Файловый инпут
+    elFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFileUpload(file);
+      e.target.value = ''; // Сброс для повторного выбора того же файла
+    });
+
+    // Drag & Drop на контейнер
+    elArtifact.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      elArtifact.classList.add('border-[#10b981]/80', 'ring-2', 'ring-[#10b981]/25');
+    });
+    elArtifact.addEventListener('dragleave', () => {
+      elArtifact.classList.remove('border-[#10b981]/80', 'ring-2', 'ring-[#10b981]/25');
+    });
+    elArtifact.addEventListener('drop', (e) => {
+      e.preventDefault();
+      elArtifact.classList.remove('border-[#10b981]/80', 'ring-2', 'ring-[#10b981]/25');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) handleFileUpload(file);
+    });
+
+    // =====================================================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // =====================================================================
+    function init() {
+      // ТЗ: курсор автоматически фокусируется в поле ввода текста
+      elTextarea.focus();
+      syncLocks();
+      updateUI();
+      drawSeal('');
+    }
+
+    init();
+  </script>
 </body>
 </html>
