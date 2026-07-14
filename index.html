@@ -10,79 +10,678 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-  <style>
-    body {
-      background-color: #040405;
-      color: #c2c5c8;
-      font-family: 'Inter', sans-serif;
-    }
-    .font-sans { font-family: 'Inter', sans-serif; }
-    .font-display { font-family: 'Space Grotesk', sans-serif; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
+ /* ================================================================
+   CRYPTO SEAL — ИНЖЕНЕРНЫЙ ШПИОНСКИЙ СТИЛЬ
+   Холодный монохром. Никакого blur. Только 1px границы.
+   ================================================================ */
 
-    @keyframes shake {
-      0%, 100% { transform: translate(0, 0); }
-      10%, 30%, 50%, 70%, 90% { transform: translate(-8px, 0); }
-      20%, 40%, 60%, 80% { transform: translate(8px, 0); }
-    }
-    .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+body {
+  background-color: #040405;
+  color: #5a6a60;
+  font-family: 'JetBrains Mono', monospace !important;
+}
 
-    @keyframes scan {
-      0% { top: 0%; }
-      50% { top: 100%; }
-      100% { top: 0%; }
-    }
-    .scan-line-anim { animation: scan 2.5s ease-in-out infinite; }
+/* --- Глобальный сброс: убираем всё размытое и скруглённое --- */
+*,
+*::before,
+*::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  border-radius: 0 !important;
+}
 
-    .action-btn {
-      background-color: rgba(16, 185, 129, 0.08);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      padding: 0.6rem 1.4rem;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      font-weight: 700;
-      border-radius: 4px;
-      transition: all 0.25s ease-in-out;
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(16,185,129,0.05);
-      backdrop-filter: blur(4px);
-    }
-    .action-btn:hover {
-      background-color: #10b981;
-      color: #08090a;
-      border-color: #10b981;
-      box-shadow: 0 0 20px rgba(16,185,129,0.4);
-    }
-    .action-btn:disabled {
-      opacity: 0.3;
-      pointer-events: none;
-    }
+.font-sans,
+.font-display {
+  font-family: 'JetBrains Mono', monospace !important;
+}
 
-    /* ТЗ: поле ключа визуально неактивно до ввода текста */
-    .pass-inactive {
-      opacity: 0.3;
-      pointer-events: none;
-      border-color: rgba(100,100,100,0.2) !important;
-      box-shadow: none !important;
-    }
-    .pass-active {
-      opacity: 1;
-      pointer-events: auto;
-      border-color: rgba(16,185,129,0.3) !important;
-    }
-    .pass-active:focus-within {
-      border-color: #10b981 !important;
-      box-shadow: 0 0 15px rgba(16,185,129,0.12) !important;
-    }
+/* Убрать пульсации/спины — инженерный пульт не мигает */
+.animate-pulse,
+.animate-bounce,
+.animate-spin,
+.animate-ping {
+  animation: none !important;
+}
 
-    /* Текстовое поле заблокировано в режиме сканирования */
-    .text-locked {
-      background-color: rgba(20,15,10,0.85) !important;
-    }
-  </style>
+/* ================================================================
+   КНОПКА-ПОЛИГОН  (.action-btn)
+   Форма: отсеченный шестиугольник через clip-path
+   «Рамка» — псевдоэлемент на 1px крупнее, без blur
+   ================================================================ */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 184px;
+  height: 36px;
+  padding: 0;
+  background-color: #080a09;
+  color: #10b981;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: none !important;
+  outline: none;
+  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s;
+  position: relative;
+  z-index: 0;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: rgba(16, 185, 129, 0.3);
+  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+  z-index: -1;
+}
+
+.action-btn:hover {
+  background-color: #10b981 !important;
+  color: #040405 !important;
+}
+.action-btn:hover::before {
+  background: #10b981;
+}
+
+.action-btn:disabled {
+  opacity: 0.15 !important;
+  pointer-events: none;
+}
+
+/* ---- Вариант: нейтральная кнопка (стирание) ---- */
+.action-btn--neutral {
+  color: #4a5a50 !important;
+}
+.action-btn--neutral::before {
+  background: rgba(74, 90, 80, 0.25) !important;
+}
+.action-btn--neutral:hover {
+  background-color: #4a5a50 !important;
+  color: #040405 !important;
+}
+.action-btn--neutral:hover::before {
+  background: #4a5a50 !important;
+}
+
+/* ---- Вариант: отмена (красный) ---- */
+.action-btn--cancel {
+  color: #ef4444 !important;
+}
+.action-btn--cancel::before {
+  background: rgba(239, 68, 68, 0.25) !important;
+}
+.action-btn--cancel:hover {
+  background-color: #ef4444 !important;
+  color: #040405 !important;
+}
+.action-btn--cancel:hover::before {
+  background: #ef4444 !important;
+}
+
+/* ================================================================
+   МАЛЫЕ КНОПКИ-ПОЛИГОНЫ (inline, scan-select, open-link)
+   ================================================================ */
+
+/* --- Селектор сканирования: Галерея / Камера --- */
+.poly-btn--scan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 156px;
+  height: 40px;
+  padding: 0 12px;
+  background-color: #080a09;
+  color: #10b981;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: none !important;
+  clip-path: polygon(8% 0, 100% 0, 100% 70%, 92% 100%, 0 100%, 0 30%);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s;
+  position: relative;
+  z-index: 0;
+}
+.poly-btn--scan::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: rgba(16, 185, 129, 0.25);
+  clip-path: polygon(8% 0, 100% 0, 100% 70%, 92% 100%, 0 100%, 0 30%);
+  z-index: -1;
+}
+.poly-btn--scan:hover {
+  background-color: #10b981 !important;
+  color: #040405 !important;
+}
+.poly-btn--scan:hover::before {
+  background: #10b981;
+}
+.poly-btn--scan svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* --- Inline кнопка «ВВОД» --- */
+.poly-btn--inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 26px;
+  padding: 0;
+  background-color: #080a09;
+  color: #10b981;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none !important;
+  clip-path: polygon(12% 0, 100% 0, 100% 65%, 88% 100%, 0 100%, 0 35%);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s;
+  position: relative;
+  z-index: 0;
+}
+.poly-btn--inline::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: rgba(16, 185, 129, 0.3);
+  clip-path: polygon(12% 0, 100% 0, 100% 65%, 88% 100%, 0 100%, 0 35%);
+  z-index: -1;
+}
+.poly-btn--inline:hover {
+  background-color: #10b981 !important;
+  color: #040405 !important;
+}
+.poly-btn--inline:hover::before {
+  background: #10b981;
+}
+
+/* --- Кнопка «OPEN LINK» --- */
+.poly-btn--link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 10px;
+  background-color: #080a09;
+  color: #10b981;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 8px !important;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none !important;
+  text-decoration: none !important;
+  clip-path: polygon(8% 0, 100% 0, 100% 60%, 92% 100%, 0 100%, 0 40%);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s;
+  position: relative;
+  z-index: 0;
+}
+.poly-btn--link::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: rgba(16, 185, 129, 0.25);
+  clip-path: polygon(8% 0, 100% 0, 100% 60%, 92% 100%, 0 100%, 0 40%);
+  z-index: -1;
+}
+.poly-btn--link:hover {
+  background-color: #10b981 !important;
+  color: #040405 !important;
+}
+.poly-btn--link:hover::before {
+  background: #10b981;
+}
+
+/* --- Кнопка «ВЫБРАТЬ ФАЙЛ» (внутри камеры) --- */
+.poly-btn--upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 14px;
+  background-color: #080a09;
+  color: #10b981;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none !important;
+  clip-path: polygon(8% 0, 100% 0, 100% 65%, 92% 100%, 0 100%, 0 35%);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s;
+  position: relative;
+  z-index: 0;
+}
+.poly-btn--upload::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: rgba(16, 185, 129, 0.25);
+  clip-path: polygon(8% 0, 100% 0, 100% 65%, 92% 100%, 0 100%, 0 35%);
+  z-index: -1;
+}
+.poly-btn--upload:hover {
+  background-color: #10b981 !important;
+  color: #040405 !important;
+}
+.poly-btn--upload:hover::before {
+  background: #10b981;
+}
+
+/* ================================================================
+   ГЛАВНЫЙ КОНТЕЙНЕР
+   ================================================================ */
+#artifact {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-color: rgba(16, 185, 129, 0.08) !important;
+  border-width: 1px !important;
+}
+
+/* ================================================================
+   ПАНЕЛЬ ТЕКСТА  (#text-field-wrapper)
+   Инженерный блок: 1px рамка + угловые маркеры через ::before/::after
+   ================================================================ */
+#text-field-wrapper {
+  background-color: #0a0b0c !important;
+  border: 1px solid rgba(16, 185, 129, 0.1) !important;
+  padding: 0 !important;
+  position: relative;
+}
+
+#text-field-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid #10b981;
+  border-left: 1px solid #10b981;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#text-field-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 1px solid #10b981;
+  border-right: 1px solid #10b981;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Заблокированное состояние (JS добавляет .text-locked) */
+#text-field-wrapper.text-locked {
+  background-color: #060706 !important;
+  border-color: rgba(239, 68, 68, 0.12) !important;
+}
+#text-field-wrapper.text-locked::before,
+#text-field-wrapper.text-locked::after {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ================================================================
+   ТЕКСТОВОЕ ПОЛЕ  (#ui-text)
+   ================================================================ */
+#ui-text {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+  letter-spacing: 0.04em;
+  color: #10b981 !important;
+  padding: 6px 14px !important;
+  line-height: 1.4;
+}
+
+#ui-text::placeholder {
+  color: rgba(16, 185, 129, 0.12) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.1em;
+}
+
+#ui-text[readonly] {
+  color: #8aaa90 !important;
+  cursor: default;
+}
+
+/* ================================================================
+   ПАНЕЛЬ КЛЮЧА  (#pass-field-wrapper)
+   Только нижняя граница — как терминальная строка ввода
+   ================================================================ */
+#pass-field-wrapper {
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.15) !important;
+  padding: 0 8px !important;
+  transition: border-color 0.12s, opacity 0.15s;
+}
+
+#pass-field-wrapper:focus-within {
+  border-bottom-color: #10b981 !important;
+}
+
+/* JS-классы активности ключа */
+#pass-field-wrapper.pass-inactive {
+  opacity: 0.18 !important;
+  pointer-events: none !important;
+  border-bottom-color: rgba(100, 100, 100, 0.08) !important;
+}
+
+#pass-field-wrapper.pass-active {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  border-bottom-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* ================================================================
+   ПОЛЕ КЛЮЧА  (#ui-pass)
+   ================================================================ */
+#ui-pass {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 14px !important;
+  letter-spacing: 0.3em;
+  color: #10b981 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none;
+}
+
+#ui-pass::placeholder {
+  color: rgba(16, 185, 129, 0.1) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.15em;
+}
+
+#ui-pass:disabled {
+  color: rgba(16, 185, 129, 0.25) !important;
+}
+
+/* ================================================================
+   QR-ПАНЕЛЬ  (#ui-qr-wrapper)
+   ================================================================ */
+#ui-qr-wrapper {
+  background-color: #0a0b0c !important;
+  border: 1px solid rgba(16, 185, 129, 0.12) !important;
+}
+
+/* Угловые маркеры QR-панели (существующие div-ы) */
+#ui-qr-wrapper > div:not(#standby-seal):not(#scanner-view):not(#scan-selector):not(#seal-canvas):not(#decrypt-error-overlay) {
+  width: 12px !important;
+  height: 12px !important;
+  border-color: #10b981 !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  background: transparent !important;
+}
+
+/* Верхний-левый */
+#ui-qr-wrapper > div:nth-child(1) {
+  top: 0 !important; left: 0 !important;
+  border-right: none !important; border-bottom: none !important;
+}
+/* Верхний-правый */
+#ui-qr-wrapper > div:nth-child(2) {
+  top: 0 !important; right: 0 !important;
+  border-left: none !important; border-bottom: none !important;
+}
+/* Нижний-левый */
+#ui-qr-wrapper > div:nth-child(3) {
+  bottom: 0 !important; left: 0 !important;
+  border-right: none !important; border-top: none !important;
+}
+/* Нижний-правый */
+#ui-qr-wrapper > div:nth-child(4) {
+  bottom: 0 !important; right: 0 !important;
+  border-left: none !important; border-top: none !important;
+}
+
+/* ================================================================
+   ЗАМКИ  (#lock-left, #lock-right)
+   ================================================================ */
+#lock-left,
+#lock-right {
+  background-color: #0a0b0c !important;
+  border: 1px solid rgba(16, 185, 129, 0.1) !important;
+  padding: 6px 4px !important;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+/* Состояние: заполнение (JS добавляет border-yellow-*) */
+#lock-left[style*="yellow"],
+#lock-right[style*="yellow"],
+#lock-left.border-yellow-500\/30,
+#lock-right.border-yellow-500\/30 {
+  border-color: rgba(234, 179, 8, 0.3) !important;
+}
+
+/* Состояние: закрыт (JS добавляет border-[#10b981]/40) */
+#lock-left.border-\[\#10b981\]\/40,
+#lock-right.border-\[\#10b981\]\/40 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Состояние: заблокирован красным (JS добавляет border-red-900/40) */
+#lock-left.border-red-900\/40,
+#lock-right.border-red-900\/40 {
+  background-color: #060706 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Иконки замков — строгий размер, без glow */
+#lock-left-icon-container svg,
+#lock-right-icon-container svg {
+  width: 28px !important;
+  height: 28px !important;
+  filter: none !important;
+}
+
+/* Метки замков */
+#lock-left-label,
+#lock-right-label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 8px !important;
+  letter-spacing: 0.2em;
+}
+
+/* ================================================================
+   СЕЛЕКТОР СКАНИРОВАНИЯ  (#scan-selector)
+   ================================================================ */
+#scan-selector {
+  background-color: #0a0b0c !important;
+  border: 1px solid rgba(16, 185, 129, 0.1) !important;
+  gap: 14px !important;
+  padding: 16px !important;
+}
+
+#scan-selector p {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.3em;
+  color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* ================================================================
+   СКАНЕР-ВИДЕО  (#scanner-view)
+   ================================================================ */
+#scanner-view {
+  background-color: #050606 !important;
+}
+
+/* Целевые углы сканера */
+#scanner-view .absolute.inset-3 > div > div {
+  width: 12px !important;
+  height: 12px !important;
+  border-color: #10b981 !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  background: transparent !important;
+}
+
+/* Лазерная линия — без glow */
+#scan-laser {
+  height: 1px !important;
+  background-color: #10b981 !important;
+  opacity: 0.6 !important;
+}
+
+@keyframes scan {
+  0%   { top: 0%; }
+  50%  { top: 100%; }
+  100% { top: 0%; }
+}
+.scan-line-anim {
+  animation: scan 2.5s ease-in-out infinite;
+}
+
+/* Ошибка камеры */
+#camera-error-view p {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.05em;
+}
+
+/* ================================================================
+   ОВЕРЛЕИ И ИНДИКАТОРЫ
+   ================================================================ */
+
+/* Оверлей блокировки текста */
+#lock-overlay {
+  background-color: rgba(4, 4, 5, 0.9) !important;
+  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+}
+#lock-overlay span {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.2em;
+  color: rgba(239, 68, 68, 0.8) !important;
+}
+#lock-overlay svg {
+  width: 12px !important;
+  height: 12px !important;
+  animation: none !important;
+  opacity: 0.6;
+}
+
+/* Индикатор дешифровки */
+#decrypted-indicator span {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 7px !important;
+  letter-spacing: 0.2em;
+}
+#decrypted-indicator svg {
+  width: 10px !important;
+  height: 10px !important;
+  animation: none !important;
+  opacity: 0.7;
+}
+
+/* Оверлей ошибки дешифровки */
+#decrypt-error-overlay {
+  background-color: #0a0b0c !important;
+  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+}
+#decrypt-error-overlay svg {
+  width: 32px !important;
+  height: 32px !important;
+  animation: none !important;
+  opacity: 0.7;
+}
+#decrypt-error-overlay p:first-of-type {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.12em;
+}
+#decrypt-error-overlay p:last-of-type {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.05em;
+  color: rgba(239, 68, 68, 0.5) !important;
+}
+
+/* Standby seal */
+#standby-seal p {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 8px !important;
+  letter-spacing: 0.25em;
+}
+#standby-seal > div:first-child {
+  opacity: 0.15 !important;
+  animation: none !important;
+}
+
+/* ================================================================
+   ЗАГОЛОВОК ТЕРМИНАЛА
+   ================================================================ */
+#artifact h1 {
+  font-family: 'JetBrains Mono', monospace !important;
+  letter-spacing: 0.25em;
+}
+#artifact h1 span {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* ================================================================
+   ФОНОВАЯ СЕТКА — снизить плотность
+   ================================================================ */
+#artifact > div:first-of-type {
+  opacity: 0.05 !important;
+  background-size: 24px 24px !important;
+}
+
+/* Калибровочные кольца */
+#artifact > div:nth-of-type(2) {
+  opacity: 0.03 !important;
+}
+
+/* ================================================================
+   ТРЯСКА (оставляем, но строже)
+   ================================================================ */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
+  20%, 40%, 60%, 80% { transform: translate(5px, 0); }
+}
+.shake-anim {
+  animation: shake 0.35s linear both;
+}
+
+/* ================================================================
+   ВСПЫШКА — без размытия
+   ================================================================ */
+#flash-layer {
+  transition: opacity 0.15s step-end !important;
+}
+
+/* ================================================================
+   DRAG-OVER (без ring с blur)
+   ================================================================ */
+#artifact.ring-2 {
+  --tw-ring-offset-shadow: 0 0 0 0px transparent !important;
+  --tw-ring-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3) !important;
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow) !important;
+}
 </head>
 <body class="flex items-center justify-center min-h-screen bg-[#030405] p-2 md:p-6 select-none overflow-hidden">
 
