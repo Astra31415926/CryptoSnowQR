@@ -10,691 +10,152 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
- <style>
-  #artifact { display: block !important; visibility: visible !important; }
-  #scanner-view { border: 2px solid red !important; min-height: 200px !important; }
-</style>
-  /* ================================================================
-   CRYPTO SEAL — ИНЖЕНЕРНЫЙ ШПИОНСКИЙ СТИЛЬ
-   Холодный монохром. Никакого blur. Только 1px границы.
-   ================================================================ */
+  <style>
+    body {
+      background-color: #040405;
+      color: #c2c5c8;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-sans { font-family: 'Inter', sans-serif; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-body {
-  background-color: #040405;
-  color: #5a6a60;
-  font-family: 'JetBrains Mono', monospace !important;
-}
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-8px, 0); }
+      20%, 40%, 60%, 80% { transform: translate(8px, 0); }
+    }
+    .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
 
-/* --- Глобальный сброс: убираем всё размытое и скруглённое --- */
-*,
-*::before,
-*::after {
-  box-shadow: none !important;
-  text-shadow: none !important;
-  backdrop-filter: none !important;
-  border-radius: 0 !important;
-}
+    @keyframes scan {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+    .scan-line-anim { animation: scan 2.5s ease-in-out infinite; }
 
-.font-sans,
-.font-display {
-  font-family: 'JetBrains Mono', monospace !important;
-}
+    .action-btn {
+      background-color: rgba(16, 185, 129, 0.08);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 0.6rem 1.4rem;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-radius: 4px;
+      transition: all 0.25s ease-in-out;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(16,185,129,0.05);
+      backdrop-filter: blur(4px);
+    }
+    .action-btn:hover {
+      background-color: #10b981;
+      color: #08090a;
+      border-color: #10b981;
+      box-shadow: 0 0 20px rgba(16,185,129,0.4);
+    }
+    .action-btn:disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
 
-/* Убрать пульсации/спины — инженерный пульт не мигает */
-.animate-pulse,
-.animate-bounce,
-.animate-spin,
-.animate-ping {
-  animation: none !important;
-}
+    /* ТЗ: поле ключа визуально неактивно до ввода текста */
+    .pass-inactive {
+      opacity: 0.3;
+      pointer-events: none;
+      border-color: rgba(100,100,100,0.2) !important;
+      box-shadow: none !important;
+    }
+    .pass-active {
+      opacity: 1;
+      pointer-events: auto;
+      border-color: rgba(16,185,129,0.3) !important;
+    }
+    .pass-active:focus-within {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 15px rgba(16,185,129,0.12) !important;
+    }
 
-/* ================================================================
-   КНОПКА-ПОЛИГОН  (.action-btn)
-   Форма: отсеченный шестиугольник через clip-path
-   «Рамка» — псевдоэлемент на 1px крупнее, без blur
-   ================================================================ */
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 184px;
-  height: 36px;
-  padding: 0;
-  background-color: #080a09;
-  color: #10b981;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 10px !important;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  border: none !important;
-  outline: none;
-  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-  cursor: pointer;
-  transition: background-color 0.1s, color 0.1s;
-  position: relative;
-  z-index: 0;
-}
+    /* Текстовое поле заблокировано в режиме сканирования */
+    .text-locked {
+      background-color: rgba(20,15,10,0.85) !important;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-[#030405] p-2 md:p-6 select-none overflow-hidden">
 
-.action-btn::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  background: rgba(16, 185, 129, 0.3);
-  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-  z-index: -1;
-}
+  <div
+    id="artifact"
+    class="relative w-full aspect-[16/9] max-w-[1200px] bg-[#08090a] text-[#c2c5c8] shadow-[0_0_60px_rgba(16,185,129,0.15)] overflow-hidden rounded-2xl border-[12px] border-[#1a1c1e] transition-all duration-500"
+  >
+    <!-- Фоновая сетка -->
+    <div class="absolute inset-0 opacity-10 pointer-events-none z-0" style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 20px 20px;"></div>
 
-.action-btn:hover {
-  background-color: #10b981 !important;
-  color: #040405 !important;
-}
-.action-btn:hover::before {
-  background: #10b981;
-}
+    <!-- Калибровочные кольца -->
+    <div class="absolute inset-0 opacity-[0.05] pointer-events-none -z-10 flex items-center justify-center">
+      <svg class="w-[85%] h-[85%] text-[#10b981]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.15">
+        <circle cx="50" cy="50" r="46" stroke-dasharray="3 3" />
+        <circle cx="50" cy="50" r="38" />
+        <circle cx="50" cy="50" r="28" />
+        <path d="M 50 0 L 50 100 M 0 50 L 100 50 M 15 15 L 85 85 M 15 85 L 85 15" />
+        <polygon points="50,4 96,50 50,96 4,50" stroke-width="0.08" />
+        <polygon points="50,12 88,50 50,88 12,50" stroke-width="0.08" />
+      </svg>
+    </div>
 
-.action-btn:disabled {
-  opacity: 0.15 !important;
-  pointer-events: none;
-}
+    <!-- Заголовок терминала -->
+    <div class="absolute top-[4.5%] left-[15%] w-[70%] text-center pointer-events-none select-none z-10">
+      <div class="text-[0.6vw] md:text-[0.7vw] uppercase tracking-[0.3em] text-[#10b981] font-bold mb-1 animate-pulse">
+        System Status: Monitoring
+      </div>
+      <h1 class="text-[2.2vw] font-light tracking-[0.2em] text-white uppercase font-display leading-tight">
+        КРИПТО-СНІГ QR <span class="text-[#10b981] opacity-50 font-mono text-[1.4vw] ml-1">v4.02</span>
+      </h1>
+      <p class="text-[0.7vw] text-[#10b981]/60 font-mono tracking-[0.35em] uppercase mt-1">
+        ANCIENT ORNAMENT CRYPTO DECODER // SECURE TERMINAL
+      </p>
+    </div>
 
-/* ---- Вариант: нейтральная кнопка (стирание) ---- */
-.action-btn--neutral {
-  color: #4a5a50 !important;
-}
-.action-btn--neutral::before {
-  background: rgba(74, 90, 80, 0.25) !important;
-}
-.action-btn--neutral:hover {
-  background-color: #4a5a50 !important;
-  color: #040405 !important;
-}
-.action-btn--neutral:hover::before {
-  background: #4a5a50 !important;
-}
+    <!-- Оператор -->
+    <div class="absolute top-[4.5%] right-[3%] text-right pointer-events-none select-none z-10">
+      <div class="text-[0.5vw] uppercase tracking-[0.2em] opacity-40">Operator Auth</div>
+      <div class="text-[0.8vw] font-mono text-[#10b981]/80">DPT-993-XLS</div>
+    </div>
 
-/* ---- Вариант: отмена (красный) ---- */
-.action-btn--cancel {
-  color: #ef4444 !important;
-}
-.action-btn--cancel::before {
-  background: rgba(239, 68, 68, 0.25) !important;
-}
-.action-btn--cancel:hover {
-  background-color: #ef4444 !important;
-  color: #040405 !important;
-}
-.action-btn--cancel:hover::before {
-  background: #ef4444 !important;
-}
+    <!-- Блок замка L1 (Сектор Альфа) -->
+    <div id="lock-left" class="absolute left-[30%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
+      <div id="lock-left-icon-container"></div>
+      <span id="lock-left-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L1</span>
+    </div>
 
-/* ================================================================
-   МАЛЫЕ КНОПКИ-ПОЛИГОНЫ (inline, scan-select, open-link)
-   ================================================================ */
+    <!-- Блок замка L2 (Сектор Бета) -->
+    <div id="lock-right" class="absolute left-[60%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
+      <div id="lock-right-icon-container"></div>
+      <span id="lock-right-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L2</span>
+    </div>
 
-/* --- Селектор сканирования: Галерея / Камера --- */
-.poly-btn--scan {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 156px;
-  height: 40px;
-  padding: 0 12px;
-  background-color: #080a09;
-  color: #10b981;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 10px !important;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  border: none !important;
-  clip-path: polygon(8% 0, 100% 0, 100% 70%, 92% 100%, 0 100%, 0 30%);
-  cursor: pointer;
-  transition: background-color 0.1s, color 0.1s;
-  position: relative;
-  z-index: 0;
-}
-.poly-btn--scan::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  background: rgba(16, 185, 129, 0.25);
-  clip-path: polygon(8% 0, 100% 0, 100% 70%, 92% 100%, 0 100%, 0 30%);
-  z-index: -1;
-}
-.poly-btn--scan:hover {
-  background-color: #10b981 !important;
-  color: #040405 !important;
-}
-.poly-btn--scan:hover::before {
-  background: #10b981;
-}
-.poly-btn--scan svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
+    <!-- Поле ввода текста -->
+    <div
+      id="text-field-wrapper"
+      class="absolute transition-all duration-500 border border-[#10b981]/25 bg-[#0c0e10]/85 rounded-lg p-1 shadow-[0_0_15px_rgba(16,185,129,0.05)] focus-within:border-[#10b981]/60 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+      style="left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%; z-index: 5;"
+    >
+      <textarea
+        id="ui-text"
+        placeholder="Введіть текст таємниці / Enter secret payload..."
+        class="w-full h-full bg-transparent border-none text-[#10b981] placeholder-[#10b981]/30 font-mono resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-1 transition-all duration-500"
+      ></textarea>
 
-/* --- Inline кнопка «ВВОД» --- */
-.poly-btn--inline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 26px;
-  padding: 0;
-  background-color: #080a09;
-  color: #10b981;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 9px !important;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border: none !important;
-  clip-path: polygon(12% 0, 100% 0, 100% 65%, 88% 100%, 0 100%, 0 35%);
-  cursor: pointer;
-  transition: background-color 0.1s, color 0.1s;
-  position: relative;
-  z-index: 0;
-}
-.poly-btn--inline::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  background: rgba(16, 185, 129, 0.3);
-  clip-path: polygon(12% 0, 100% 0, 100% 65%, 88% 100%, 0 100%, 0 35%);
-  z-index: -1;
-}
-.poly-btn--inline:hover {
-  background-color: #10b981 !important;
-  color: #040405 !important;
-}
-.poly-btn--inline:hover::before {
-  background: #10b981;
-}
+      <!-- Оверлей блокировки при ожидании ключа -->
+      <div id="lock-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-[1px] rounded border border-red-950/30 pointer-events-none">
+        <span class="text-red-500 text-[0.8vw] font-mono tracking-[0.2em] uppercase flex items-center gap-2">
+          <svg class="w-4 h-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+          AWAITING KEY VERIFICATION
+        </span>
+      </div>
 
-/* --- Кнопка «OPEN LINK» --- */
-.poly-btn--link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 22px;
-  padding: 0 10px;
-  background-color: #080a09;
-  color: #10b981;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 8px !important;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border: none !important;
-  text-decoration: none !important;
-  clip-path: polygon(8% 0, 100% 0, 100% 60%, 92% 100%, 0 100%, 0 40%);
-  cursor: pointer;
-  transition: background-color 0.1s, color 0.1s;
-  position: relative;
-  z-index: 0;
-}
-.poly-btn--link::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  background: rgba(16, 185, 129, 0.25);
-  clip-path: polygon(8% 0, 100% 0, 100% 60%, 92% 100%, 0 100%, 0 40%);
-  z-index: -1;
-}
-.poly-btn--link:hover {
-  background-color: #10b981 !important;
-  color: #040405 !important;
-}
-.poly-btn--link:hover::before {
-  background: #10b981;
-}
-
-/* --- Кнопка «ВЫБРАТЬ ФАЙЛ» (внутри камеры) --- */
-.poly-btn--upload {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 30px;
-  padding: 0 14px;
-  background-color: #080a09;
-  color: #10b981;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 9px !important;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border: none !important;
-  clip-path: polygon(8% 0, 100% 0, 100% 65%, 92% 100%, 0 100%, 0 35%);
-  cursor: pointer;
-  transition: background-color 0.1s, color 0.1s;
-  position: relative;
-  z-index: 0;
-}
-.poly-btn--upload::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  background: rgba(16, 185, 129, 0.25);
-  clip-path: polygon(8% 0, 100% 0, 100% 65%, 92% 100%, 0 100%, 0 35%);
-  z-index: -1;
-}
-.poly-btn--upload:hover {
-  background-color: #10b981 !important;
-  color: #040405 !important;
-}
-.poly-btn--upload:hover::before {
-  background: #10b981;
-}
-
-/* ================================================================
-   ГЛАВНЫЙ КОНТЕЙНЕР
-   ================================================================ */
-#artifact {
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  border-color: rgba(16, 185, 129, 0.08) !important;
-  border-width: 1px !important;
-}
-
-/* ================================================================
-   ПАНЕЛЬ ТЕКСТА  (#text-field-wrapper)
-   Инженерный блок: 1px рамка + угловые маркеры через ::before/::after
-   ================================================================ */
-#text-field-wrapper {
-  background-color: #0a0b0c !important;
-  border: 1px solid rgba(16, 185, 129, 0.1) !important;
-  padding: 0 !important;
-  position: relative;
-}
-
-#text-field-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  width: 10px;
-  height: 10px;
-  border-top: 1px solid #10b981;
-  border-left: 1px solid #10b981;
-  pointer-events: none;
-  z-index: 10;
-}
-
-#text-field-wrapper::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  right: -1px;
-  width: 10px;
-  height: 10px;
-  border-bottom: 1px solid #10b981;
-  border-right: 1px solid #10b981;
-  pointer-events: none;
-  z-index: 10;
-}
-
-/* Заблокированное состояние (JS добавляет .text-locked) */
-#text-field-wrapper.text-locked {
-  background-color: #060706 !important;
-  border-color: rgba(239, 68, 68, 0.12) !important;
-}
-#text-field-wrapper.text-locked::before,
-#text-field-wrapper.text-locked::after {
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-/* ================================================================
-   ТЕКСТОВОЕ ПОЛЕ  (#ui-text)
-   ================================================================ */
-#ui-text {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 12px !important;
-  letter-spacing: 0.04em;
-  color: #10b981 !important;
-  padding: 6px 14px !important;
-  line-height: 1.4;
-}
-
-#ui-text::placeholder {
-  color: rgba(16, 185, 129, 0.12) !important;
-  font-size: 10px !important;
-  letter-spacing: 0.1em;
-}
-
-#ui-text[readonly] {
-  color: #8aaa90 !important;
-  cursor: default;
-}
-
-/* ================================================================
-   ПАНЕЛЬ КЛЮЧА  (#pass-field-wrapper)
-   Только нижняя граница — как терминальная строка ввода
-   ================================================================ */
-#pass-field-wrapper {
-  background-color: transparent !important;
-  border: none !important;
-  border-bottom: 1px solid rgba(16, 185, 129, 0.15) !important;
-  padding: 0 8px !important;
-  transition: border-color 0.12s, opacity 0.15s;
-}
-
-#pass-field-wrapper:focus-within {
-  border-bottom-color: #10b981 !important;
-}
-
-/* JS-классы активности ключа */
-#pass-field-wrapper.pass-inactive {
-  opacity: 0.18 !important;
-  pointer-events: none !important;
-  border-bottom-color: rgba(100, 100, 100, 0.08) !important;
-}
-
-#pass-field-wrapper.pass-active {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  border-bottom-color: rgba(16, 185, 129, 0.3) !important;
-}
-
-/* ================================================================
-   ПОЛЕ КЛЮЧА  (#ui-pass)
-   ================================================================ */
-#ui-pass {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 14px !important;
-  letter-spacing: 0.3em;
-  color: #10b981 !important;
-  background: transparent !important;
-  border: none !important;
-  outline: none;
-}
-
-#ui-pass::placeholder {
-  color: rgba(16, 185, 129, 0.1) !important;
-  font-size: 10px !important;
-  letter-spacing: 0.15em;
-}
-
-#ui-pass:disabled {
-  color: rgba(16, 185, 129, 0.25) !important;
-}
-
-/* ================================================================
-   QR-ПАНЕЛЬ  (#ui-qr-wrapper)
-   ================================================================ */
-#ui-qr-wrapper {
-  background-color: #0a0b0c !important;
-  border: 1px solid rgba(16, 185, 129, 0.12) !important;
-}
-
-/* Угловые маркеры QR-панели (существующие div-ы) */
-#ui-qr-wrapper > div:not(#standby-seal):not(#scanner-view):not(#scan-selector):not(#seal-canvas):not(#decrypt-error-overlay) {
-  width: 12px !important;
-  height: 12px !important;
-  border-color: #10b981 !important;
-  border-width: 2px !important;
-  border-style: solid !important;
-  background: transparent !important;
-}
-
-/* Верхний-левый */
-#ui-qr-wrapper > div:nth-child(1) {
-  top: 0 !important; left: 0 !important;
-  border-right: none !important; border-bottom: none !important;
-}
-/* Верхний-правый */
-#ui-qr-wrapper > div:nth-child(2) {
-  top: 0 !important; right: 0 !important;
-  border-left: none !important; border-bottom: none !important;
-}
-/* Нижний-левый */
-#ui-qr-wrapper > div:nth-child(3) {
-  bottom: 0 !important; left: 0 !important;
-  border-right: none !important; border-top: none !important;
-}
-/* Нижний-правый */
-#ui-qr-wrapper > div:nth-child(4) {
-  bottom: 0 !important; right: 0 !important;
-  border-left: none !important; border-top: none !important;
-}
-
-/* ================================================================
-   ЗАМКИ  (#lock-left, #lock-right)
-   ================================================================ */
-#lock-left,
-#lock-right {
-  background-color: #0a0b0c !important;
-  border: 1px solid rgba(16, 185, 129, 0.1) !important;
-  padding: 6px 4px !important;
-  transition: border-color 0.15s, background-color 0.15s;
-}
-
-/* Состояние: заполнение (JS добавляет border-yellow-*) */
-#lock-left[style*="yellow"],
-#lock-right[style*="yellow"],
-#lock-left.border-yellow-500\/30,
-#lock-right.border-yellow-500\/30 {
-  border-color: rgba(234, 179, 8, 0.3) !important;
-}
-
-/* Состояние: закрыт (JS добавляет border-[#10b981]/40) */
-#lock-left.border-\[\#10b981\]\/40,
-#lock-right.border-\[\#10b981\]\/40 {
-  border-color: rgba(16, 185, 129, 0.35) !important;
-}
-
-/* Состояние: заблокирован красным (JS добавляет border-red-900/40) */
-#lock-left.border-red-900\/40,
-#lock-right.border-red-900\/40 {
-  background-color: #060706 !important;
-  border-color: rgba(239, 68, 68, 0.2) !important;
-}
-
-/* Иконки замков — строгий размер, без glow */
-#lock-left-icon-container svg,
-#lock-right-icon-container svg {
-  width: 28px !important;
-  height: 28px !important;
-  filter: none !important;
-}
-
-/* Метки замков */
-#lock-left-label,
-#lock-right-label {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 8px !important;
-  letter-spacing: 0.2em;
-}
-
-/* ================================================================
-   СЕЛЕКТОР СКАНИРОВАНИЯ  (#scan-selector)
-   ================================================================ */
-#scan-selector {
-  background-color: #0a0b0c !important;
-  border: 1px solid rgba(16, 185, 129, 0.1) !important;
-  gap: 14px !important;
-  padding: 16px !important;
-}
-
-#scan-selector p {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 9px !important;
-  letter-spacing: 0.3em;
-  color: rgba(16, 185, 129, 0.3) !important;
-}
-
-/* ================================================================
-   СКАНЕР-ВИДЕО  (#scanner-view)
-   ================================================================ */
-#scanner-view {
-  background-color: #050606 !important;
-}
-
-/* Целевые углы сканера */
-#scanner-view .absolute.inset-3 > div > div {
-  width: 12px !important;
-  height: 12px !important;
-  border-color: #10b981 !important;
-  border-width: 2px !important;
-  border-style: solid !important;
-  background: transparent !important;
-}
-
-/* Лазерная линия — без glow */
-#scan-laser {
-  height: 1px !important;
-  background-color: #10b981 !important;
-  opacity: 0.6 !important;
-}
-
-@keyframes scan {
-  0%   { top: 0%; }
-  50%  { top: 100%; }
-  100% { top: 0%; }
-}
-.scan-line-anim {
-  animation: scan 2.5s ease-in-out infinite;
-}
-
-/* Ошибка камеры */
-#camera-error-view p {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 9px !important;
-  letter-spacing: 0.05em;
-}
-
-/* ================================================================
-   ОВЕРЛЕИ И ИНДИКАТОРЫ
-   ================================================================ */
-
-/* Оверлей блокировки текста */
-#lock-overlay {
-  background-color: rgba(4, 4, 5, 0.9) !important;
-  border: 1px solid rgba(239, 68, 68, 0.15) !important;
-}
-#lock-overlay span {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 9px !important;
-  letter-spacing: 0.2em;
-  color: rgba(239, 68, 68, 0.8) !important;
-}
-#lock-overlay svg {
-  width: 12px !important;
-  height: 12px !important;
-  animation: none !important;
-  opacity: 0.6;
-}
-
-/* Индикатор дешифровки */
-#decrypted-indicator span {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 7px !important;
-  letter-spacing: 0.2em;
-}
-#decrypted-indicator svg {
-  width: 10px !important;
-  height: 10px !important;
-  animation: none !important;
-  opacity: 0.7;
-}
-
-/* Оверлей ошибки дешифровки */
-#decrypt-error-overlay {
-  background-color: #0a0b0c !important;
-  border: 1px solid rgba(239, 68, 68, 0.15) !important;
-}
-#decrypt-error-overlay svg {
-  width: 32px !important;
-  height: 32px !important;
-  animation: none !important;
-  opacity: 0.7;
-}
-#decrypt-error-overlay p:first-of-type {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 11px !important;
-  letter-spacing: 0.12em;
-}
-#decrypt-error-overlay p:last-of-type {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 9px !important;
-  letter-spacing: 0.05em;
-  color: rgba(239, 68, 68, 0.5) !important;
-}
-
-/* Standby seal */
-#standby-seal p {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 8px !important;
-  letter-spacing: 0.25em;
-}
-#standby-seal > div:first-child {
-  opacity: 0.15 !important;
-  animation: none !important;
-}
-
-/* ================================================================
-   ЗАГОЛОВОК ТЕРМИНАЛА
-   ================================================================ */
-#artifact h1 {
-  font-family: 'JetBrains Mono', monospace !important;
-  letter-spacing: 0.25em;
-}
-#artifact h1 span {
-  font-family: 'JetBrains Mono', monospace !important;
-}
-
-/* ================================================================
-   ФОНОВАЯ СЕТКА — снизить плотность
-   ================================================================ */
-#artifact > div:first-of-type {
-  opacity: 0.05 !important;
-  background-size: 24px 24px !important;
-}
-
-/* Калибровочные кольца */
-#artifact > div:nth-of-type(2) {
-  opacity: 0.03 !important;
-}
-
-/* ================================================================
-   ТРЯСКА (оставляем, но строже)
-   ================================================================ */
-@keyframes shake {
-  0%, 100% { transform: translate(0, 0); }
-  10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
-  20%, 40%, 60%, 80% { transform: translate(5px, 0); }
-}
-.shake-anim {
-  animation: shake 0.35s linear both;
-}
-
-/* ================================================================
-   ВСПЫШКА — без размытия
-   ================================================================ */
-#flash-layer {
-  transition: opacity 0.15s step-end !important;
-}
-
-<div id="artifact" class="w-[500px] mx-auto mt-10 p-6 border border-[#10b981]/20 bg-[#040405] flex flex-col gap-4">
-  <div class="text-center pb-2 border-b border-[#10b981]/10">
-    <h1 class="text-[#10b981] text-xl tracking-[0.4em] font-bold">CRYPTOSEAL</h1>
-  </div>
-
-  <div id="scanner-view" class="w-full aspect-square border border-[#10b981]/20 bg-[#08090a] relative"></div>
-
-  <textarea id="ui-text" placeholder="Введіть текст..." class="w-full min-h-[60px] bg-[#08090a] border border-[#10b981]/20 p-3 text-[#10b981] font-mono resize-y outline-none"></textarea>
-
-  <div class="flex items-center gap-2 w-full">
-    <div id="lock-left" class="w-12 h-12 border border-[#10b981]/20 flex items-center justify-center shrink-0">L1</div>
-    <input id="ui-pass" placeholder="Ключ..." class="flex-grow bg-[#08090a] border border-[#10b981]/20 p-3 text-[#10b981] font-mono outline-none">
-    <div id="lock-right" class="w-12 h-12 border border-[#10b981]/20 flex items-center justify-center shrink-0">L2</div>
-  </div>
-
-  <button id="btn-scan" class="action-btn w-full">СКАНИРОВАТЬ</button>
-</div>
       <!-- Индикатор успешной дешифровки -->
       <div id="decrypted-indicator" class="hidden absolute bottom-1 right-2 pointer-events-none">
         <span class="text-[#10b981] text-[0.6vw] font-mono tracking-widest uppercase flex items-center gap-1">
