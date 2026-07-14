@@ -675,88 +675,23 @@ body {
   transition: opacity 0.15s step-end !important;
 }
 
-/* ================================================================
-   DRAG-OVER (без ring с blur)
-   ================================================================ */
-#artifact.ring-2 {
-  --tw-ring-offset-shadow: 0 0 0 0px transparent !important;
-  --tw-ring-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3) !important;
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow) !important;
-}
-   </style>
-</head>
-<body class="flex items-center justify-center min-h-screen bg-[#030405] p-2 md:p-6 select-none overflow-hidden">
+<div id="artifact" class="w-[500px] mx-auto mt-10 p-6 border border-[#10b981]/20 bg-[#040405] flex flex-col gap-4">
+  <div class="text-center pb-2 border-b border-[#10b981]/10">
+    <h1 class="text-[#10b981] text-xl tracking-[0.4em] font-bold">CRYPTOSEAL</h1>
+  </div>
 
-  <div
-    id="artifact"
-    class="relative w-full aspect-[16/9] max-w-[1200px] bg-[#08090a] text-[#c2c5c8] shadow-[0_0_60px_rgba(16,185,129,0.15)] overflow-hidden rounded-2xl border-[12px] border-[#1a1c1e] transition-all duration-500"
-  >
-    <!-- Фоновая сетка -->
-    <div class="absolute inset-0 opacity-10 pointer-events-none z-0" style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 20px 20px;"></div>
+  <div id="scanner-view" class="w-full aspect-square border border-[#10b981]/20 bg-[#08090a] relative"></div>
 
-    <!-- Калибровочные кольца -->
-    <div class="absolute inset-0 opacity-[0.05] pointer-events-none -z-10 flex items-center justify-center">
-      <svg class="w-[85%] h-[85%] text-[#10b981]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.15">
-        <circle cx="50" cy="50" r="46" stroke-dasharray="3 3" />
-        <circle cx="50" cy="50" r="38" />
-        <circle cx="50" cy="50" r="28" />
-        <path d="M 50 0 L 50 100 M 0 50 L 100 50 M 15 15 L 85 85 M 15 85 L 85 15" />
-        <polygon points="50,4 96,50 50,96 4,50" stroke-width="0.08" />
-        <polygon points="50,12 88,50 50,88 12,50" stroke-width="0.08" />
-      </svg>
-    </div>
+  <textarea id="ui-text" placeholder="Введіть текст..." class="w-full min-h-[60px] bg-[#08090a] border border-[#10b981]/20 p-3 text-[#10b981] font-mono resize-y outline-none"></textarea>
 
-    <!-- Заголовок терминала -->
-    <div class="absolute top-[4.5%] left-[15%] w-[70%] text-center pointer-events-none select-none z-10">
-      <div class="text-[0.6vw] md:text-[0.7vw] uppercase tracking-[0.3em] text-[#10b981] font-bold mb-1 animate-pulse">
-        System Status: Monitoring
-      </div>
-      <h1 class="text-[2.2vw] font-light tracking-[0.2em] text-white uppercase font-display leading-tight">
-        КРИПТО-СНІГ QR <span class="text-[#10b981] opacity-50 font-mono text-[1.4vw] ml-1">v4.02</span>
-      </h1>
-      <p class="text-[0.7vw] text-[#10b981]/60 font-mono tracking-[0.35em] uppercase mt-1">
-        ANCIENT ORNAMENT CRYPTO DECODER // SECURE TERMINAL
-      </p>
-    </div>
+  <div class="flex items-center gap-2 w-full">
+    <div id="lock-left" class="w-12 h-12 border border-[#10b981]/20 flex items-center justify-center shrink-0">L1</div>
+    <input id="ui-pass" placeholder="Ключ..." class="flex-grow bg-[#08090a] border border-[#10b981]/20 p-3 text-[#10b981] font-mono outline-none">
+    <div id="lock-right" class="w-12 h-12 border border-[#10b981]/20 flex items-center justify-center shrink-0">L2</div>
+  </div>
 
-    <!-- Оператор -->
-    <div class="absolute top-[4.5%] right-[3%] text-right pointer-events-none select-none z-10">
-      <div class="text-[0.5vw] uppercase tracking-[0.2em] opacity-40">Operator Auth</div>
-      <div class="text-[0.8vw] font-mono text-[#10b981]/80">DPT-993-XLS</div>
-    </div>
-
-    <!-- Блок замка L1 (Сектор Альфа) -->
-    <div id="lock-left" class="absolute left-[30%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
-      <div id="lock-left-icon-container"></div>
-      <span id="lock-left-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L1</span>
-    </div>
-
-    <!-- Блок замка L2 (Сектор Бета) -->
-    <div id="lock-right" class="absolute left-[60%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
-      <div id="lock-right-icon-container"></div>
-      <span id="lock-right-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L2</span>
-    </div>
-
-    <!-- Поле ввода текста -->
-    <div
-      id="text-field-wrapper"
-      class="absolute transition-all duration-500 border border-[#10b981]/25 bg-[#0c0e10]/85 rounded-lg p-1 shadow-[0_0_15px_rgba(16,185,129,0.05)] focus-within:border-[#10b981]/60 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.15)]"
-      style="left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%; z-index: 5;"
-    >
-      <textarea
-        id="ui-text"
-        placeholder="Введіть текст таємниці / Enter secret payload..."
-        class="w-full h-full bg-transparent border-none text-[#10b981] placeholder-[#10b981]/30 font-mono resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-1 transition-all duration-500"
-      ></textarea>
-
-      <!-- Оверлей блокировки при ожидании ключа -->
-      <div id="lock-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-[1px] rounded border border-red-950/30 pointer-events-none">
-        <span class="text-red-500 text-[0.8vw] font-mono tracking-[0.2em] uppercase flex items-center gap-2">
-          <svg class="w-4 h-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-          AWAITING KEY VERIFICATION
-        </span>
-      </div>
-
+  <button id="btn-scan" class="action-btn w-full">СКАНИРОВАТЬ</button>
+</div>
       <!-- Индикатор успешной дешифровки -->
       <div id="decrypted-indicator" class="hidden absolute bottom-1 right-2 pointer-events-none">
         <span class="text-[#10b981] text-[0.6vw] font-mono tracking-widest uppercase flex items-center gap-1">
