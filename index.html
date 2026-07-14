@@ -2,22 +2,22 @@
 <html lang="uk" class="h-full">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Крипто-Сніг QR: Секретний Термінал</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Крипто-Сніг QR</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     body {
-      background-color: #040405;
-      color: #c2c5c8;
+      background-color: #0d0a08;
+      color: #c9bfae;
       font-family: 'Inter', sans-serif;
     }
     .font-sans { font-family: 'Inter', sans-serif; }
-    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .font-display { font-family: 'Cormorant Garamond', serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
 
     @keyframes shake {
@@ -35,26 +35,22 @@
     .scan-line-anim { animation: scan 2.5s ease-in-out infinite; }
 
     .action-btn {
-      background-color: rgba(16, 185, 129, 0.08);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      padding: 0.6rem 1.4rem;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      font-weight: 700;
-      border-radius: 4px;
-      transition: all 0.25s ease-in-out;
+      background-color: rgba(201, 168, 118, 0.08);
+      color: #c9a876;
+      border: 1px solid rgba(201, 168, 118, 0.35);
+      padding: 0.65rem 1.3rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.02em;
+      font-weight: 500;
+      border-radius: 10px;
+      transition: all 0.2s ease-in-out;
       cursor: pointer;
-      box-shadow: 0 0 15px rgba(16,185,129,0.05);
-      backdrop-filter: blur(4px);
     }
     .action-btn:hover {
-      background-color: #10b981;
-      color: #08090a;
-      border-color: #10b981;
-      box-shadow: 0 0 20px rgba(16,185,129,0.4);
+      background-color: #c9a876;
+      color: #15100b;
+      border-color: #c9a876;
     }
     .action-btn:disabled {
       opacity: 0.3;
@@ -65,37 +61,122 @@
     .pass-inactive {
       opacity: 0.3;
       pointer-events: none;
-      border-color: rgba(100,100,100,0.2) !important;
+      border-color: rgba(120,110,95,0.25) !important;
       box-shadow: none !important;
     }
     .pass-active {
       opacity: 1;
       pointer-events: auto;
-      border-color: rgba(16,185,129,0.3) !important;
+      border-color: rgba(201,168,118,0.3) !important;
     }
     .pass-active:focus-within {
-      border-color: #10b981 !important;
-      box-shadow: 0 0 15px rgba(16,185,129,0.12) !important;
+      border-color: #c9a876 !important;
+      box-shadow: 0 0 12px rgba(201,168,118,0.12) !important;
     }
 
     /* Текстовое поле заблокировано в режиме сканирования */
     .text-locked {
       background-color: rgba(20,15,10,0.85) !important;
     }
+
+    /* ===================== МОБИЛЬНАЯ АДАПТАЦИЯ ===================== */
+    @media (max-width: 760px) {
+      body { padding: 0; }
+      html, body { min-height: 100%; }
+
+      #artifact {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: auto;
+        height: auto;
+        min-height: 100vh;
+        border-radius: 0;
+        border-width: 0;
+        padding: 1.5rem 1.1rem 2rem;
+        gap: 1.1rem;
+        overflow: visible;
+        box-shadow: none;
+      }
+
+      #artifact .bg-grid, #artifact .rings-deco { display: none; }
+
+      .m-block {
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        z-index: auto !important;
+      }
+
+      #title-block { order: 1; }
+
+      #ui-qr-wrapper {
+        order: 2;
+        aspect-ratio: 1 / 1;
+        width: 78% !important;
+        max-width: 320px;
+        margin: 0 auto !important;
+      }
+
+      #text-field-wrapper { order: 3; min-height: 60px; }
+
+      .locks-row { order: 4; display: flex; gap: 0.75rem; }
+      #lock-left, #lock-right {
+        position: static !important;
+        width: 100% !important;
+        height: 64px !important;
+      }
+
+      #pass-field-wrapper { order: 5; min-height: 54px; }
+
+      .actions-row {
+        order: 6;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+      .actions-row .action-btn { flex: 1 1 auto; text-align: center; }
+
+      /* Фиксированные размеры текста вместо vw */
+      #seal-title { font-size: 26px !important; }
+      #seal-subtitle { font-size: 10px !important; }
+      #ui-text { font-size: 16px !important; }
+      #ui-pass { font-size: 20px !important; letter-spacing: 0.2em !important; }
+      #lock-left-label, #lock-right-label { font-size: 11px !important; }
+      .standby-text { font-size: 12px !important; }
+      .scan-hint { font-size: 13px !important; }
+      #btn-gallery, #btn-camera { font-size: 14px !important; }
+      .cam-err-title { font-size: 13px !important; }
+      .cam-err-sub { font-size: 12px !important; }
+      #btn-manual-upload { font-size: 12px !important; }
+      .derr-title { font-size: 16px !important; }
+      .derr-sub { font-size: 12px !important; }
+      .awaiting-text { font-size: 12px !important; }
+      .decrypted-text { font-size: 11px !important; }
+      #btn-open-link { font-size: 11px !important; }
+      #btn-inline-decrypt { font-size: 12px !important; }
+    }
   </style>
 </head>
-<body class="flex items-center justify-center min-h-screen bg-[#030405] p-2 md:p-6 select-none overflow-hidden">
+<body class="flex items-center justify-center min-h-screen bg-[#0d0a08] p-2 md:p-6 select-none overflow-hidden">
 
   <div
     id="artifact"
-    class="relative w-full aspect-[16/9] max-w-[1200px] bg-[#08090a] text-[#c2c5c8] shadow-[0_0_60px_rgba(16,185,129,0.15)] overflow-hidden rounded-2xl border-[12px] border-[#1a1c1e] transition-all duration-500"
+    class="relative w-full aspect-[16/9] max-w-[1200px] bg-[#15100b] text-[#c9bfae] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden rounded-2xl border-[10px] border-[#2a2118] transition-all duration-500"
   >
     <!-- Фоновая сетка -->
-    <div class="absolute inset-0 opacity-10 pointer-events-none z-0" style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 20px 20px;"></div>
+    <div class="bg-grid absolute inset-0 opacity-10 pointer-events-none z-0" style="background-image: radial-gradient(#c9a876 1px, transparent 1px); background-size: 20px 20px;"></div>
 
     <!-- Калибровочные кольца -->
-    <div class="absolute inset-0 opacity-[0.05] pointer-events-none -z-10 flex items-center justify-center">
-      <svg class="w-[85%] h-[85%] text-[#10b981]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.15">
+    <div class="rings-deco absolute inset-0 opacity-[0.05] pointer-events-none -z-10 flex items-center justify-center">
+      <svg class="w-[85%] h-[85%] text-[#c9a876]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.15">
         <circle cx="50" cy="50" r="46" stroke-dasharray="3 3" />
         <circle cx="50" cy="50" r="38" />
         <circle cx="50" cy="50" r="28" />
@@ -105,104 +186,97 @@
       </svg>
     </div>
 
-    <!-- Заголовок терминала -->
-    <div class="absolute top-[4.5%] left-[15%] w-[70%] text-center pointer-events-none select-none z-10">
-      <div class="text-[0.6vw] md:text-[0.7vw] uppercase tracking-[0.3em] text-[#10b981] font-bold mb-1 animate-pulse">
-        System Status: Monitoring
-      </div>
-      <h1 class="text-[2.2vw] font-light tracking-[0.2em] text-white uppercase font-display leading-tight">
-        КРИПТО-СНІГ QR <span class="text-[#10b981] opacity-50 font-mono text-[1.4vw] ml-1">v4.02</span>
+    <!-- Заголовок -->
+    <div id="title-block" class="m-block absolute top-[5%] left-[10%] w-[80%] text-center pointer-events-none select-none z-10">
+      <h1 id="seal-title" class="text-[2.3vw] font-medium tracking-[0.06em] text-[#e8dcc8] font-display leading-tight">
+        Крипто-Сніг QR
       </h1>
-      <p class="text-[0.7vw] text-[#10b981]/60 font-mono tracking-[0.35em] uppercase mt-1">
-        ANCIENT ORNAMENT CRYPTO DECODER // SECURE TERMINAL
+      <p id="seal-subtitle" class="text-[0.7vw] text-[#c9a876]/60 font-mono tracking-[0.25em] uppercase mt-1">
+        искусство скрытых смыслов
       </p>
     </div>
 
-    <!-- Оператор -->
-    <div class="absolute top-[4.5%] right-[3%] text-right pointer-events-none select-none z-10">
-      <div class="text-[0.5vw] uppercase tracking-[0.2em] opacity-40">Operator Auth</div>
-      <div class="text-[0.8vw] font-mono text-[#10b981]/80">DPT-993-XLS</div>
-    </div>
-
     <!-- Блок замка L1 (Сектор Альфа) -->
-    <div id="lock-left" class="absolute left-[30%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
+    <div class="locks-row m-block" style="position:absolute; left:0; top:0; width:0; height:0;">
+    </div>
+    <div id="lock-left" class="absolute left-[30%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#1c150f]/80 border border-[#c9a876]/20 rounded-xl p-2 z-10 transition-all duration-500">
       <div id="lock-left-icon-container"></div>
-      <span id="lock-left-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L1</span>
+      <span id="lock-left-label" class="text-[0.6vw] text-[#c9a876]/80 mt-1 font-mono tracking-widest uppercase">L1</span>
     </div>
 
     <!-- Блок замка L2 (Сектор Бета) -->
-    <div id="lock-right" class="absolute left-[60%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#0c0e10]/80 border border-[#10b981]/20 rounded-xl p-2 z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-500">
+    <div id="lock-right" class="absolute left-[60%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#1c150f]/80 border border-[#c9a876]/20 rounded-xl p-2 z-10 transition-all duration-500">
       <div id="lock-right-icon-container"></div>
-      <span id="lock-right-label" class="text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold">L2</span>
+      <span id="lock-right-label" class="text-[0.6vw] text-[#c9a876]/80 mt-1 font-mono tracking-widest uppercase">L2</span>
     </div>
 
     <!-- Поле ввода текста -->
     <div
       id="text-field-wrapper"
-      class="absolute transition-all duration-500 border border-[#10b981]/25 bg-[#0c0e10]/85 rounded-lg p-1 shadow-[0_0_15px_rgba(16,185,129,0.05)] focus-within:border-[#10b981]/60 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+      class="m-block absolute transition-all duration-500 border border-[#c9a876]/25 bg-[#1c150f]/85 rounded-lg p-1 focus-within:border-[#c9a876]/60"
       style="left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%; z-index: 5;"
     >
       <textarea
         id="ui-text"
         placeholder="Введіть текст таємниці / Enter secret payload..."
-        class="w-full h-full bg-transparent border-none text-[#10b981] placeholder-[#10b981]/30 font-mono resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-1 transition-all duration-500"
+        class="w-full h-full bg-transparent border-none text-[#e8dcc8] placeholder-[#c9a876]/30 font-sans resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-1 transition-all duration-500"
       ></textarea>
 
       <!-- Оверлей блокировки при ожидании ключа -->
       <div id="lock-overlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-[1px] rounded border border-red-950/30 pointer-events-none">
-        <span class="text-red-500 text-[0.8vw] font-mono tracking-[0.2em] uppercase flex items-center gap-2">
+        <span class="awaiting-text text-red-400 text-[0.8vw] font-mono tracking-[0.15em] uppercase flex items-center gap-2">
           <svg class="w-4 h-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-          AWAITING KEY VERIFICATION
+          ожидание ключа
         </span>
       </div>
 
       <!-- Индикатор успешной дешифровки -->
       <div id="decrypted-indicator" class="hidden absolute bottom-1 right-2 pointer-events-none">
-        <span class="text-[#10b981] text-[0.6vw] font-mono tracking-widest uppercase flex items-center gap-1">
+        <span class="decrypted-text text-[#c9a876] text-[0.6vw] font-mono tracking-widest uppercase flex items-center gap-1">
           <svg class="w-3 h-3 animate-ping" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          DECRYPTED
+          расшифровано
         </span>
       </div>
 
       <!-- ТЗ: кликабельные ссылки после дешифровки -->
-      <a id="btn-open-link" class="hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-[#10b981]/20 hover:bg-[#10b981]/40 text-[#10b981] border border-[#10b981]/40 rounded text-[0.65vw] font-bold tracking-widest transition-all cursor-pointer no-underline z-10" target="_blank" rel="noopener noreferrer">
-        OPEN LINK
+      <a id="btn-open-link" class="hidden absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-[#c9a876]/20 hover:bg-[#c9a876]/40 text-[#c9a876] border border-[#c9a876]/40 rounded text-[0.65vw] font-medium tracking-wide transition-all cursor-pointer no-underline z-10" target="_blank" rel="noopener noreferrer">
+        открыть ссылку
       </a>
     </div>
 
     <!-- Центральная область QR / орнамента -->
     <div
       id="ui-qr-wrapper"
-      class="absolute flex items-center justify-center pointer-events-auto overflow-hidden transition-all duration-500 rounded-xl z-40 border border-[#10b981]/20 bg-[#0c0e10] shadow-[0_0_60px_rgba(0,0,0,0.85)]"
+      class="m-block absolute flex items-center justify-center pointer-events-auto overflow-hidden transition-all duration-500 rounded-xl z-40 border border-[#c9a876]/20 bg-[#1c150f] shadow-[0_0_40px_rgba(0,0,0,0.6)]"
       style="left: 39.1%; top: 35.3%; width: 22.1%; height: 40.6%;"
     >
       <!-- Угловые маркеры -->
-      <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#10b981] pointer-events-none z-50"></div>
-      <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#10b981] pointer-events-none z-50"></div>
-      <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#10b981] pointer-events-none z-50"></div>
-      <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#10b981] pointer-events-none z-50"></div>
+      <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#c9a876] pointer-events-none z-50"></div>
+      <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#c9a876] pointer-events-none z-50"></div>
+      <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#c9a876] pointer-events-none z-50"></div>
+      <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#c9a876] pointer-events-none z-50"></div>
 
       <!-- Стандартный экран ожидания -->
       <div id="standby-seal" class="absolute inset-0 flex flex-col items-center justify-center text-center p-3 select-none pointer-events-none">
-        <div class="w-[60%] h-[60%] border border-[#10b981]/20 rounded-full flex items-center justify-center opacity-30 animate-spin" style="animation-duration: 30s;">
-          <svg class="w-full h-full text-[#10b981]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <div class="w-[60%] h-[60%] border border-[#c9a876]/20 rounded-full flex items-center justify-center opacity-30 animate-spin" style="animation-duration: 30s;">
+          <svg class="w-full h-full text-[#c9a876]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M12 2v20M2 12h20" stroke-width="0.5" />
             <circle cx="12" cy="12" r="10" stroke-width="0.5" stroke-dasharray="2 2" />
           </svg>
         </div>
-        <p class="absolute text-[0.7vw] text-[#10b981]/40 tracking-[0.2em] font-mono leading-tight uppercase">STANDBY SEAL</p>
+        <p class="standby-text absolute text-[0.7vw] text-[#c9a876]/40 tracking-[0.15em] font-mono leading-tight uppercase">печать в ожидании</p>
       </div>
 
       <!-- ТЗ: Селектор источника сканирования (Галерея / Камера) -->
-      <div id="scan-selector" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#0c0e10] z-[60] p-4 gap-3">
-        <p class="text-[#10b981]/50 text-[0.75vw] font-mono tracking-[0.35em] uppercase mb-1">Оберіть джерело</p>
+      <div id="scan-selector" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#1c150f] z-[60] p-4 gap-3">
+        <p class="scan-hint text-[#c9a876]/50 text-[0.75vw] font-sans tracking-[0.1em] uppercase mb-1">выберите источник</p>
         <button id="btn-gallery" class="action-btn w-[75%] text-[0.9vw] py-3 flex items-center justify-center gap-2">
           <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-          ГАЛЕРЕЯ
+          галерея
         </button>
         <button id="btn-camera" class="action-btn w-[75%] text-[0.9vw] py-3 flex items-center justify-center gap-2">
           <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          КАМЕРА
+          камера
         </button>
       </div>
 
@@ -210,24 +284,24 @@
       <div id="scanner-view" class="hidden absolute inset-0 w-full h-full flex-col justify-between p-3 select-none bg-black/90">
         <div class="absolute inset-3 pointer-events-none z-30 flex flex-col justify-between">
           <div class="flex justify-between">
-            <div class="w-4 h-4 border-t-2 border-l-2 border-[#10b981] rounded-tl-sm animate-pulse"></div>
-            <div class="w-4 h-4 border-t-2 border-r-2 border-[#10b981] rounded-tr-sm animate-pulse"></div>
+            <div class="w-4 h-4 border-t-2 border-l-2 border-[#c9a876] rounded-tl-sm animate-pulse"></div>
+            <div class="w-4 h-4 border-t-2 border-r-2 border-[#c9a876] rounded-tr-sm animate-pulse"></div>
           </div>
           <div class="flex justify-between">
-            <div class="w-4 h-4 border-b-2 border-l-2 border-[#10b981] rounded-bl-sm animate-pulse"></div>
-            <div class="w-4 h-4 border-b-2 border-r-2 border-[#10b981] rounded-br-sm animate-pulse"></div>
+            <div class="w-4 h-4 border-b-2 border-l-2 border-[#c9a876] rounded-bl-sm animate-pulse"></div>
+            <div class="w-4 h-4 border-b-2 border-r-2 border-[#c9a876] rounded-br-sm animate-pulse"></div>
           </div>
         </div>
         <video id="scan-video" class="w-full h-full object-cover rounded" playsinline></video>
-        <div id="scan-laser" class="absolute left-0 w-full h-[3px] bg-[#10b981] opacity-80 shadow-[0_0_12px_#10b981] scan-line-anim z-20 pointer-events-none"></div>
+        <div id="scan-laser" class="absolute left-0 w-full h-[3px] bg-[#c9a876] opacity-80 shadow-[0_0_12px_#c9a876] scan-line-anim z-20 pointer-events-none"></div>
         <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black/70 z-20">
           <div id="camera-error-view" class="hidden flex-col items-center justify-center">
-            <svg class="w-8 h-8 text-[#10b981]/90 mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg>
-            <p class="text-[0.8vw] text-emerald-200/90 leading-tight">Камера недоступна.</p>
-            <p class="text-[0.6vw] text-zinc-400 mt-1">Виберіть файл вручну.</p>
+            <svg class="w-8 h-8 text-[#c9a876]/90 mb-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg>
+            <p class="cam-err-title text-[0.8vw] text-[#e8dcc8]/90 leading-tight">Камера недоступна.</p>
+            <p class="cam-err-sub text-[0.6vw] text-[#c9bfae]/60 mt-1">Виберіть файл вручну.</p>
           </div>
-          <button type="button" id="btn-manual-upload" class="mt-2 px-3 py-1.5 bg-[#10b981]/15 hover:bg-[#10b981]/30 text-[#10b981] text-[0.7vw] font-bold border border-[#10b981]/40 rounded-md transition-all cursor-pointer shadow-[0_0_10px_rgba(16,185,129,0.15)]">
-            ВИБРАТИ ФАЙЛ
+          <button type="button" id="btn-manual-upload" class="mt-2 px-3 py-1.5 bg-[#c9a876]/15 hover:bg-[#c9a876]/30 text-[#c9a876] text-[0.7vw] font-medium border border-[#c9a876]/40 rounded-md transition-all cursor-pointer">
+            вибрати файл
           </button>
         </div>
       </div>
@@ -236,17 +310,17 @@
       <canvas id="seal-canvas" width="512" height="512" class="w-full h-full object-contain transition-all duration-500"></canvas>
 
       <!-- ТЗ: Сообщение об ошибке дешифровки (заменяет изображение) -->
-      <div id="decrypt-error-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#0c0e10] z-[60] p-4 text-center">
-        <svg class="w-10 h-10 text-red-500 mb-3 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
-        <p class="text-red-500 text-[1.1vw] font-mono tracking-[0.15em] uppercase font-bold">Пароль неверный</p>
-        <p class="text-red-400/60 text-[0.75vw] font-mono mt-2 tracking-wide">Попробуйте еще раз</p>
+      <div id="decrypt-error-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#1c150f] z-[60] p-4 text-center">
+        <svg class="w-10 h-10 text-red-400 mb-3 animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+        <p class="derr-title text-red-400 text-[1.1vw] font-sans tracking-[0.05em] font-medium">Пароль неверный</p>
+        <p class="derr-sub text-red-400/60 text-[0.75vw] font-sans mt-2 tracking-wide">Попробуйте еще раз</p>
       </div>
     </div>
 
     <!-- Поле ввода ключа -->
     <div
       id="pass-field-wrapper"
-      class="pass-inactive absolute flex items-center justify-center border-b border-[#10b981]/30 transition-all bg-[#0c0e10]/40 rounded px-2"
+      class="m-block pass-inactive absolute flex items-center justify-center border-b border-[#c9a876]/30 transition-all bg-[#1c150f]/40 rounded px-2"
       style="left: 35%; top: 82%; width: 30%; height: 5.5%; z-index: 15;"
     >
       <input
@@ -254,38 +328,40 @@
         id="ui-pass"
         placeholder="КЛЮЧ / PASSWORD"
         maxlength="12"
-        class="w-full h-full bg-transparent border-none text-[#10b981] text-center text-[1.6vw] tracking-[0.3em] font-mono outline-none placeholder-emerald-950/40 px-2 transition-all duration-300"
+        class="w-full h-full bg-transparent border-none text-[#e8dcc8] text-center text-[1.6vw] tracking-[0.3em] font-mono outline-none placeholder-[#c9a876]/25 px-2 transition-all duration-300"
       />
       <!-- ТЗ: Кнопка «Ввод» при сканировании зашифрованного QR -->
       <button
         id="btn-inline-decrypt"
-        class="hidden absolute right-2 px-2.5 py-1 bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 rounded text-[0.7vw] font-bold tracking-widest hover:bg-[#10b981]/35 transition-all"
+        class="hidden absolute right-2 px-2.5 py-1 bg-[#c9a876]/20 text-[#c9a876] border border-[#c9a876]/40 rounded text-[0.7vw] font-medium tracking-wide hover:bg-[#c9a876]/35 transition-all"
       >
-        ВВЕСТИ
+        ввести
       </button>
     </div>
 
     <!-- Скрытый файловый инпут -->
     <input type="file" id="file-input-hidden" accept="image/*" class="hidden" />
 
+    <div class="actions-row m-block" style="position:absolute; left:0; bottom:0; width:0; height:0;"></div>
+
     <!-- ТЗ: Кнопка Download (экспорт PNG) -->
     <button id="btn-save" class="hidden absolute bottom-[3%] left-[3%] action-btn">
-      [+] ЗБЕРЕГТИ
+      Зберегти
     </button>
 
     <!-- ТЗ: Кнопка «Обновить» орнамент -->
     <button id="btn-refresh" class="hidden absolute bottom-[3%] left-[19%] action-btn">
-      [↻] ОНОВИТИ
+      Оновити
     </button>
 
     <!-- Кнопка сброса -->
-    <button id="btn-reset" class="hidden absolute bottom-[3%] left-[3%] action-btn text-emerald-500 border-emerald-950/40 hover:bg-emerald-950/10 hover:shadow-emerald-950/20">
-      [↺] СТИРАТИ
+    <button id="btn-reset" class="hidden absolute bottom-[3%] left-[3%] action-btn text-amber-600 border-amber-950/40 hover:bg-amber-950/10">
+      Стерти
     </button>
 
     <!-- ТЗ: Кнопка Scan / отмена -->
     <button id="btn-scan" class="absolute bottom-[3%] right-[3%] action-btn">
-      [◉] СКАНУВАТИ
+      Сканувати
     </button>
   </div>
 
@@ -351,10 +427,10 @@
     const elLockL2Label = document.getElementById('lock-right-label');
 
     // === SVG-ИКОНКИ ЗАМКОВ ===
-    const SVG_UNLOCKED  = `<svg class="w-8 h-8 text-[#10b981]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h16.5a1.5 1.5 0 0 0 1.5-1.5V12a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 12v8.25a1.5 1.5 0 0 0 1.5 1.5z" /></svg>`;
+    const SVG_UNLOCKED  = `<svg class="w-8 h-8 text-[#c9a876]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h16.5a1.5 1.5 0 0 0 1.5-1.5V12a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 12v8.25a1.5 1.5 0 0 0 1.5 1.5z" /></svg>`;
     const SVG_FILLING   = `<svg class="w-8 h-8 text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.6)] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>`;
-    const SVG_CLOSED    = `<svg class="w-8 h-8 text-[#10b981] drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
-    const SVG_LOCKED_RED = `<svg class="w-8 h-8 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
+    const SVG_CLOSED    = `<svg class="w-8 h-8 text-[#c9a876] drop-shadow-[0_0_8px_rgba(201,168,118,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
+    const SVG_LOCKED_RED = `<svg class="w-8 h-8 text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)] animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
 
     // === ЗВУКОВАЯ СИСТЕМА ===
     function playBeep(freq = 880, duration = 0.15) {
@@ -372,7 +448,7 @@
         gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
         osc.start();
         osc.stop(ctx.currentTime + duration);
-      } catch (e) { /*音频上下文被阻止 */ }
+      } catch (e) { /* audio context blocked */ }
     }
 
     function playSuccessSound() {
@@ -554,7 +630,7 @@
       const ctx = elSealCanvas.getContext('2d');
       if (!ctx) return;
 
-      ctx.fillStyle = "#110e0b";
+      ctx.fillStyle = "#15100b";
       ctx.fillRect(0, 0, 512, 512);
 
       if (!dataString || !dataString.trim()) {
@@ -778,11 +854,11 @@
 
       // Кнопка Scan / Отмена
       if (isScanMode || isDecryptPending || isDecrypted) {
-        elBtnScan.textContent = "✖ СКАСУВАТИ";
-        elBtnScan.classList.add('text-red-500', 'border-red-950/40', 'hover:bg-red-950/10');
+        elBtnScan.textContent = "Скасувати";
+        elBtnScan.classList.add('text-red-400', 'border-red-950/40', 'hover:bg-red-950/10');
       } else {
-        elBtnScan.textContent = "[◉] СКАНУВАТИ";
-        elBtnScan.classList.remove('text-red-500', 'border-red-950/40', 'hover:bg-red-950/10');
+        elBtnScan.textContent = "Сканувати";
+        elBtnScan.classList.remove('text-red-400', 'border-red-950/40', 'hover:bg-red-950/10');
       }
     }
 
@@ -847,30 +923,30 @@
         case 'empty':
           elLockL1Icon.innerHTML = SVG_UNLOCKED;
           elLockL1Block.className = elLockL1Block.className.replace(/bg-\[#\w]+\s*/g, '').replace(/border-\[#[\w/]+\]\/?\d*\s*/g, '');
-          elLockL1Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/20');
+          elLockL1Block.classList.add('bg-[#1c150f]/80', 'border-[#c9a876]/20');
           elLockL1Label.textContent = 'L1';
-          elLockL1Label.className = 'text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL1Label.className = 'text-[0.6vw] text-[#c9a876]/80 mt-1 font-mono tracking-widest uppercase';
           break;
         case 'filling':
           elLockL1Icon.innerHTML = SVG_FILLING;
-          elLockL1Block.classList.add('bg-[#0c0e10]/80', 'border-yellow-500/30');
-          elLockL1Block.classList.remove('border-[#10b981]/20', 'border-red-900/40');
+          elLockL1Block.classList.add('bg-[#1c150f]/80', 'border-yellow-500/30');
+          elLockL1Block.classList.remove('border-[#c9a876]/20', 'border-red-900/40');
           elLockL1Label.textContent = 'L1';
-          elLockL1Label.className = 'text-[0.6vw] text-yellow-500/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL1Label.className = 'text-[0.6vw] text-yellow-500/80 mt-1 font-mono tracking-widest uppercase';
           break;
         case 'closed':
           elLockL1Icon.innerHTML = SVG_CLOSED;
-          elLockL1Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/40');
+          elLockL1Block.classList.add('bg-[#1c150f]/80', 'border-[#c9a876]/40');
           elLockL1Block.classList.remove('border-yellow-500/30', 'border-red-900/40');
           elLockL1Label.textContent = 'L1';
-          elLockL1Label.className = 'text-[0.6vw] text-[#10b981] mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL1Label.className = 'text-[0.6vw] text-[#c9a876] mt-1 font-mono tracking-widest uppercase';
           break;
         case 'locked_red':
           elLockL1Icon.innerHTML = SVG_LOCKED_RED;
-          elLockL1Block.classList.add('bg-[#110e0b]', 'border-red-900/40', 'shadow-inner');
-          elLockL1Block.classList.remove('border-[#10b981]/20', 'border-yellow-500/30', 'border-[#10b981]/40');
+          elLockL1Block.classList.add('bg-[#15100b]', 'border-red-900/40');
+          elLockL1Block.classList.remove('border-[#c9a876]/20', 'border-yellow-500/30', 'border-[#c9a876]/40');
           elLockL1Label.textContent = 'LOCKED';
-          elLockL1Label.className = 'text-[0.6vw] text-red-500/90 mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL1Label.className = 'text-[0.6vw] text-red-400/90 mt-1 font-mono tracking-widest uppercase';
           break;
       }
 
@@ -879,30 +955,30 @@
         case 'empty':
           elLockL2Icon.innerHTML = SVG_UNLOCKED;
           elLockL2Block.className = elLockL2Block.className.replace(/bg-\[#\w]+\s*/g, '').replace(/border-\[#[\w/]+\]\/?\d*\s*/g, '');
-          elLockL2Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/20');
+          elLockL2Block.classList.add('bg-[#1c150f]/80', 'border-[#c9a876]/20');
           elLockL2Label.textContent = 'L2';
-          elLockL2Label.className = 'text-[0.6vw] text-[#10b981]/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL2Label.className = 'text-[0.6vw] text-[#c9a876]/80 mt-1 font-mono tracking-widest uppercase';
           break;
         case 'filling':
           elLockL2Icon.innerHTML = SVG_FILLING;
-          elLockL2Block.classList.add('bg-[#0c0e10]/80', 'border-yellow-500/30');
-          elLockL2Block.classList.remove('border-[#10b981]/20', 'border-red-900/40');
+          elLockL2Block.classList.add('bg-[#1c150f]/80', 'border-yellow-500/30');
+          elLockL2Block.classList.remove('border-[#c9a876]/20', 'border-red-900/40');
           elLockL2Label.textContent = 'L2';
-          elLockL2Label.className = 'text-[0.6vw] text-yellow-500/80 mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL2Label.className = 'text-[0.6vw] text-yellow-500/80 mt-1 font-mono tracking-widest uppercase';
           break;
         case 'closed':
           elLockL2Icon.innerHTML = SVG_CLOSED;
-          elLockL2Block.classList.add('bg-[#0c0e10]/80', 'border-[#10b981]/40');
+          elLockL2Block.classList.add('bg-[#1c150f]/80', 'border-[#c9a876]/40');
           elLockL2Block.classList.remove('border-yellow-500/30', 'border-red-900/40');
           elLockL2Label.textContent = 'L2';
-          elLockL2Label.className = 'text-[0.6vw] text-[#10b981] mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL2Label.className = 'text-[0.6vw] text-[#c9a876] mt-1 font-mono tracking-widest uppercase';
           break;
         case 'locked_red':
           elLockL2Icon.innerHTML = SVG_LOCKED_RED;
-          elLockL2Block.classList.add('bg-[#110e0b]', 'border-red-900/40', 'shadow-inner');
-          elLockL2Block.classList.remove('border-[#10b981]/20', 'border-yellow-500/30', 'border-[#10b981]/40');
+          elLockL2Block.classList.add('bg-[#15100b]', 'border-red-900/40');
+          elLockL2Block.classList.remove('border-[#c9a876]/20', 'border-yellow-500/30', 'border-[#c9a876]/40');
           elLockL2Label.textContent = 'LOCKED';
-          elLockL2Label.className = 'text-[0.6vw] text-red-500/90 mt-1 font-mono tracking-widest uppercase font-bold';
+          elLockL2Label.className = 'text-[0.6vw] text-red-400/90 mt-1 font-mono tracking-widest uppercase';
           break;
       }
     }
@@ -1222,14 +1298,14 @@
     // Drag & Drop на контейнер
     elArtifact.addEventListener('dragover', (e) => {
       e.preventDefault();
-      elArtifact.classList.add('border-[#10b981]/80', 'ring-2', 'ring-[#10b981]/25');
+      elArtifact.classList.add('border-[#c9a876]/80', 'ring-2', 'ring-[#c9a876]/25');
     });
     elArtifact.addEventListener('dragleave', () => {
-      elArtifact.classList.remove('border-[#10b981]/80', 'ring-2', 'ring-[#10b981]/25');
+      elArtifact.classList.remove('border-[#c9a876]/80', 'ring-2', 'ring-[#c9a876]/25');
     });
     elArtifact.addEventListener('drop', (e) => {
       e.preventDefault();
-      elArtifact.classList.remove('border-[#10b981]/80', 'ring-2', 'ring-[#10b981]/25');
+      elArtifact.classList.remove('border-[#c9a876]/80', 'ring-2', 'ring-[#c9a876]/25');
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith('image/')) handleFileUpload(file);
     });
