@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Крипто-Сніг QR</title>
+  <title>CryptoSeal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,6 +79,77 @@
       background-color: rgba(20,15,10,0.85) !important;
     }
 
+    /* ===================== ГАЛЕРЕЯ ПРИМЕРОВ ===================== */
+    .gallery-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      width: 130px;
+      flex-shrink: 0;
+    }
+    .gallery-thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      border: 1px solid rgba(201,168,118,0.25);
+      overflow: hidden;
+      background: #1c150f;
+    }
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .info-panel {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.3s ease, max-height 0.3s ease;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      color: #c9bfae;
+      margin-top: 0.6rem;
+      padding: 0 0.2rem;
+    }
+    .gallery-col:hover .info-panel {
+      opacity: 1;
+      max-height: 400px;
+    }
+
+    /* ===================== ИКОНКИ-КНОПКИ С ПОДСКАЗКОЙ ===================== */
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      background-color: rgba(201, 168, 118, 0.08);
+      color: #c9a876;
+      border: 1px solid rgba(201, 168, 118, 0.35);
+      border-radius: 999px;
+      cursor: pointer;
+      padding: 0.65rem;
+      transition: all 0.2s ease-in-out;
+      overflow: hidden;
+    }
+    .icon-btn:hover {
+      background-color: #c9a876;
+      color: #15100b;
+      border-color: #c9a876;
+    }
+    .icon-btn .icon-label {
+      max-width: 0;
+      opacity: 0;
+      white-space: nowrap;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: max-width 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
+    }
+    .icon-btn:hover .icon-label {
+      max-width: 140px;
+      opacity: 1;
+      margin-left: 0.5rem;
+    }
+    .icon-btn svg { flex-shrink: 0; }
+
     /* ===================== МОБИЛЬНАЯ АДАПТАЦИЯ ===================== */
     @media (max-width: 760px) {
       body { padding: 0; }
@@ -136,13 +207,25 @@
 
       #pass-field-wrapper { order: 5; min-height: 54px; }
 
+      #btn-scan-main { order: 6; }
       .actions-row {
         order: 6;
         display: flex;
-        flex-wrap: wrap;
         gap: 0.6rem;
+        justify-content: center;
       }
-      .actions-row .action-btn { flex: 1 1 auto; text-align: center; }
+      .actions-row #btn-back,
+      .actions-row #btn-refresh,
+      .actions-row #btn-save {
+        position: static !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        flex: 1 1 auto;
+        justify-content: center;
+      }
 
       /* Фиксированные размеры текста вместо vw */
       #seal-title { font-size: 26px !important; }
@@ -162,10 +245,38 @@
       .decrypted-text { font-size: 11px !important; }
       #btn-open-link { font-size: 11px !important; }
       #btn-inline-decrypt { font-size: 12px !important; }
+
+      /* Галерея на мобильном — компактная горизонтальная лента над артефактом */
+      #page-wrap { flex-direction: column; }
+      .gallery-col {
+        flex-direction: row;
+        width: 100%;
+        gap: 0.5rem;
+        overflow-x: auto;
+        order: 0;
+      }
+      .gallery-col .gallery-thumb { width: 64px; height: 64px; flex-shrink: 0; }
+      .info-panel { display: none; }
+
+      /* На тач-экране подсказка не нужна — иконка + мгновенное срабатывание */
+      .icon-btn .icon-label { display: none; }
+      .icon-btn { padding: 0.7rem; }
     }
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-[#0d0a08] p-2 md:p-6 select-none overflow-hidden">
+
+  <div id="page-wrap" class="flex items-center justify-center gap-6 w-full max-w-[1550px]">
+
+  <!-- Галерея слева -->
+  <div class="gallery-col">
+    <div class="gallery-thumb"><img src="gallery/example-1.jpg" alt="Пример мандалы 1" onerror="this.style.display='none'"></div>
+    <div class="gallery-thumb"><img src="gallery/example-2.jpg" alt="Пример мандалы 2" onerror="this.style.display='none'"></div>
+    <div class="gallery-thumb"><img src="gallery/example-3.jpg" alt="Пример мандалы 3" onerror="this.style.display='none'"></div>
+    <div class="info-panel">
+      CryptoSeal — это веб-приложение, которое шифрует текст и преобразует его в орнаментальный QR-код (мандалу). В основе работы лежат два принципа: 1) шифрование ключом, который знает только отправитель и получатель; 2) стеганография — данные внедряются непосредственно в структуру цветовых каналов изображения, маскируя классический вид QR-кода под геометрический узор.
+    </div>
+  </div>
 
   <div
     id="artifact"
@@ -188,11 +299,11 @@
 
     <!-- Заголовок -->
     <div id="title-block" class="m-block absolute top-[5%] left-[10%] w-[80%] text-center pointer-events-none select-none z-10">
-      <h1 id="seal-title" class="text-[2.3vw] font-medium tracking-[0.06em] text-[#e8dcc8] font-display leading-tight">
-        Крипто-Сніг QR
+      <h1 id="seal-title" class="text-[2.6vw] font-medium tracking-[0.28em] text-[#e8dcc8] font-mono leading-tight">
+        CRYPTOSEAL
       </h1>
-      <p id="seal-subtitle" class="text-[0.7vw] text-[#c9a876]/60 font-mono tracking-[0.25em] uppercase mt-1">
-        искусство скрытых смыслов
+      <p id="seal-subtitle" class="text-[0.7vw] text-[#c9a876]/60 font-sans tracking-[0.3em] uppercase mt-1">
+        Ornamental Cryptography
       </p>
     </div>
 
@@ -342,28 +453,44 @@
     <!-- Скрытый файловый инпут -->
     <input type="file" id="file-input-hidden" accept="image/*" class="hidden" />
 
-    <div class="actions-row m-block" style="position:absolute; left:0; bottom:0; width:0; height:0;"></div>
-
-    <!-- ТЗ: Кнопка Download (экспорт PNG) -->
-    <button id="btn-save" class="hidden absolute bottom-[3%] left-[3%] action-btn">
-      Зберегти
+    <!-- Большая кнопка «Сканировать» — видна только пока текст пуст -->
+    <button id="btn-scan-main" class="m-block absolute bottom-[3%] left-1/2 -translate-x-1/2 w-[60%] action-btn text-center">
+      Сканировать
     </button>
 
-    <!-- ТЗ: Кнопка «Обновить» орнамент -->
-    <button id="btn-refresh" class="hidden absolute bottom-[3%] left-[19%] action-btn">
-      Оновити
-    </button>
+    <!-- Группа из трёх иконок-кнопок: видна когда есть текст, либо в режимах сканирования/расшифровки -->
+    <div id="actions-row" class="actions-row m-block" style="position:absolute; left:0; top:0; width:0; height:0;">
+      <!-- «Назад» — слева по центру. В режиме создания с текстом = очистить, в режиме сканирования/расшифровки = отмена -->
+      <button id="btn-back" class="hidden icon-btn absolute left-[3%] top-1/2 -translate-y-1/2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span class="icon-label">Назад</span>
+      </button>
 
-    <!-- Кнопка сброса -->
-    <button id="btn-reset" class="hidden absolute bottom-[3%] left-[3%] action-btn text-amber-600 border-amber-950/40 hover:bg-amber-950/10">
-      Стерти
-    </button>
+      <!-- «Обновить» — справа по центру, новый узор без изменения текста -->
+      <button id="btn-refresh" class="hidden icon-btn absolute right-[3%] top-1/2 -translate-y-1/2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg>
+        <span class="icon-label">Обновить</span>
+      </button>
 
-    <!-- ТЗ: Кнопка Scan / отмена -->
-    <button id="btn-scan" class="absolute bottom-[3%] right-[3%] action-btn">
-      Сканувати
-    </button>
+      <!-- «Сохранить» — снизу по центру, вместо «Сканировать», пока есть текст -->
+      <button id="btn-save" class="hidden icon-btn absolute bottom-[3%] left-1/2 -translate-x-1/2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        <span class="icon-label">Сохранить</span>
+      </button>
+    </div>
   </div>
+
+  <!-- Галерея справа -->
+  <div class="gallery-col">
+    <div class="gallery-thumb"><img src="gallery/example-4.jpg" alt="Пример мандалы 4" onerror="this.style.display='none'"></div>
+    <div class="gallery-thumb"><img src="gallery/example-5.jpg" alt="Пример мандалы 5" onerror="this.style.display='none'"></div>
+    <div class="gallery-thumb"><img src="gallery/example-6.jpg" alt="Пример мандалы 6" onerror="this.style.display='none'"></div>
+    <div class="info-panel">
+      Как этим пользоваться? Создание: введите текст — в реальном времени сформируется уникальный узор; введите ключ (до 12 символов), замки подтвердят, что он принят; «Обновить» — новый вариант узора без изменения текста; «Сохранить» — экспорт мандалы в PNG. Активация: нажмите «Сканировать», загрузите изображение или откройте камеру; если данные зашифрованы — введите ключ и нажмите «Ввод». При неверном ключе печать останется закрытой.
+    </div>
+  </div>
+
+  </div><!-- /page-wrap -->
 
   <!-- Вспышка при сканировании -->
   <div id="flash-layer" class="fixed inset-0 bg-white pointer-events-none z-[300] transition-opacity duration-300 opacity-0"></div>
@@ -380,6 +507,7 @@
     let password = '';
     let pendingCiphertext = null;
     let showDecryptError = false;
+    let lastScannedDataURL = null; // хранит точный кадр/файл, который был отсканирован
 
     // Состояния замков: 'empty' | 'filling' | 'closed'
     let lockL1 = 'empty';
@@ -400,8 +528,8 @@
     const elInlineDecrypt  = document.getElementById('btn-inline-decrypt');
     const elBtnSave        = document.getElementById('btn-save');
     const elBtnRefresh     = document.getElementById('btn-refresh');
-    const elBtnReset       = document.getElementById('btn-reset');
-    const elBtnScan        = document.getElementById('btn-scan');
+    const elBtnBack        = document.getElementById('btn-back');
+    const elBtnScanMain    = document.getElementById('btn-scan-main');
     const elStandbySeal    = document.getElementById('standby-seal');
     const elScanSelector   = document.getElementById('scan-selector');
     const elScannerView    = document.getElementById('scanner-view');
@@ -692,6 +820,23 @@
       }
     }
 
+    // === ПОКАЗ ТОЧНОГО ОТСКАНИРОВАННОГО ИЗОБРАЖЕНИЯ ===
+    // Гарантирует, что картинка не меняется после сканирования/расшифровки:
+    // вместо повторной генерации нового случайного орнамента показываем
+    // ровно тот файл/кадр, который был отсканирован.
+    function showScannedImage(dataURL) {
+      lastScannedDataURL = dataURL;
+      const ctx = elSealCanvas.getContext('2d');
+      if (!ctx) return;
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, 512, 512);
+        ctx.drawImage(img, 0, 0, 512, 512);
+        elSealCanvas.style.opacity = '1';
+      };
+      img.src = dataURL;
+    }
+
     // === СБОРКА QR-ДАННЫХ (с префиксом | для шифрования) ===
     async function buildQRData() {
       const t = text.trim();
@@ -835,30 +980,26 @@
       }
 
       // --- Кнопки действий ---
-      elBtnSave.classList.add('hidden');
+      // Правило: пока текст пуст (в режиме создания) — одна большая кнопка «Сканировать».
+      // Как только появился хотя бы 1 символ текста — она сменяется тремя иконками:
+      // Назад (очистить) / Обновить (новый узор) / Сохранить (PNG).
+      // В режимах сканирования/расшифровки видна только «Назад» (роль отмены).
+      elBtnScanMain.classList.add('hidden');
+      elBtnBack.classList.add('hidden');
       elBtnRefresh.classList.add('hidden');
-      elBtnReset.classList.add('hidden');
+      elBtnSave.classList.add('hidden');
 
       if (isCreateMode) {
-        // ТЗ: Download при наличии текста
         if (hasText) {
-          elBtnSave.classList.remove('hidden');
-        }
-        // ТЗ: «Обновить» при 1+ символе в ключе
-        if (hasPass) {
+          elBtnBack.classList.remove('hidden');
           elBtnRefresh.classList.remove('hidden');
+          elBtnSave.classList.remove('hidden');
+        } else {
+          elBtnScanMain.classList.remove('hidden');
         }
-      } else if (isDecryptPending || isDecrypted) {
-        elBtnReset.classList.remove('hidden');
-      }
-
-      // Кнопка Scan / Отмена
-      if (isScanMode || isDecryptPending || isDecrypted) {
-        elBtnScan.textContent = "Скасувати";
-        elBtnScan.classList.add('text-red-400', 'border-red-950/40', 'hover:bg-red-950/10');
       } else {
-        elBtnScan.textContent = "Сканувати";
-        elBtnScan.classList.remove('text-red-400', 'border-red-950/40', 'hover:bg-red-950/10');
+        // scan_select, scan_camera, decrypt_pending, decrypted — только «Назад» (отмена)
+        elBtnBack.classList.remove('hidden');
       }
     }
 
@@ -1001,6 +1142,7 @@
         password = '';
         pendingCiphertext = null;
         showDecryptError = false;
+        lastScannedDataURL = null;
       }
       mode = 'create';
       updateUI();
@@ -1070,8 +1212,9 @@
           if (detected && qrData) {
             playBeep(880, 0.12);
             triggerFlash();
+            const capturedFrame = offCanvas.toDataURL('image/png');
             stopCamera();
-            processQRData(qrData.trim());
+            processQRData(qrData.trim(), capturedFrame);
             return;
           }
         }
@@ -1094,7 +1237,8 @@
     }
 
     // ТЗ: обработка обнаруженных QR-данных
-    function processQRData(raw) {
+    // imgDataURL — точный кадр/файл, который был отсканирован (для показа без изменений)
+    function processQRData(raw, imgDataURL) {
       if (raw.startsWith('|')) {
         // ТЗ: QR зашифрован (префикс |)
         pendingCiphertext = raw.substring(1);
@@ -1104,8 +1248,8 @@
         mode = 'decrypt_pending';
         syncLocks();
         updateUI();
-        // Рисуем зашифрованный QR в канвас
-        drawSeal(raw);
+        // Показываем ровно отсканированное изображение, без перегенерации
+        if (imgDataURL) showScannedImage(imgDataURL);
         // Фокус на поле ключа
         setTimeout(() => elPassInput.focus(), 100);
       } else {
@@ -1117,7 +1261,7 @@
         mode = 'create';
         syncLocks();
         updateUI();
-        drawSeal(text);
+        if (imgDataURL) showScannedImage(imgDataURL);
         playSuccessSound();
       }
     }
@@ -1145,8 +1289,9 @@
           if (code && code.data) {
             playBeep(880, 0.12);
             triggerFlash();
+            const uploadedFrame = tc.toDataURL('image/png');
             stopCamera();
-            processQRData(code.data.trim());
+            processQRData(code.data.trim(), uploadedFrame);
           } else {
             // QR не обнаружен — тряска и сообщение
             playFailureSound();
@@ -1176,8 +1321,7 @@
         playSuccessSound();
         syncLocks();
         updateUI();
-        // Показываем орнамент (скрываем ошибку)
-        drawSeal('|' + pendingCiphertext);
+        // Картинка НЕ перерисовывается — на канвасе уже точное отсканированное изображение
       } else {
         // ТЗ: при ошибке — заменить изображение на сообщение
         playFailureSound();
@@ -1251,26 +1395,28 @@
       playBeep(550, 0.08);
     });
 
-    // Сброс
-    elBtnReset.addEventListener('click', () => {
-      text = '';
-      password = '';
-      pendingCiphertext = null;
-      showDecryptError = false;
-      mode = 'create';
-      syncLocks();
-      updateUI();
-      drawSeal('');
-      setTimeout(() => elTextarea.focus(), 100);
-    });
-
-    // ТЗ: Scan / Отмена
-    elBtnScan.addEventListener('click', () => {
+    // «Назад»: в режиме создания с текстом — очистить и остаться в создании;
+    // в любом другом режиме (скан/расшифровка) — отмена и возврат в создание
+    elBtnBack.addEventListener('click', () => {
       if (mode === 'create') {
-        enterScanMode();
+        text = '';
+        password = '';
+        pendingCiphertext = null;
+        showDecryptError = false;
+        lastScannedDataURL = null;
+        syncLocks();
+        updateUI();
+        drawSeal('');
+        setTimeout(() => elTextarea.focus(), 100);
       } else {
+        lastScannedDataURL = null;
         exitScanMode();
       }
+    });
+
+    // Большая кнопка «Сканировать» — запускает выбор источника
+    elBtnScanMain.addEventListener('click', () => {
+      enterScanMode();
     });
 
     // ТЗ: Селектор — Галерея
