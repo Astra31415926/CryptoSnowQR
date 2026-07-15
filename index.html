@@ -79,21 +79,27 @@
       background-color: rgba(20,15,10,0.85) !important;
     }
 
-    /* ===================== ГАЛЕРЕЯ ПРИМЕРОВ ===================== */
+    /* ===================== ГАЛЕРЕЯ ПРИМЕРОВ (горизонтальные кластеры) ===================== */
     .gallery-col {
       display: flex;
       flex-direction: column;
       gap: 0.9rem;
-      width: 130px;
       flex-shrink: 0;
+      transition: opacity 0.25s ease;
+    }
+    .thumb-row {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
     }
     .gallery-thumb {
-      width: 100%;
-      aspect-ratio: 1 / 1;
+      width: 64px;
+      height: 64px;
       border-radius: 10px;
       border: 1px solid rgba(201,168,118,0.25);
       overflow: hidden;
       background: #1c150f;
+      flex-shrink: 0;
     }
     .gallery-thumb img {
       width: 100%;
@@ -101,20 +107,58 @@
       object-fit: cover;
       display: block;
     }
+    /* Область текста имеет фиксированную высоту всегда — только прозрачность анимируется, макет не дёргается */
     .info-panel {
+      min-height: 92px;
+      width: 208px;
       opacity: 0;
-      max-height: 0;
-      overflow: hidden;
-      transition: opacity 0.3s ease, max-height 0.3s ease;
-      font-size: 0.72rem;
+      transition: opacity 0.3s ease;
+      font-size: 0.7rem;
       line-height: 1.5;
       color: #c9bfae;
-      margin-top: 0.6rem;
-      padding: 0 0.2rem;
     }
     .gallery-col:hover .info-panel {
       opacity: 1;
-      max-height: 400px;
+    }
+
+    /* ===================== ЗАГОЛОВОК: подзаголовок по наведению/тапу ===================== */
+    #title-block { pointer-events: none; }
+    #seal-title { pointer-events: auto; cursor: default; }
+    #seal-subtitle {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.25s ease, max-height 0.25s ease;
+    }
+    #title-block:hover #seal-subtitle,
+    #title-block.show-subtitle #seal-subtitle {
+      opacity: 1;
+      max-height: 40px;
+    }
+
+    /* ===================== ИНДИКАТОРЫ КЛЮЧА L1/L2 — компактные, у поля ключа ===================== */
+    .lock-indicator {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease, width 0.25s ease;
+    }
+    .pass-active .lock-indicator {
+      opacity: 1;
+      width: 26px;
+      overflow: visible;
+    }
+    .lock-indicator svg { width: 18px !important; height: 18px !important; }
+    .lock-indicator span { font-size: 8px !important; }
+
+    /* ===================== ПОЛЕ ТЕКСТА: авто-расширение до лимита ===================== */
+    #text-field-wrapper {
+      min-height: 44px;
+      max-height: 92px;
+    }
+    #ui-text {
+      overflow-y: auto;
     }
 
     /* ===================== ИКОНКИ-КНОПКИ С ПОДСКАЗКОЙ ===================== */
@@ -149,6 +193,12 @@
       margin-left: 0.5rem;
     }
     .icon-btn svg { flex-shrink: 0; }
+
+    /* ===================== СОСТОЯНИЕ «КЛАВИАТУРА ОТКРЫТА» (моб.) ===================== */
+    body.keyboard-open .gallery-col {
+      opacity: 0.3;
+      pointer-events: none;
+    }
 
     /* ===================== МОБИЛЬНАЯ АДАПТАЦИЯ ===================== */
     @media (max-width: 760px) {
@@ -196,14 +246,7 @@
         margin: 0 auto !important;
       }
 
-      #text-field-wrapper { order: 3; min-height: 60px; }
-
-      .locks-row { order: 4; display: flex; gap: 0.75rem; }
-      #lock-left, #lock-right {
-        position: static !important;
-        width: 100% !important;
-        height: 64px !important;
-      }
+      #text-field-wrapper { order: 3; }
 
       #pass-field-wrapper { order: 5; min-height: 54px; }
 
@@ -214,17 +257,11 @@
         gap: 0.6rem;
         justify-content: center;
       }
-      .actions-row #btn-back,
-      .actions-row #btn-refresh,
-      .actions-row #btn-save {
-        position: static !important;
-        left: auto !important;
-        right: auto !important;
-        top: auto !important;
-        bottom: auto !important;
-        transform: none !important;
-        flex: 1 1 auto;
-        justify-content: center;
+
+      /* Пока открыта клавиатура — прячем кнопки управления и притемняем галерею */
+      body.keyboard-open #btn-scan-main,
+      body.keyboard-open .actions-row {
+        display: none !important;
       }
 
       /* Фиксированные размеры текста вместо vw */
@@ -232,7 +269,7 @@
       #seal-subtitle { font-size: 10px !important; }
       #ui-text { font-size: 16px !important; }
       #ui-pass { font-size: 20px !important; letter-spacing: 0.2em !important; }
-      #lock-left-label, #lock-right-label { font-size: 11px !important; }
+      #lock-left-label, #lock-right-label { font-size: 9px !important; }
       .standby-text { font-size: 12px !important; }
       .scan-hint { font-size: 13px !important; }
       #btn-gallery, #btn-camera { font-size: 14px !important; }
@@ -246,16 +283,12 @@
       #btn-open-link { font-size: 11px !important; }
       #btn-inline-decrypt { font-size: 12px !important; }
 
-      /* Галерея на мобильном — компактная горизонтальная лента над артефактом */
+      /* Галерея на мобильном — 3 миниатюры сверху, 3 снизу, по горизонтали */
       #page-wrap { flex-direction: column; }
-      .gallery-col {
-        flex-direction: row;
-        width: 100%;
-        gap: 0.5rem;
-        overflow-x: auto;
-        order: 0;
-      }
-      .gallery-col .gallery-thumb { width: 64px; height: 64px; flex-shrink: 0; }
+      #gallery-left { order: -1; }
+      #gallery-right { order: 99; }
+      .gallery-col { width: 100% !important; }
+      .thumb-row { overflow-x: auto; justify-content: center; }
       .info-panel { display: none; }
 
       /* На тач-экране подсказка не нужна — иконка + мгновенное срабатывание */
@@ -269,10 +302,12 @@
   <div id="page-wrap" class="flex items-center justify-center gap-6 w-full max-w-[1550px]">
 
   <!-- Галерея слева -->
-  <div class="gallery-col">
-    <div class="gallery-thumb"><img src="gallery/example-1.jpg" alt="Пример мандалы 1" onerror="this.style.display='none'"></div>
-    <div class="gallery-thumb"><img src="gallery/example-2.jpg" alt="Пример мандалы 2" onerror="this.style.display='none'"></div>
-    <div class="gallery-thumb"><img src="gallery/example-3.jpg" alt="Пример мандалы 3" onerror="this.style.display='none'"></div>
+  <div class="gallery-col" id="gallery-left">
+    <div class="thumb-row">
+      <div class="gallery-thumb"><img src="gallery/001.png" alt="Пример мандалы 1" onerror="this.style.display='none'"></div>
+      <div class="gallery-thumb"><img src="gallery/002.png" alt="Пример мандалы 2" onerror="this.style.display='none'"></div>
+      <div class="gallery-thumb"><img src="gallery/003.png" alt="Пример мандалы 3" onerror="this.style.display='none'"></div>
+    </div>
     <div class="info-panel">
       CryptoSeal — это веб-приложение, которое шифрует текст и преобразует его в орнаментальный QR-код (мандалу). В основе работы лежат два принципа: 1) шифрование ключом, который знает только отправитель и получатель; 2) стеганография — данные внедряются непосредственно в структуру цветовых каналов изображения, маскируя классический вид QR-кода под геометрический узор.
     </div>
@@ -297,8 +332,8 @@
       </svg>
     </div>
 
-    <!-- Заголовок -->
-    <div id="title-block" class="m-block absolute top-[5%] left-[10%] w-[80%] text-center pointer-events-none select-none z-10">
+    <!-- Заголовок: подзаголовок скрыт, появляется по наведению/тапу -->
+    <div id="title-block" class="m-block absolute top-[5%] left-[10%] w-[80%] text-center select-none z-10">
       <h1 id="seal-title" class="text-[2.6vw] font-medium tracking-[0.28em] text-[#e8dcc8] font-mono leading-tight">
         CRYPTOSEAL
       </h1>
@@ -307,30 +342,19 @@
       </p>
     </div>
 
-    <!-- Блок замка L1 (Сектор Альфа) -->
-    <div class="locks-row m-block" style="position:absolute; left:0; top:0; width:0; height:0;">
-    </div>
-    <div id="lock-left" class="absolute left-[30%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#1c150f]/80 border border-[#c9a876]/20 rounded-xl p-2 z-10 transition-all duration-500">
-      <div id="lock-left-icon-container"></div>
-      <span id="lock-left-label" class="text-[0.6vw] text-[#c9a876]/80 mt-1 font-mono tracking-widest uppercase">L1</span>
-    </div>
-
-    <!-- Блок замка L2 (Сектор Бета) -->
-    <div id="lock-right" class="absolute left-[60%] top-[70%] w-[10%] h-[22%] pointer-events-none flex flex-col items-center justify-center bg-[#1c150f]/80 border border-[#c9a876]/20 rounded-xl p-2 z-10 transition-all duration-500">
-      <div id="lock-right-icon-container"></div>
-      <span id="lock-right-label" class="text-[0.6vw] text-[#c9a876]/80 mt-1 font-mono tracking-widest uppercase">L2</span>
-    </div>
+    <!-- Замки L1/L2 перенесены внутрь поля ключа (см. ниже) -->
 
     <!-- Поле ввода текста -->
     <div
       id="text-field-wrapper"
       class="m-block absolute transition-all duration-500 border border-[#c9a876]/25 bg-[#1c150f]/85 rounded-lg p-1 focus-within:border-[#c9a876]/60"
-      style="left: 26.5%; top: 23.5%; width: 47.2%; height: 6.5%; z-index: 5;"
+      style="left: 26.5%; top: 23.5%; width: 47.2%; z-index: 5;"
     >
       <textarea
         id="ui-text"
         placeholder="Введіть текст таємниці / Enter secret payload..."
-        class="w-full h-full bg-transparent border-none text-[#e8dcc8] placeholder-[#c9a876]/30 font-sans resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-1 transition-all duration-500"
+        rows="1"
+        class="w-full bg-transparent border-none text-[#e8dcc8] placeholder-[#c9a876]/30 font-sans resize-none outline-none text-[1.1vw] leading-[1.3] px-4 py-2 transition-all duration-500"
       ></textarea>
 
       <!-- Оверлей блокировки при ожидании ключа -->
@@ -428,19 +452,30 @@
       </div>
     </div>
 
-    <!-- Поле ввода ключа -->
+    <!-- Поле ввода ключа (замки L1/L2 — компактные индикаторы по бокам, появляются вместе с активацией поля) -->
     <div
       id="pass-field-wrapper"
-      class="m-block pass-inactive absolute flex items-center justify-center border-b border-[#c9a876]/30 transition-all bg-[#1c150f]/40 rounded px-2"
-      style="left: 35%; top: 82%; width: 30%; height: 5.5%; z-index: 15;"
+      class="m-block pass-inactive absolute flex items-center justify-center gap-2 border-b border-[#c9a876]/30 transition-all bg-[#1c150f]/40 rounded px-2"
+      style="left: 32%; top: 82%; width: 36%; height: 5.5%; z-index: 15;"
     >
+      <div id="lock-left" class="lock-indicator flex flex-col items-center justify-center">
+        <div id="lock-left-icon-container"></div>
+        <span id="lock-left-label" class="text-[#c9a876]/80 mt-0.5 font-mono tracking-widest uppercase">L1</span>
+      </div>
+
       <input
         type="password"
         id="ui-pass"
         placeholder="КЛЮЧ / PASSWORD"
         maxlength="12"
-        class="w-full h-full bg-transparent border-none text-[#e8dcc8] text-center text-[1.6vw] tracking-[0.3em] font-mono outline-none placeholder-[#c9a876]/25 px-2 transition-all duration-300"
+        class="flex-1 h-full min-w-0 bg-transparent border-none text-[#e8dcc8] text-center text-[1.6vw] tracking-[0.3em] font-mono outline-none placeholder-[#c9a876]/25 px-2 transition-all duration-300"
       />
+
+      <div id="lock-right" class="lock-indicator flex flex-col items-center justify-center">
+        <div id="lock-right-icon-container"></div>
+        <span id="lock-right-label" class="text-[#c9a876]/80 mt-0.5 font-mono tracking-widest uppercase">L2</span>
+      </div>
+
       <!-- ТЗ: Кнопка «Ввод» при сканировании зашифрованного QR -->
       <button
         id="btn-inline-decrypt"
@@ -458,22 +493,22 @@
       Сканировать
     </button>
 
-    <!-- Группа из трёх иконок-кнопок: видна когда есть текст, либо в режимах сканирования/расшифровки -->
-    <div id="actions-row" class="actions-row m-block" style="position:absolute; left:0; top:0; width:0; height:0;">
-      <!-- «Назад» — слева по центру. В режиме создания с текстом = очистить, в режиме сканирования/расшифровки = отмена -->
-      <button id="btn-back" class="hidden icon-btn absolute left-[3%] top-1/2 -translate-y-1/2">
+    <!-- Группа из трёх иконок-кнопок: единый заметный ряд снизу по центру -->
+    <div id="actions-row" class="actions-row m-block hidden absolute bottom-[3%] left-1/2 -translate-x-1/2 flex items-center gap-3">
+      <!-- «Назад» — в режиме создания с текстом = очистить, в режиме сканирования/расшифровки = отмена -->
+      <button id="btn-back" class="icon-btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         <span class="icon-label">Назад</span>
       </button>
 
-      <!-- «Обновить» — справа по центру, новый узор без изменения текста -->
-      <button id="btn-refresh" class="hidden icon-btn absolute right-[3%] top-1/2 -translate-y-1/2">
+      <!-- «Обновить» — новый узор без изменения текста -->
+      <button id="btn-refresh" class="hidden icon-btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg>
         <span class="icon-label">Обновить</span>
       </button>
 
-      <!-- «Сохранить» — снизу по центру, вместо «Сканировать», пока есть текст -->
-      <button id="btn-save" class="hidden icon-btn absolute bottom-[3%] left-1/2 -translate-x-1/2">
+      <!-- «Сохранить» — экспорт PNG -->
+      <button id="btn-save" class="hidden icon-btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
         <span class="icon-label">Сохранить</span>
       </button>
@@ -481,10 +516,12 @@
   </div>
 
   <!-- Галерея справа -->
-  <div class="gallery-col">
-    <div class="gallery-thumb"><img src="gallery/example-4.jpg" alt="Пример мандалы 4" onerror="this.style.display='none'"></div>
-    <div class="gallery-thumb"><img src="gallery/example-5.jpg" alt="Пример мандалы 5" onerror="this.style.display='none'"></div>
-    <div class="gallery-thumb"><img src="gallery/example-6.jpg" alt="Пример мандалы 6" onerror="this.style.display='none'"></div>
+  <div class="gallery-col" id="gallery-right">
+    <div class="thumb-row">
+      <div class="gallery-thumb"><img src="gallery/004.png" alt="Пример мандалы 4" onerror="this.style.display='none'"></div>
+      <div class="gallery-thumb"><img src="gallery/005.png" alt="Пример мандалы 5" onerror="this.style.display='none'"></div>
+      <div class="gallery-thumb"><img src="gallery/006.png" alt="Пример мандалы 6" onerror="this.style.display='none'"></div>
+    </div>
     <div class="info-panel">
       Как этим пользоваться? Создание: введите текст — в реальном времени сформируется уникальный узор; введите ключ (до 12 символов), замки подтвердят, что он принят; «Обновить» — новый вариант узора без изменения текста; «Сохранить» — экспорт мандалы в PNG. Активация: нажмите «Сканировать», загрузите изображение или откройте камеру; если данные зашифрованы — введите ключ и нажмите «Ввод». При неверном ключе печать останется закрытой.
     </div>
@@ -530,6 +567,8 @@
     const elBtnRefresh     = document.getElementById('btn-refresh');
     const elBtnBack        = document.getElementById('btn-back');
     const elBtnScanMain    = document.getElementById('btn-scan-main');
+    const elActionsRow     = document.getElementById('actions-row');
+    const elTitleBlock     = document.getElementById('title-block');
     const elStandbySeal    = document.getElementById('standby-seal');
     const elScanSelector   = document.getElementById('scan-selector');
     const elScannerView    = document.getElementById('scanner-view');
@@ -837,6 +876,15 @@
       img.src = dataURL;
     }
 
+    // === АВТО-РАСШИРЕНИЕ ПОЛЯ ТЕКСТА ДО ЛИМИТА ===
+    // Растёт вместе с содержимым, но не более значения max (px), дальше — внутренняя прокрутка
+    function autoResizeTextarea() {
+      elTextarea.style.height = 'auto';
+      const max = 88;
+      const h = Math.min(elTextarea.scrollHeight, max);
+      elTextarea.style.height = h + 'px';
+    }
+
     // === СБОРКА QR-ДАННЫХ (с префиксом | для шифрования) ===
     async function buildQRData() {
       const t = text.trim();
@@ -980,18 +1028,17 @@
       }
 
       // --- Кнопки действий ---
-      // Правило: пока текст пуст (в режиме создания) — одна большая кнопка «Сканировать».
-      // Как только появился хотя бы 1 символ текста — она сменяется тремя иконками:
-      // Назад (очистить) / Обновить (новый узор) / Сохранить (PNG).
-      // В режимах сканирования/расшифровки видна только «Назад» (роль отмены).
+      // Пока текст пуст (создание) — одна большая кнопка «Сканировать».
+      // Есть текст — единый ряд из трёх иконок: Назад / Обновить / Сохранить.
+      // В режимах сканирования/расшифровки — виден только «Назад» (роль отмены).
       elBtnScanMain.classList.add('hidden');
-      elBtnBack.classList.add('hidden');
+      elActionsRow.classList.add('hidden');
       elBtnRefresh.classList.add('hidden');
       elBtnSave.classList.add('hidden');
 
       if (isCreateMode) {
         if (hasText) {
-          elBtnBack.classList.remove('hidden');
+          elActionsRow.classList.remove('hidden');
           elBtnRefresh.classList.remove('hidden');
           elBtnSave.classList.remove('hidden');
         } else {
@@ -999,8 +1046,11 @@
         }
       } else {
         // scan_select, scan_camera, decrypt_pending, decrypted — только «Назад» (отмена)
-        elBtnBack.classList.remove('hidden');
+        elActionsRow.classList.remove('hidden');
       }
+
+      // --- Авто-расширение текстового поля под содержимое (до лимита в CSS) ---
+      autoResizeTextarea();
     }
 
     // =====================================================================
@@ -1456,6 +1506,33 @@
       if (file && file.type.startsWith('image/')) handleFileUpload(file);
     });
 
+    // === МОБИЛЬНОЕ СОСТОЯНИЕ «КЛАВИАТУРА ОТКРЫТА» ===
+    // Пока активно поле текста/ключа — прячем кнопки управления и притемняем галерею.
+    // По уходу фокуса (клавиатура убрана) — интерфейс перестраивается обратно.
+    let keyboardCloseTimer = null;
+    function markKeyboardOpen() {
+      clearTimeout(keyboardCloseTimer);
+      document.body.classList.add('keyboard-open');
+    }
+    function markKeyboardMaybeClosed() {
+      clearTimeout(keyboardCloseTimer);
+      keyboardCloseTimer = setTimeout(() => {
+        const active = document.activeElement;
+        if (active !== elTextarea && active !== elPassInput) {
+          document.body.classList.remove('keyboard-open');
+        }
+      }, 150);
+    }
+    elTextarea.addEventListener('focus', markKeyboardOpen);
+    elTextarea.addEventListener('blur', markKeyboardMaybeClosed);
+    elPassInput.addEventListener('focus', markKeyboardOpen);
+    elPassInput.addEventListener('blur', markKeyboardMaybeClosed);
+
+    // === ЗАГОЛОВОК: подзаголовок по тапу (мобильный — hover не работает) ===
+    elTitleBlock.querySelector('#seal-title').addEventListener('click', () => {
+      elTitleBlock.classList.toggle('show-subtitle');
+    });
+
     // =====================================================================
     // ИНИЦИАЛИЗАЦИЯ
     // =====================================================================
@@ -1465,6 +1542,7 @@
       syncLocks();
       updateUI();
       drawSeal('');
+      autoResizeTextarea();
     }
 
     init();
