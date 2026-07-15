@@ -111,14 +111,12 @@
       class="relative overflow-hidden rounded-2xl"
       style="height: min(82vh, 760px); aspect-ratio: 16 / 9; max-width: 1450px; min-width: 560px; border: 10px solid rgba(201,168,118,0.5);"
     >
-      <!-- Кнопка языка -->
-      <div class="skeleton-box absolute" style="top: 3%; left: 3%; width: 40px; height: 30px;"></div>
-
-      <!-- Кнопка темы -->
-      <div class="skeleton-box absolute rounded-full" style="top: 3%; right: 3%; width: 34px; height: 34px;"></div>
-
-      <!-- Заголовок -->
-      <div id="title-block" class="m-block skeleton-box absolute" style="top: 5%; left: 10%; width: 80%; height: 10%;"></div>
+      <!-- Заголовок + кнопки языка/темы — единый блок в одну строку -->
+      <div id="title-block" class="m-block absolute flex items-center gap-3" style="top: 5%; left: 10%; width: 80%; height: 10%;">
+        <div class="skeleton-box shrink-0" style="width: 40px; height: 30px;"></div>
+        <div class="skeleton-box flex-1 h-full"></div>
+        <div class="skeleton-box rounded-full shrink-0" style="width: 34px; height: 34px;"></div>
+      </div>
 
       <!-- Поле текста -->
       <div id="text-field" class="m-block skeleton-box absolute" style="left: 26.5%; top: 17%; width: 47.2%; height: 9%;"></div>
