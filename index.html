@@ -125,8 +125,8 @@
     }
     .gallery-thumb {
       position: relative;
-      width: 110px;
-      height: 110px;
+      width: clamp(80px, 10vh, 140px);
+      height: clamp(80px, 10vh, 140px);
       border-radius: 12px;
       border: 1px solid rgba(201,168,118,0.25);
       overflow: hidden;
@@ -382,7 +382,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen bg-[#0d0a08] p-2 md:p-6 select-none overflow-hidden">
 
-  <div id="page-wrap" class="flex items-center justify-center gap-6 w-full max-w-[1850px]">
+  <div id="page-wrap" class="flex items-center justify-center gap-6 w-full max-w-[2100px]">
 
   <!-- Галерея слева -->
   <div class="gallery-col" id="gallery-left">
@@ -400,7 +400,7 @@
 
   <div
     id="artifact"
-    class="relative w-full aspect-[16/9] max-w-[1200px] min-w-[560px] bg-[#15100b] text-[#c9bfae] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden rounded-2xl border-[10px] border-[#2a2118] transition-all duration-500"
+    class="relative h-[min(82vh,760px)] aspect-[16/9] max-w-[1450px] min-w-[560px] bg-[#15100b] text-[#c9bfae] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden rounded-2xl border-[10px] border-[#2a2118] transition-all duration-500"
   >
     <!-- Фоновая сетка -->
     <div class="bg-grid absolute inset-0 opacity-10 pointer-events-none z-0" style="background-image: radial-gradient(#c9a876 1px, transparent 1px); background-size: 20px 20px;"></div>
