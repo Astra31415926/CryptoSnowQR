@@ -70,6 +70,7 @@
     }
     .pass-active {
       opacity: 1;
+      max-height: 60px;
       pointer-events: auto;
       border-color: rgba(201,168,118,0.3) !important;
     }
@@ -118,6 +119,7 @@
       gap: 8px;
     }
     .gallery-thumb {
+      position: relative;
       width: 64px;
       height: 64px;
       border-radius: 10px;
@@ -125,6 +127,29 @@
       overflow: hidden;
       background: #1c150f;
       flex-shrink: 0;
+    }
+    /* Подпись при наведении на конкретную миниатюру */
+    .gallery-thumb::after {
+      content: attr(data-caption);
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 6px;
+      white-space: nowrap;
+      font-size: 10px;
+      color: #c9bfae;
+      background: rgba(28,21,15,0.95);
+      border: 1px solid rgba(201,168,118,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 20;
+    }
+    .gallery-thumb:hover::after {
+      opacity: 1;
     }
     .gallery-thumb img {
       width: 100%;
@@ -222,8 +247,7 @@
     body.light-theme .bg-grid { background-image: radial-gradient(#a9895c 1px, transparent 1px) !important; }
     body.light-theme .rings-deco svg { color: #a9895c !important; }
     body.light-theme #seal-title { color: #3a2c1a !important; }
-    body.light-theme #seal-subtitle,
-    body.light-theme .standby-text { color: rgba(120,90,50,0.75) !important; }
+    body.light-theme #seal-subtitle { color: rgba(120,90,50,0.75) !important; }
     body.light-theme .gallery-thumb { background: #ecdfc4 !important; border-color: rgba(160,120,60,0.35) !important; }
     body.light-theme .info-panel { color: #4a3a26 !important; }
     body.light-theme #text-field-wrapper,
@@ -319,7 +343,6 @@
       #seal-subtitle { font-size: 10px !important; }
       #ui-text { font-size: 16px !important; }
       #ui-pass { font-size: 20px !important; letter-spacing: 0.2em !important; }
-      .standby-text { font-size: 12px !important; }
       .scan-hint { font-size: 13px !important; }
       #btn-gallery, #btn-camera { font-size: 14px !important; }
       .cam-err-title { font-size: 13px !important; }
@@ -353,9 +376,9 @@
   <!-- Галерея слева -->
   <div class="gallery-col" id="gallery-left">
     <div class="thumb-row">
-      <div class="gallery-thumb"><img src="gallery/001.png" alt="Пример мандалы 1" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
-      <div class="gallery-thumb"><img src="gallery/002.png" alt="Пример мандалы 2" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
-      <div class="gallery-thumb"><img src="gallery/003.png" alt="Пример мандалы 3" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
+      <div class="gallery-thumb" data-caption="Мандала №1"><img src="gallery/001.png" alt="Пример мандалы 1" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
+      <div class="gallery-thumb" data-caption="Мандала №2"><img src="gallery/002.png" alt="Пример мандалы 2" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
+      <div class="gallery-thumb" data-caption="Мандала №3"><img src="gallery/003.png" alt="Пример мандалы 3" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
     </div>
     <div class="info-panel">
       <span data-ua="CryptoSeal — це веб-застосунок, який шифрує текст і перетворює його на орнаментальний QR-код (мандалу). В основі роботи лежать два принципи: 1) шифрування ключем, який знає лише відправник і отримувач; 2) стеганографія — дані вбудовуються безпосередньо в структуру кольорових каналів зображення, маскуючи класичний вигляд QR-коду під геометричний узор." data-en="CryptoSeal is a web app that encrypts text and turns it into an ornamental QR code (mandala). Two principles underpin it: 1) encryption with a key known only to sender and recipient; 2) steganography — the data is embedded directly into the image's colour channels, disguising the classic QR pattern as a geometric ornament.">
@@ -450,16 +473,8 @@
       <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#c9a876] pointer-events-none z-50"></div>
       <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#c9a876] pointer-events-none z-50"></div>
 
-      <!-- Стандартный экран ожидания -->
-      <div id="standby-seal" class="absolute inset-0 flex flex-col items-center justify-center text-center p-3 select-none pointer-events-none">
-        <div class="w-[60%] h-[60%] border border-[#c9a876]/20 rounded-full flex items-center justify-center opacity-30">
-          <svg class="w-full h-full text-[#c9a876]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M12 2v20M2 12h20" stroke-width="0.5" />
-            <circle cx="12" cy="12" r="10" stroke-width="0.5" stroke-dasharray="2 2" />
-          </svg>
-        </div>
-        <p class="standby-text absolute text-[0.7vw] text-[#c9a876]/55 tracking-[0.15em] font-mono leading-tight uppercase" data-ua="Печать в очікуванні" data-en="Seal standing by">печать в ожидании</p>
-      </div>
+      <!-- Пустой квадрат до генерации орнамента — без иконок и текста -->
+      <div id="standby-seal" class="absolute inset-0 pointer-events-none"></div>
 
       <!-- ТЗ: Селектор источника сканирования (Галерея / Камера) -->
       <div id="scan-selector" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#1c150f] z-[60] p-4 gap-3">
@@ -514,34 +529,36 @@
     <!-- Поле ввода ключа: замки по бокам от инпута, 12 кружков-индикаторов под ним, глазик показать/скрыть -->
     <div
       id="pass-field-wrapper"
-      class="m-block pass-inactive absolute flex flex-col items-center gap-2 border-b border-[#c9a876]/30 transition-all bg-[#1c150f]/40 rounded px-3 py-2"
-      style="left: 26%; top: 79%; width: 48%; z-index: 15;"
+      class="m-block pass-inactive absolute flex items-center gap-3 border border-[#c9a876]/30 transition-all bg-[#1c150f]/60 rounded-lg px-3 py-2"
+      style="left: 26.5%; top: 80%; width: 47.2%; z-index: 15;"
     >
-      <div class="flex items-center justify-center gap-3 w-full">
-        <div id="lock-left" class="shrink-0 flex items-center justify-center"></div>
+      <div id="lock-left" class="shrink-0 flex items-center justify-center"></div>
 
-        <div class="relative flex-1 min-w-0">
-          <input
-            type="password"
-            id="ui-pass"
-            placeholder="КЛЮЧ / PASSWORD"
-            maxlength="12"
-            class="w-full bg-transparent border-none text-[#e8dcc8] text-center text-[1.6vw] tracking-[0.3em] font-mono outline-none placeholder-[#c9a876]/40 px-8 py-1 transition-all duration-300"
-          />
-          <button id="btn-toggle-pass-visibility" type="button" class="absolute right-0 top-1/2 -translate-y-1/2 text-[#c9a876]/60 hover:text-[#c9a876] transition-colors">
-            <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+      <div class="relative flex-1 min-w-0 h-full">
+        <!-- Реальное поле ввода: текст прозрачен, пока не нажат глазик — видимость даёт CSS-класс pass-revealed -->
+        <input
+          type="text"
+          id="ui-pass"
+          placeholder="КЛЮЧ / PASSWORD"
+          maxlength="12"
+          autocomplete="off"
+          class="w-full bg-transparent border-none text-center text-[1.4vw] tracking-[0.3em] font-mono outline-none placeholder-[#c9a876]/40 px-1 py-1 transition-all duration-300"
+          style="color: transparent; caret-color: #c9a876;"
+        />
+        <!-- Кружки-индикаторы поверх поля: маскируют символы, пока глазик закрыт -->
+        <div id="pass-dots" class="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none">
+          <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
+          <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
+          <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
+          <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
         </div>
-
-        <div id="lock-right" class="shrink-0 flex items-center justify-center"></div>
       </div>
 
-      <div id="pass-dots" class="flex items-center gap-1 flex-wrap justify-center">
-        <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
-        <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
-        <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
-        <span class="pass-dot"></span><span class="pass-dot"></span><span class="pass-dot"></span>
-      </div>
+      <button id="btn-toggle-pass-visibility" type="button" class="shrink-0 text-[#c9a876]/60 hover:text-[#c9a876] transition-colors">
+        <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+
+      <div id="lock-right" class="shrink-0 flex items-center justify-center"></div>
 
       <!-- ТЗ: Кнопка «Ввод» при сканировании зашифрованного QR -->
       <button
@@ -556,13 +573,13 @@
     <!-- Скрытый файловый инпут -->
     <input type="file" id="file-input-hidden" accept="image/*" class="hidden" />
 
-    <!-- Большая кнопка «Сканировать» — видна только пока текст пуст -->
-    <button id="btn-scan-main" class="m-block absolute bottom-[3%] left-1/2 -translate-x-1/2 w-[60%] action-btn text-center" data-ua="Сканувати" data-en="Scan">
+    <!-- Большая кнопка «Сканировать» — видна только пока текст пуст. Ширина строго равна ширине QR-квадрата -->
+    <button id="btn-scan-main" class="m-block absolute bottom-[3%] action-btn text-center" style="left: 39.1%; width: 22.1%;" data-ua="Сканувати" data-en="Scan">
       Сканировать
     </button>
 
-    <!-- Группа из трёх иконок-кнопок: единый заметный ряд снизу по центру -->
-    <div id="actions-row" class="actions-row m-block hidden absolute bottom-[3%] left-1/2 -translate-x-1/2 flex items-center gap-3">
+    <!-- Группа из трёх иконок-кнопок — та же ширина/позиция, что и «Сканировать» -->
+    <div id="actions-row" class="actions-row m-block hidden absolute bottom-[3%] flex items-center justify-between" style="left: 39.1%; width: 22.1%;">
       <!-- «Назад» — в режиме создания с текстом = очистить, в режиме сканирования/расшифровки = отмена -->
       <button id="btn-back" class="icon-btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -586,9 +603,9 @@
   <!-- Галерея справа -->
   <div class="gallery-col" id="gallery-right">
     <div class="thumb-row">
-      <div class="gallery-thumb"><img src="gallery/004.png" alt="Пример мандалы 4" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
-      <div class="gallery-thumb"><img src="gallery/005.png" alt="Пример мандалы 5" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
-      <div class="gallery-thumb"><img src="gallery/006.png" alt="Пример мандалы 6" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
+      <div class="gallery-thumb" data-caption="Мандала №4"><img src="gallery/004.png" alt="Пример мандалы 4" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
+      <div class="gallery-thumb" data-caption="Мандала №5"><img src="gallery/005.png" alt="Пример мандалы 5" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
+      <div class="gallery-thumb" data-caption="Мандала №6"><img src="gallery/006.png" alt="Пример мандалы 6" onerror="this.closest('.gallery-thumb').style.display='none'"></div>
     </div>
     <div class="info-panel">
       <span data-ua="Як цим користуватися? Створення: введіть текст — у реальному часі сформується унікальний узор; введіть ключ (до 12 символів), кружечки підтвердять, що він прийнятий; «Оновити» — новий варіант узору без зміни тексту; «Зберегти» — експорт мандали в PNG. Активація: натисніть «Сканувати», завантажте зображення або відкрийте камеру; якщо дані зашифровані — введіть ключ і натисніть «Ввести». При невірному ключі печатка залишиться закритою." data-en="How to use it? Create: type your text — a unique pattern forms in real time; enter a key (up to 12 characters), the dots confirm it's accepted; «Refresh» — a new pattern variant without changing the text; «Save» — export the mandala as PNG. Activate: press «Scan», upload an image or open the camera; if the data is encrypted — enter the key and press «Enter». With a wrong key the seal stays closed.">
@@ -653,6 +670,7 @@
     const elFlashLayer     = document.getElementById('flash-layer');
 
     // Индикаторы ключа — кружки, заполняются по мере ввода
+    const elPassDotsContainer = document.getElementById('pass-dots');
     const elPassDots = document.querySelectorAll('.pass-dot');
     const elLockLeftIcon  = document.getElementById('lock-left');
     const elLockRightIcon = document.getElementById('lock-right');
@@ -1530,14 +1548,27 @@
     elPassInput.addEventListener('blur', markKeyboardMaybeClosed);
 
     // === ГЛАЗИК: показать/скрыть текст ключа ===
+    // Скрыто (по умолчанию): текст прозрачен, поверх видны кружки-индикаторы.
+    // Показано: кружки прячутся, реальные символы становятся видимыми (как в эталоне).
     const EYE_OPEN = '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
     const EYE_OFF  = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
     let passVisible = false;
+    function applyPassVisibility() {
+      if (passVisible) {
+        elPassInput.style.color = '#e8dcc8';
+        elPassDotsContainer.style.opacity = '0';
+        elEyeIcon.innerHTML = EYE_OFF;
+      } else {
+        elPassInput.style.color = 'transparent';
+        elPassDotsContainer.style.opacity = '1';
+        elEyeIcon.innerHTML = EYE_OPEN;
+      }
+    }
     elBtnTogglePass.addEventListener('click', () => {
       passVisible = !passVisible;
-      elPassInput.type = passVisible ? 'text' : 'password';
-      elEyeIcon.innerHTML = passVisible ? EYE_OFF : EYE_OPEN;
+      applyPassVisibility();
     });
+    applyPassVisibility();
 
     // === ЗАГОЛОВОК: подзаголовок по тапу (мобильный — hover не работает) ===
     elTitleBlock.querySelector('#seal-title').addEventListener('click', () => {
