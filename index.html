@@ -382,7 +382,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen bg-[#0d0a08] p-2 md:p-6 select-none overflow-hidden">
 
-  <div id="page-wrap" class="flex items-center justify-center gap-6 w-full max-w-[1550px]">
+  <div id="page-wrap" class="flex items-center justify-center gap-6 w-full max-w-[1850px]">
 
   <!-- Галерея слева -->
   <div class="gallery-col" id="gallery-left">
@@ -566,7 +566,7 @@
       </div>
 
       <button id="btn-toggle-pass-visibility" type="button" class="shrink-0 text-[#c9a876]/60 hover:text-[#c9a876] transition-colors pass-icon-box">
-        <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
       </button>
 
       <div id="lock-right" class="shrink-0 flex items-center justify-center pass-icon-box"></div>
@@ -1560,12 +1560,11 @@
     elPassInput.addEventListener('blur', markKeyboardMaybeClosed);
 
     // === ГЛАЗИК: показать/скрыть текст ключа ===
-    // Скрыто (по умолчанию): текст прозрачен, поверх видны кружки-индикаторы — но только когда есть хотя бы 1 символ,
-    // иначе кружки конфликтовали бы с плейсхолдером «КЛЮЧ / PASSWORD».
-    // Показано: кружки прячутся, реальные символы становятся видимыми (как в эталоне).
+    // Видно по умолчанию: реальные символы ключа отображаются сразу, без маскировки.
+    // Скрыто (по клику на глазик): текст прозрачен, поверх видны кружки-индикаторы (только если есть хотя бы 1 символ).
     const EYE_OPEN = '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
     const EYE_OFF  = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
-    let passVisible = false;
+    let passVisible = true;
     function updatePassDisplay() {
       const hasChars = password.length > 0;
       if (passVisible) {
